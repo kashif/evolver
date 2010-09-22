@@ -1,0 +1,196 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 18</title></head>
+
+<BODY>
+<a name="newsletter 19"></a>
+<h1>Surface Evolver Newsletter no. 20</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+                         Surface Evolver Newsletter 20 
+                              January 1, 2008
+                     by Ken Brakke, brakke@susqu.edu
+
+
+Surface Evolver version 2.30 available for download at
+http://www.susqu.edu/brakke/evolver.
+This is the first release since version 2.26 in August, 2005.
+
+For those who compile Evolver themselves, the same makefile may be used.
+
+New features in version 2.30:
+
+Clip view:
+  The graphics display now has user-controlled clipping planes, so you
+  can see inside your surface.  In the OpenGL graphics window, if you 
+  hit the 'l' key (lower case 'L'), a clipping plane will appear. Dragging 
+  the mouse will translate the clipping plane, and hitting 'k' will let you 
+  rotate the clipping plane.  See "clip view" in the documentation for more.
+
+Slice view:
+  There is also a slice view mode, that works like clip view, except it
+  produces a two-dimensional cross-section of the surface.  To initiate it,
+  use the "slice_view" toggle command; thereafter the 'l' and 'k' keys
+  control the mouse mode.
+
+Movie viewer:
+  For scrolling through stages of an evolution in full 3D fashion, I have
+  written a program "evmovie" that reads simple geometry files and makes
+  an Evolver-like display, so you can manipulate the surface with the mouse
+  (with clipping plane!) and scroll through the files.  It can handle
+  hundreds or even thousands of files pretty smoothly.  There is a new
+  Evolver command "binary_off_file" for producing files for evmovie.
+  To download and see documentation, go to
+  http://www.susqu.edu/brakke/evmovie.
+
+Loading multiple surfaces:
+  The "addload" command will load a new datefile without deleting the
+  current surface.  Good for building up a surface from several component
+  parts, particularly if one componont is repeated in multiple places.
+  See the addload_example.fe datafile in the distribution for an example.
+
+Graphics text:
+  You can display simple text in graphics (OpenGL and PostScript graphics,
+  anyway). Syntax:
+
+     text_id := display_text(x,y,string)
+
+  The x,y coordinates of the start of the string are in window units, i.e.
+  the window coordinates run from (0,0) in the lower left to (1,1) in the
+  upper right. The return value should be saved in a variable in case you want
+  to delete the text later with delete_text(text_id); even if you don't want to
+  delete it, you must have something on the left of the assignment for syntax
+  purposes. No font size control or font type or color implemented. Meant for
+  captioning images, for example a timer in frames of a movie.
+
+Showing string facets:
+  In the string model, facets will now be displayed according to the
+  "show facet where expr" command.  Facets can be colored and picked.
+  If the facet edge loop is not closed, then a closing edge will be
+  assumed.  May not work too well for non-convex facets.
+
+Array operations:
+  Several basic operations that work on whole arrays have been added
+  to the Evolver command language, so scripts can avoid tedious "for"
+  loops:
+
+    array := array
+    array := scalar
+    array := scalar * array
+    array := array + array
+    array := array - array
+    vector dot_product vector
+
+  These work on element attributes that are vectors or arrays, as well
+  as stand-alone arrays.  I decided to use "dot_product" as the name of
+  the inner product operator instead of just "dot" since I had several 
+  scripts using "dot" as a variable, and I assume other people do also,
+  and I didn't want to break those. There are also matrix_inverse() and 
+  matrix_determinant() functions.  
+
+  NOTE: the matrix_inverse() function is now a function returning 0 for
+  singular and 1 for nonsingular matrix, rather than a procedure not 
+  returning a value. This means that scripts using matrix_inverse() will 
+  have to assign the return value to a variable.
+
+Element array attributes:
+  For use with the whole-array commands, these element attributes
+  are defined as 1-dimensional arrays:
+  vertices: __x (coordinates), __p (boundary parameters), __vertex_normal
+  edges: __edge_vector
+  facets: __facet_normal
+ 
+Local names:
+  The syntax for declaring identifiers to have local scope has been extended
+  to permit multiple names in the same declaration, such as
+     local ax,bx,cx,ay,by,by,cx,cy,cz;
+  
+Deeper recursive calls:
+  The stack mechanism of the expression interpreter has been modified
+  to permit much deeper recursion, for example in geometric search
+  algorithms. 
+
+Debugging scripts:
+  Several features have been added to help in debugging scripts:
+
+  "subcommand" command: Displays a command prompt and accepts user
+   commands.  At "exit", it resumes the script.
+
+  "abort" ends all script execution and returns to the main
+   command prompt.
+
+  "breakpoint" can be used to cause a command prompt to appear when
+   execution reaches a certain line in a script.  The syntax is
+       breakpoint scriptname linenumber
+   where scriptname is hte name of the procedure or function and 
+   linenumber is the line number in the file the procedure is defined in.
+   There is also an "unset breakpoint" commmand.
+
+  "whereami" at a subcommand or breakpoint prompt will print a stack
+   trace so you can tell where you are in your scripts.
+
+Expression profiling: 
+  On systems where Evolver has cpu_counter available and Evolver has been
+  compiled with the manifest constant PROF_EVALS defined, the expression
+  evaluator inside Evolver keeps track of the clock cycles elapsed during
+  each expression evaluation. These expressions include procedures,
+  functions, constraint and boundary formulas, content integrands, energy
+  integrands, quantity integrands, etc; everything that prints out as code in
+  a dump file. The "print profiling" command will print the accumulated CPU
+  cycles so far for each type of expression. The times are inclusive of any
+  child functions or procedures.  The command reset_profiling will set all 
+  the cycle values back to 0.
+
+
+New named methods:
+
+  dirichlet_elastic: to do conformal mapping by minimizing Dirichlet energy.
+
+  laplacian_mean_curvature: to do motion by the laplacian of the
+    mean curvature.
+
+New toggle:
+   function_quantity_sparse: uses sparse matrices with function-type quantities.
+
+Warning suppression:
+  If your datafile or script generates harmless warnings, you can suppress
+  particular warnings by number.  Syntax:
+     suppress_warning number
+     unsuppress_warning number
+
+Validity checking:
+  To help in scripts that want to iterate over constraints or boundaries,
+  there are read-only variables high_constraint and high_boundary for the
+  maximum constraint and boundary numbers (remember that for named 
+  constraints and boundaries, the names are synonyms for numbers),
+  and there are boolean functions valid_constraint() and valid_boundary()
+  that take numbers or names as arguments. 
+
+
+Autopop and autochop improvements:
+
+  Autopop in the soapfilm model now deletes small facets.
+ 
+  The immediate_autopop toggle causes deletion of short edges or facets 
+  to be done immediately on detection before proceeding with detetecting
+  further small edges or facets.
+
+  The read-write internal variahle autochop_length can be used to read or
+  set the autochop critical length without changing the autochop toggle
+  state.
+
+Edge deletion options:
+
+  Toggle force_deletion will force edge or facet deletion to happen
+  even if it creates two edges with the same endpoints.
+
+  Togglw star_fcnagling will refine edges that would otherwise wind
+  up with same endpoints due to an edge or facet deleteon.
+
+End of Newsletter 20
+
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 4</title></head>
+
+<BODY>
+<a name="newsletter 4"></a>
+<h1>Surface Evolver Newsletter no. 4</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+		      Surface Evolver Newsletter Number 4
+			      May 28, 1993
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+
+New features
+Bibliography
+
+Version 1.91 now available. New features:
+
+      The two sides of a facets can have different colors. 'COLOR'
+      applies to both sides, 'FRONTCOLOR' and 'BACKCOLOR'
+      to different sides, according to the orientation inherited
+      from the datafile. Example:
+	"set facet backcolor red"
+
+      Attributes of individual named elements can be set inside
+      loops, i.e. "foreach facet ff do set ff color red"
+      does the same as "set facet color red".
+
+      To reduce need for explicit line-splicing on long commands,
+      the parser now keeps track of depth of brace and parenthesis
+      nesting, and will call for more input if a line ends inside nest.
+      So if you want to type a multiline command, start with '{'
+      and end with '}' many lines later.  Also does auto line-splicing 
+      if certain tokens are last token in line (such as '+'), but it
+      is wiser to enclose with braces rather than count on this.  
+
+      Queries can run through edges and facets adjacent to
+      a vertex, and facets of a body, as in "list vertices vv
+      where max(vv.facet,color==red) &gt; 0".
+
+      New attributes: Valence attribute has been extended to vertices
+      and bodies.  Vertex valence is the number of edges on
+      a vertex.  Body valence is the number of facets on the
+      body (edges in the string model). Example:
+      "list vertices where valence == 4"
+
+      Surface area can be minimized by minimizing Dirichlet integral,
+      according to a scheme of Polthier and Pinkall.  Command 'dirichlet'.
+      Not a replacement for other evolutions.
+
+      Using a command from the history list now echoes it.
+
+      Improved NeXT terminal interface.  -u option for no graphics,
+      -t for terminal and graphics.
+
+      Command assignment fixed to assign only one command.
+      so "ggg := g; g" will be the same as "{ggg := g}; g"
+      and not "ggg := {g;g}".
+
+      Every time a command changed a global variable, the surface
+      was being recalculated.  This slowed down scripts immensely.
+      So now the only variables that cause recalculation are
+      1) adjustable parameters defined in the datafile
+      2) quantity moduli and parameters
+      You can turn off even this with "autorecalc off".
+
+      "view_4d" command to toggle sending full 4D coordinates
+      to geomview.  Default is OFF.
+
+
+Bibliography:
+
+      Alice Underwood, "Constructing barriers to minimal surfaces from
+      polyhedral data," Ph.D. thesis, Princeton, 1993.
+
+         When the Evolver reaches a minimum area for a given triangulation
+      of a surface, can you guarantee that there is a smooth minimal
+      surface nearby?  This thesis proves some sufficient conditions.
+      You have to be able to "blow" on the surface and still have it
+      stable.  The triangulation must be well-behaved.  Unfortunately,
+      the estimates are far from the best possible (I hope!), and one
+      needs on the order of 10^7 to apply the proof.
+
+      Ken Brakke, "Stability of a toroidal bubble in a rotating tank."
+
+	 This is the final report of an Evolver project I did for Lockheed.
+      A tank of liquid helium is rotating in weightlessness.  The tank
+      has a rod along the axis of rotation.  The tank is partially full,
+      and the bubble is supposed to form an axisymmetric torus so the center
+      of mass is on the axis.  The questions are: what is the rotation rate
+      needed to force a spherical bubble to form a torus, and what is the
+      minimum rotation rate at which the torus is stable against breaking 
+      up into a sphere?  This is not an official publication of anybody,
+      but copies are available to anybody interested.
+
+      Hans Mittelmann, "Symmetric Capillary Surfaces in a Cube",
+      Math. Comp. Simul. 35 (1993), 139-152.  (reference update)
+
+
+End of Evolver Newsletter 4
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

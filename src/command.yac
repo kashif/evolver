@@ -1,0 +1,3514 @@
+
+/*************************************************************
+*  This file is part of the Surface Evolver source code.     *
+*  Programmer:  Ken Brakke, brakke@susqu.edu                 *
+*************************************************************/
+
+/*********************************************************************
+*
+* File: command.yac
+*  YACC specification for expression and command parser for evolver. 
+*  Does algebraic form of expressions and builds parse tree 
+*  Accepts longest complete expression, so coordinates can
+*    be listed as expressions on same line 
+*/
+
+/* Notes:
+   vcommand denotes commands that can be recognized as such from their
+     first token; only such commands can be assigned to procedure
+     variables.
+   backquotes used to surround commands at start of comma-separated
+     expression list.
+
+   On semicolons:  Semicolons are command separators and optional
+       command terminators.  Note that 'command' by itself does
+       not have a terminating semicolon.  Semicolons are therefore
+       associated with the outermost part of a nested command, so
+       don't work inside if-then.  Blocks in { } are commands in 
+       order to work inside structured commands, so need semicolon 
+       separator afterwards.
+*/
+
+%{  
+#include "include.h"
+#include "lex.h"
+
+#define YYSTYPE yystype
+#define gettxt(a,b) (b)
+#define yylex kb_yylex
+
+int assignbacktrack ARGS((void));
+
+#ifndef __GNUC__
+#ifdef YYBISON
+/* for Bison */
+#ifndef __yy_memcpy
+static void __yy_memcpy ARGS((char *, char *, int ));
+#endif
+#endif
+#endif
+
+/* for bison version 2.1 output */
+#define __STDC__ 1
+
+/* for non-ANSI compilers */
+#define const
+
+#ifndef NO_YACC_DEBUG
+#define YYDEBUG 1
+#endif
+int help_flag; /* avoid error message while doing help */
+
+/* Backtrack to previous := in inputbuffer */
+int assignbacktrack ()
+{ int spot;
+  for ( spot = inputbufferspot - 1; spot > 0 ; spot-- )
+    if ( inputbuffer[spot-1] == ':' && inputbuffer[spot] == '=' )
+       return spot+1;
+  return 0;
+}
+%}
+
+%pure_parser
+
+%token      EXPRESSION_START_ COMMAND_START_ HISTORY_ GEOMVIEW_ VIEW_MATRIX_
+%token      LEAD_INTEGER_ INTEGER_ REAL_ SIGNED_NUMBER_ NEWIDENT_ REDEFINE_
+%token      MATHFUNC_ MATHFUNC2_ POW_ USERFUNC_  MIDV_  DATAFILENAME_ LOGFILE_
+%token      PI_ E_ G_ PARAM_  SYMBOL_ TOTAL_  EXTRA_ATTRIBUTE_ FIXEDVOL_
+%token      IDENT_ UMINUS_ SHELL_ COLOR_  HESSIAN_ VOLCONST_ TORUS_PERIODS_
+%token            VERTICES_ EDGES_ FACETS_ BODIES_  HESSIAN_MENU_ POSTSCRIPT_
+%token      LENGTH_ AREA_ VOLUME_ ID_ OID_ TAG_ ORIGINAL_ FACETEDGES_ WRAP_
+%token      QUOTATION_ UNSET_ TOPINFO_ OPACITY_ VALENCE_ HESSIAN_SADDLE_
+%token      SET_ FIXED_ DENSITY_ PRESSURE_ CONSTRAINT_ COORD_ DISSOLVE_
+%token      WHERE_ LIST_ SHOW_ DELETE_ REFINE_ RECALC_  SHOWQ_ EDGESWAP_
+%token      FIX_ UNFIX_ TOGGLENAME_ TOGGLEVALUE_ STAR_ QUANTITY_NAME_ PAUSE_
+%token      GO_ SHOW_VOL_ CHECK_  READ_  ZOOM_ ON_ OFF_ GEOMPIPE_ SELF_
+%token      SINGLE_LETTER_ LONG_JIGGLE_ RAW_VERAVG_ COUNTS_  CHDIR_
+%token      ALICE_ STABILITY_TEST_ DEFINE_ UPLUS_  DATATYPE_ FLUSH_COUNTS_
+%token      AUTOCHOP_ UTEST_ ATTRIBUTE_ RITZ_ MOVE_ VERTEXNORMAL_ POP_
+%token      SYSTEM_  TETRA_POINT_ TRIPLE_POINT_ LANCZOS_ EIGENPROBE_ EXEC_
+%token      AREAWEED_ EDGEWEED_ GRAVITY_ EDGEDIVIDE_ LINEAR_ QUADRATIC_
+%token      DIFFUSION_ EXTRAPOLATE_ TRANSFORM_DEPTH_ PRINTF_ ERRPRINTF_
+%token      PRINT_ MAX_ MIN_ COUNT_ SUM_ AVG_  BREAK_ CONTINUE_ SIZEOF_
+%token      TRANSFORM_EXPR_ BARE_ BOTTOMINFO_ METIS_ KMETIS_ KEYLOGFILE_
+%token       SCALE_  BURCHARD_  REBODY_ BOUNDARY_ ORIENTATION_ OMETIS_
+%token      SQ_MEAN_CURV_ FRONTCOLOR_ SINGLE_REDEFD_ METHOD_NAME_ TASK_EXEC_
+%token      RAWEST_VERAVG_ SINGLE_LETTER_ARG_ BACKCOLOR_ LAGRANGE_ RETURN_
+%token      TRANSFORM_EXPR_VERB_ OOGLFILE_ PARALLEL_EXEC_ BINARY_OFF_FILE_
+%token      SPRINTF_ CONVERT_TO_QUANTS_ METIS_FACTOR_ FUNCTION_ EXPRINT_
+%token      DIHEDRAL_ WRAP_VERTEX_ ARRAYIDENT_  DATE_AND_TIME_ LOCAL_
+%token      SHOW_EXPR_ SHOW_TRANS_ AXIAL_POINT_ ENERGY_ CONSERVED_ INFO_ONLY_
+%token      ASSIGN_ PROCEDURE_ FOREACH_ STRINGGLOBAL_  EQUIANGULATE_
+%token      HISTOGRAM_ LOGHISTOGRAM_ AREA_FIXED_ QUIT_ WARNING_MESSAGES_
+%token      IF_  WHILE_ DO_ NO_REFINE_ STRING_ NONCONTENT_ FOR_  HIT_PARTNER_
+%token      FRONTBODY_ BACKBODY_ COLORFILE_ PERM_STRINGGLOBAL_ FUNCTION_IDENT_
+%token       THICKEN_  COLORMAP_  REDIRECT_  NEWVERTEX_ NEWEDGE_ NEWFACET_
+%token      MODULUS_ TARGET_ VALUE_ INVERSE_PERIODS_ NEWBODY_ DELTA_
+%token      GAP_CONSTANT_ DUMP_ NOTCH_ QUANTITY_ LOAD_ PERM_PROCEDURE_
+%token      PROCEDURE_WORD_ DYNAMIC_LOAD_FUNC_ PERM_IDENT_ PERMLOAD_
+%token      HELP_  VERTEX_AVERAGE_ METHOD_INSTANCE_ RAW_VERTEX_AVERAGE_
+%token      OPTIMIZE_  REDIRECTOVER_ TOLERANCE_ RAWEST_VERTEX_AVERAGE_
+%token      JIGGLE_ VIEW_TRANSFORMS_ CLOSE_SHOW_ IS_DEFINED_ NODISPLAY_
+%token      PERM_ASSIGN_ PHASE_  VIEW_TRANSFORM_SWAP_COLORS_ BACKQUOTE_COMMA_
+%token      INTERNAL_VARIABLE_ DIRICHLET_ SOBOLEV_  VIEW_TRANSFORM_PARITY_
+%token      SOBOLEV_SEEK_ DIRICHLET_SEEK_ HESSIAN_SEEK_ REORDER_STORAGE_
+%token      RENUMBER_ALL_ CONSTRAINT_NAME_ BOUNDARY_NAME_ PROCEDURE_IDENT_
+%token      POP_TRI_TO_EDGE_ POP_EDGE_TO_TRI_ POP_QUAD_TO_QUAD_ SHOWVERB_
+%token      PROCEDURES_ MPI_TASK_ATTR_  T1_EDGESWAP_ MERGE_EDGE_ MERGE_FACET_
+%token      MERGE_VERTEX_ RESET_COUNTS_ VALID_ELEMENT_ MID_EDGE_ MID_FACET_
+%token      GO_COUNT_ ELEMENT_IDENT_  BODY_METIS_ REVERSE_ORIENTATION_
+%token      MATRIX_MULTIPLY_ MATRIX_INVERSE_ BINARY_PRINTF_ DUMP_MEMLIST_
+%token      FREE_DISCARDS_ REPARTITION_ METIS_READJUST_  MEAN_CURVATURE_
+%token      GLOBAL_ LEAD_INTEGER_AT_ INTEGER_AT_ MATRIX_DETERMINANT_
+%token      SUBCOMMAND_ ABORT_ BREAKPOINT_ WHEREAMI_ ADDLOAD_ SIMPLEX_TO_FE_
+%token      DISPLAY_TEXT_ DELETE_TEXT_ SUPPRESS_WARNING_ UNSUPPRESS_WARNING_
+%token      RESET_PROFILING_ VALID_CONSTRAINT_ VALID_BOUNDARY_
+%token      ARRAY_ATTRIBUTE_  PROFILING_
+%token      ',' '.' ';' '[' ']' '{' '}' '(' ')' '`'
+
+%start      whole
+
+%right       PERM_ASSIGN_ ASSIGN_ ASSIGNOP_
+%left       PIPE_ 
+
+%nonassoc   THEN_
+%nonassoc   ELSE_
+
+%left       '='  
+%right       '?' ':'
+%left       OR_
+%left       AND_
+%right      NOT_
+%right      EQ_ '>' '<' LE_ GE_ NE_
+%nonassoc      ON_CONSTRAINT_
+%nonassoc      HIT_CONSTRAINT_
+%nonassoc      ON_BOUNDARY_
+%nonassoc      ON_QUANTITY_
+%nonassoc      ON_METHOD_INSTANCE_
+%left       '+' '-'
+%left       '*' '/' '%' IMOD_ IDIV_  DOT_
+%nonassoc      UMINUS_ UPLUS_
+%left       '^' 
+%nonassoc   EPRINT_
+%%
+
+/* pseudo-variable values are node indices in node list */
+
+/**************************************************************************/
+whole : COMMAND_START_   /* empty line */ 
+whole : COMMAND_START_
+  { begin_local_scope(); } commandline { end_local_scope(); }
+
+commandline : commands   { $$.i = makenode(CMDLIST_,$1.i,0); } 
+
+command : vcommand  { $$.i = $1.i; /* for commands distinguishable by First tok */}
+
+/**************************************************************************/
+command : command PIPE_ stringexpr 
+          { int p = makenode(PIPE_,$3.i,0);
+            subtree_swap(&$1.i,&p); /* so pipe executed first */
+            $$.i = makenode(PIPE_END_,p,$1.i);
+          }
+command : command PIPE_ error {kb_error(2330,"Piping must be to quoted string or string expression.\n",Q_ERROR);}
+
+/**************************************************************************/
+command : command REDIRECT_ stringexpr { int p = makenode(REDIRECT_,$3.i,0);
+                            subtree_swap(&$1.i,&p); /* so file openedfirst */
+                            $$.i = makenode(REDIRECT_END_,p,$1.i);
+                            }
+
+command : command REDIRECT_ error {
+  kb_error(2331,
+     "Redirection must be to quoted string or string expression.\n",Q_ERROR);}
+/**************************************************************************/
+
+command : command REDIRECTOVER_ stringexpr 
+              { int p = makenode(REDIRECTOVER_,$3.i,0);
+                subtree_swap(&$1.i,&p); /* so file openedfirst */
+                $$.i = makenode(REDIRECT_END_,p,$1.i);
+              }
+
+command : command REDIRECTOVER_ error {
+  kb_error(2332,
+  "Redirection must be to quoted string or string expression.\n",Q_ERROR);}
+/**************************************************************************/
+
+vcommand : BREAKPOINT_ PROCEDURE_  rexpr
+            { $$.i = makenode(SET_BREAKPOINT_,$2.i,$3.i); }
+
+vcommand : BREAKPOINT_ FUNCTION_IDENT_  rexpr
+            { $$.i = makenode(SET_BREAKPOINT_,$2.i,$3.i); }
+
+vcommand : BREAKPOINT_ PROCEDURE_IDENT_ rexpr
+            { $$.i = makenode(SET_BREAKPOINT_,$2.i,$3.i); }
+
+vcommand : BREAKPOINT_ error
+            { kb_error(5981,"Syntax: breakpoint procedurename linenumber\n",
+                  Q_ERROR); }
+
+vcommand : UNSET_ BREAKPOINT_ { $$.i = makenode(UNSET_BREAKPOINT_,0,0); }
+
+vcommand : WHEREAMI_ { $$.i = makenode(WHEREAMI_COMMAND_,0,0); }
+
+/**************************************************************************/
+vcommand : error { kb_error(3988,"Illegal command syntax.\n", Q_ERROR); }
+
+vcommand : PROCEDURE_  { $$.i = makenode(PROCEDURE_,$1.i,0); }
+
+vcommand : PROCEDURE_ rexpr   { int init = makenode(REPEAT_INIT_,$2.i,0);
+                       $$.i = makenode(PROCEDURE_,$1.i,0);
+                          $$.i = makenode(REPEAT_,init,$$.i); }
+
+vcommand : PROCEDURE_ error {
+    kb_error(3600,"Missing semicolon?",Q_ERROR);
+           }
+/**************************************************************************/
+
+vcommand : PERM_PROCEDURE_  { $$.i = makenode(PERM_PROCEDURE_,$1.i,0); }
+
+vcommand : PERM_PROCEDURE_ rexpr   { int init = makenode(REPEAT_INIT_,$2.i,0);
+                       $$.i = makenode(PERM_PROCEDURE_,$1.i,0);
+                          $$.i = makenode(REPEAT_,init,$$.i); }
+vcommand : PERM_PROCEDURE_ error {
+    kb_error(3601,"Procedure has no arguments; can be followed by repetition count.",Q_ERROR);
+           }
+/**************************************************************************/
+
+command : command error { kb_error(2333,"Missing semicolon?\n",Q_ERROR); }
+
+commands: commandlist { $$.i = $1.i; }
+
+commands: commandlistterm { $$.i = $1.i; }
+
+commandblock: '{' { begin_local_scope(); } commands '}'  
+             { end_local_scope(); $$.i = makenode(COMMAND_BLOCK_,$3.i,0); }
+
+commandblock: '{' '}'  { $$.i = makenode(NULLBLOCK_,0,0); }
+
+commandblock: '{' error '}'  { kb_error(3602,"Error following '{'",Q_ERROR); }
+/**************************************************************************/
+onecommand :  commandsemic  { $$.i = $1.i; }  
+
+onecommand :  command  { $$.i = $1.i; }  
+
+command :  commandblock { $$.i = $1.i; }
+
+command :  commandblock  rexpr  
+     { int init = makenode(REPEAT_INIT_,$2.i,0);
+       subtree_swap(&$1.i,&init);
+       $$.i = makenode(REPEAT_,init,$1.i); 
+       }
+command : commandblock error { kb_error(3603,
+   "Error following command block; expected ';' or repetition count or nothing.",
+   Q_ERROR);
+  }
+/**************************************************************************/
+
+/* want to do left recursion */
+commandsemic: ';'          { $$.i = makenode(NULLCMD_,0,0); }
+commandsemic: command ';'      { $$.i = $1.i; }
+
+commandterm: commandsemic   { $$.i = $1.i; } 
+
+commandlist: command          { $$.i = $1.i; }
+
+commandlistterm: commandterm          { $$.i = $1.i; }
+
+commandlist: commandlistterm command    
+      { $$.i = makenode(CMDLIST_,$1.i,$2.i); }
+
+commandlistterm: commandlistterm commandterm     
+     { $$.i = makenode(CMDLIST_,$1.i,$2.i); }
+
+ifhead: IF_  rexpr { $$.i = makenode(IFTEST_,$2.i,0); }
+         THEN_ command  { $$.i = makenode(IF_,$3.i,$5.i); } 
+
+vcommand: IF_ error 
+    { kb_error(2334,"Syntax: IF rexpr THEN command [ ELSE command ]\n",Q_ERROR);}
+
+vcommand: ifhead  {$$.i = makenode(ELSE_,$1.i,0); }
+
+vcommand: ifhead ELSE_  command  { $$.i = makenode(ELSE_,$1.i,$3.i); } 
+
+vcommand: ELSE_ error { kb_error(2335,"Illegal ELSE.  Don't use semicolon before ELSE.\n",Q_ERROR); }
+
+vcommand: '?'    { $$.i = makenode(SINGLE_LETTER_,'?',0); }
+
+/* commandsemic:  ';'  { $$.i = makenode(NOP_,0,0); } */
+/**************************************************************************/
+
+command: GEOMVIEW_  stringexpr  { $$.i = makenode(GEOMVIEW_,$2.i,0); }
+command: GEOMVIEW_  toggle  { $$.i = makenode(GEOMVIEW_TOGGLE_,$2.i,0); }
+command: GEOMVIEW_    { $$.i = makenode(GEOMVIEW_TOGGLE_,ON_,0); }
+command: GEOMVIEW_ error   { kb_error(2336,"Syntax: GEOMVIEW ON|OFF or GEOMVIEW \"geomview command\"\n",Q_ERROR); }
+
+/**************************************************************************/
+command: GEOMPIPE_  stringexpr  { $$.i = makenode(GEOMPIPE_,$2.i,0); }
+command: GEOMPIPE_  toggle  { $$.i = makenode(GEOMPIPE_TOGGLE_,$2.i,0); }
+command: GEOMPIPE_    { $$.i = makenode(GEOMPIPE_TOGGLE_,ON_,0); }
+command: GEOMPIPE_ error   { kb_error(2337,"Syntax: GEOMPIPE ON|OFF or GEOMPIPE \"shell command\"\n",Q_ERROR); }
+
+/**************************************************************************/
+command: LOGFILE_  stringexpr  { $$.i = makenode(LOGFILE_,$2.i,0); }
+command: LOGFILE_  toggle  { $$.i = makenode(LOGFILE_TOGGLE_,$2.i,0); }
+command: LOGFILE_    { $$.i = makenode(LOGFILE_TOGGLE_,ON_,0); }
+command: LOGFILE_ error   { kb_error(2338,"Syntax: LOGFILE ON|OFF or LOGFILE \"filename\"\n",Q_ERROR); }
+
+/**************************************************************************/
+command: KEYLOGFILE_  stringexpr  { $$.i = makenode(KEYLOGFILE_,$2.i,0); }
+command: KEYLOGFILE_  toggle  { $$.i = makenode(KEYLOGFILE_TOGGLE_,$2.i,0); }
+command: KEYLOGFILE_    { $$.i = makenode(KEYLOGFILE_TOGGLE_,ON_,0); }
+command: KEYLOGFILE_ error   { kb_error(2419,"Syntax: KEYLOGFILE ON|OFF or KEYLOGFILE \"filename\"\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand: POSTSCRIPT_  stringexpr  { $$.i = makenode( POSTSCRIPT_,$2.i,0); }
+vcommand: POSTSCRIPT_  error { kb_error(3361,"Syntax: POSTSCRIPT \"filename\"\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand: BINARY_OFF_FILE_  stringexpr  { $$.i = makenode( BINARY_OFF_FILE_,$2.i,0); }
+vcommand: BINARY_OFF_FILE_  error { kb_error(4339,"Syntax: BINARY_OFF_FILE \"filename\"\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand: OOGLFILE_  stringexpr  { $$.i = makenode( OOGLFILE_,$2.i,0); }
+vcommand: OOGLFILE_  error { kb_error(2339,"Syntax: OOGLFILE \"filename\"\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand: HISTORY_ { $$.i = makenode(HISTORY_,0,0); }
+vcommand: HISTORY_ error { kb_error(2340,"Syntax: HISTORY   (no arguments)\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand: RETURN_ { $$.i = makenode(RETURN_,0,0); }
+vcommand: RETURN_ rexpr { $$.i = makenode(RETURN_,$2.i,0); }
+vcommand: RETURN_ error { kb_error(2341,"Syntax: RETURN [expr] \n",Q_ERROR); }
+/**************************************************************************/
+
+vcommand: BREAK_ { $$.i = makenode(BREAK_,1,0); }
+vcommand: BREAK_ INTEGER_ { $$.i = makenode(BREAK_,$2.i,0); }
+vcommand: BREAK_ error { kb_error(2342,"Syntax: BREAK   or  BREAK integer   (to break multiple levels)\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand: CONTINUE_ { $$.i = makenode(CONTINUE_,1,0); }
+vcommand: CONTINUE_ INTEGER_ { $$.i = makenode(CONTINUE_,$2.i,0); }
+vcommand: CONTINUE_ error { kb_error(2343,"Syntax: CONTINUE   or  CONTINUE integer   (to continue in higher level loop)\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand: GO_        { 
+                         $$.i = makenode(SINGLE_LETTER_,'g',0);
+                     }
+
+vcommand: GO_COUNT_  {   int init,count,g;
+                         real_val = $1.i;
+                         count = makenode(PUSHCONST,0,0);
+                         init = makenode(REPEAT_INIT_,count,0);
+                         g = makenode(SINGLE_LETTER_,'g',0);
+                         $$.i = makenode(REPEAT_,init,g); 
+                     }
+
+vcommand:  GO_  rexpr   { int init,g;
+                         init = makenode(REPEAT_INIT_,$2.i,0);
+                         g = makenode(SINGLE_LETTER_,'g',0);
+                         $$.i = makenode(REPEAT_,init,g); 
+                       }
+
+vcommand: GO_ error { kb_error(3666,"Syntax: GO count\n",Q_ERROR); }
+/**************************************************************************/
+whilehead: WHILE_  rexpr { $$.i = makenode(WHILE_TOP_,$2.i,0); }
+          DO_ { $$.i = $3.i; }
+         
+vcommand: whilehead command { $$.i = makenode(WHILE_END_,$1.i,$2.i); }
+
+vcommand: WHILE_ error { kb_error(2344,"Syntax: WHILE rexpr DO command\n",Q_ERROR); }
+
+/**************************************************************************/
+
+dohead: DO_ { $$.i = makenode(DO_ENTRY_,0,0);} 
+        onecommand { $$.i = makenode(DO_TOP_,$2.i,$3.i); }
+
+
+vcommand: dohead  WHILE_ rexpr  { $$.i = makenode(DO_END_,$1.i,$3.i); }
+
+vcommand: dohead 
+          error { kb_error(4345,"Missing WHILE at end of DO statement.\n",Q_ERROR); }
+
+command: DO_ error { kb_error(2345,"Syntax: DO command WHILE expr\n",Q_ERROR); }
+/**************************************************************************/
+
+forentry:   FOR_  '(' commandsemic 
+            { $$.i = makenode(FOR_ENTRY_,$3.i,0); }
+
+forhead:   forentry rexpr ';' 
+            { $$.i = makenode(FOR_HEAD_,$1.i,$2.i); }
+forhead:   forentry ';' 
+            { int tmp;
+              real_val = 1;
+              tmp = makenode(PUSHCONST,0,0);
+              $$.i = makenode(FOR_HEAD_,$1.i,tmp); 
+            }
+
+fortop:    forhead command ')' { $$.i = makenode(FOR_TOP_,$1.i,$2.i); }
+fortop:    forhead  ')' { int  tmp = makenode(NULLCMD_,0,0);
+                          $$.i = makenode(FOR_TOP_,$1.i,tmp);
+               }
+
+vcommand:  fortop command { $$.i = makenode(FOR_END_,$1.i,$2.i); }
+
+vcommand: FOR_ error { kb_error(2514,
+        "Syntax: FOR ( command ; rexpr ; command ) command\n",Q_ERROR); }
+
+vcommand: FOR_ '(' error { kb_error(3668,
+        "Error in initializer of FOR loop.\n",Q_ERROR); }
+
+forhead:   forentry error  { kb_error(3669,
+        "Error in test expression of FOR loop.\n",Q_ERROR); }
+
+fortop:   forhead error  { kb_error(3670,
+        "Error in increment part of FOR loop.\n",Q_ERROR); }
+
+vcommand: fortop error { kb_error(2844,
+        "Bad FOR loop body.  Try starting body on same line as FOR header.\n",
+     Q_ERROR); }
+/**************************************************************************/
+
+vcommand:  SINGLE_LETTER_ { $$.i = makenode(SINGLE_LETTER_,$1.i,0); }
+
+vcommand:  SINGLE_REDEFD_ { $$.i = makenode(SINGLE_REDEFD_,$1.i,0); }
+
+vcommand:  SINGLE_REDEFD_ rexpr    { int init = makenode(REPEAT_INIT_,$2.i,0);
+                       $$.i = makenode(SINGLE_REDEFD_,$1.i,0);
+                        $$.i = makenode(REPEAT_,init,$$.i); }
+
+vcommand:  SINGLE_REDEFD_ error  { kb_error(3671,
+     "Expected repetition count after redefined single letter.\n",Q_ERROR); }
+
+vcommand:  SINGLE_LETTER_ARG_ { $$.i = makenode(SINGLE_LETTER_,$1.i,0); }
+
+vcommand:  SINGLE_LETTER_ rexpr    { int init = makenode(REPEAT_INIT_,$2.i,0);
+                       $$.i = makenode(SINGLE_LETTER_,$1.i,0);
+                         $$.i = makenode(REPEAT_,init,$$.i); }
+
+vcommand:  SINGLE_LETTER_ error  { kb_error(3672,
+     "Expected repetition count after single letter command.\n",Q_ERROR); }
+
+vcommand:  SINGLE_LETTER_ARG_ rexpr { assigntype = ASSIGN_;
+           switch ($1.i)
+             { case 't': $$.i = makenode(EDGEWEED_,$2.i,0); break;
+               case 'w': $$.i = makenode(AREAWEED_,$2.i,0); break;
+               case 'l': $$.i = makenode(EDGEDIVIDE_,$2.i,0); break;
+               case 'm': $$.i = makenode(SET_SCALE_,$2.i,0); break;
+               case 'n': $$.i = makenode(NOTCH_,$2.i,0); break;
+               case 'j': $$.i = makenode(JIGGLE_,$2.i,0); break;
+               case 'G': $$.i = makenode(SET_GRAVITY_,$2.i,0); break;
+               case 'P': $$.i = makenode(INVOKE_P_MENU_,$2.i,0); break;
+               case 'M': $$.i = makenode(SET_MODEL_,$2.i,0); break;
+               case 'y': $$.i = makenode(TORDUP_,$2.i,0); break;
+               case 'K': $$.i = makenode(SKINNY_,$2.i,0); break;
+               case 'k': $$.i = makenode(SET_GAP_CONSTANT_,$2.i,0); break;
+               case 'p': $$.i = makenode(SET_AMBIENT_PRESSURE_,$2.i,0); break;
+               default: kb_error(1884,"Extra expression after single letter command.\n",Q_ERROR);
+             }
+        }
+
+vcommand:  SINGLE_LETTER_ARG_ error  { kb_error(3660,
+     "Expected argument after single letter command.\n",Q_ERROR); }
+
+/**************************************************************************/
+
+vcommand:  READ_  { $$.i = makenode(NOP_,0,0); }
+
+vcommand:  READ_  stringexpr { $$.i = makenode(READ_,$2.i,0); }
+
+vcommand : READ_ error { kb_error(2346,"Syntax: READ \"filename\"   (need quoted string or string expression)\n",Q_ERROR);}
+
+
+/**************************************************************************/
+command: TRANSFORM_DEPTH_  rexpr 
+                  { $$.i = makenode(TRANSFORM_DEPTH_,$2.i,0);}
+
+command: TRANSFORM_DEPTH_ ASSIGN_  rexpr 
+                  { $$.i = makenode(TRANSFORM_DEPTH_,$3.i,0);}
+
+command: TRANSFORM_DEPTH_ error { kb_error(2348,"Syntax: TRANSFORM_DEPTH := integer\n",Q_ERROR);}
+/**************************************************************************/
+
+vcommand: TRANSFORM_EXPR_VERB_ stringexpr { $$.i = makenode(TRANSFORM_EXPR_,$2.i,0);}
+
+vcommand: TRANSFORM_EXPR_VERB_ ASSIGN_ stringexpr { $$.i = makenode(TRANSFORM_EXPR_,$3.i,0);}
+
+vcommand: TRANSFORM_EXPR_VERB_ error { kb_error(2349,"Syntax: TRANSFORM_EXPR := string    (quoted string or string expression) \n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand:  SYSTEM_  stringexpr { $$.i = makenode(SYSTEM_,$2.i,0); }
+
+vcommand:  SYSTEM_ error { kb_error(2350,"Syntax: SYSTEM \"command\"   (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  EXEC_  stringexpr { $$.i = makenode(EXEC_,$2.i,0); }
+
+vcommand:  EXEC_ error { kb_error(2351,"Syntax: EXEC string (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  PARALLEL_EXEC_  stringexpr { $$.i = makenode(PARALLEL_EXEC_,$2.i,0); }
+
+vcommand:  PARALLEL_EXEC_ error { kb_error(3115,"Syntax: PARALLEL_EXEC string (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  TASK_EXEC_ rexpr ','  stringexpr
+     { $$.i = makenode(TASK_EXEC_,$2.i,$4.i); }
+
+vcommand:  TASK_EXEC_ error { kb_error(3119,"Syntax: TASK_EXEC nodenumber, string (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  CHDIR_  stringexpr { $$.i = makenode(CHDIR_,$2.i,0); }
+
+vcommand:  CHDIR_ error { kb_error(2352,"Syntax: CHDIR \"command\"   (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  METIS_  rexpr { $$.i = makenode(METIS_,$2.i,0); }
+
+vcommand:  METIS_ error { kb_error(3236,"Syntax: METIS numparts\n",Q_ERROR); }
+
+vcommand:  KMETIS_ rexpr { $$.i = makenode(KMETIS_,$2.i,0); }
+
+vcommand:  KMETIS_ error { kb_error(2354,"Syntax: KMETIS numparts\n",Q_ERROR); }
+
+vcommand:  METIS_READJUST_  rexpr { $$.i = makenode(METIS_READJUST_,$2.i,0); }
+
+vcommand:  METIS_READJUST_ error { kb_error(3237,"Syntax: METIS_READJUST numparts\n",Q_ERROR); }
+
+vcommand:  BODY_METIS_ rexpr { $$.i = makenode(BODY_METIS_,$2.i,0); }
+
+vcommand:  BODY_METIS_ error { kb_error(3775,"Syntax: BODY_METIS numparts\n",Q_ERROR); }
+
+command:  OMETIS_  rexpr { $$.i = makenode(OMETIS_,$2.i,0); }
+
+command:  OMETIS_ { $$.i = makenode(OMETIS_,0,0); }
+
+command:  OMETIS_ error { kb_error(2355,"Syntax: OMETIS   or   OMETIS expr\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand:  EDGEWEED_  rexpr { $$.i = makenode(EDGEWEED_,$2.i,0); }
+
+vcommand:  EDGEWEED_ error { kb_error(2356,"Syntax: EDGEWEED minlength\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  AREAWEED_  rexpr { $$.i = makenode(AREAWEED_,$2.i,0); }
+
+vcommand:  AREAWEED_ error { kb_error(2357,"Syntax: AREAWEED minarea\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  EDGEDIVIDE_  rexpr { $$.i = makenode(EDGEDIVIDE_,$2.i,0); }
+
+vcommand:  EDGEDIVIDE_ error { kb_error(2358,"Syntax: EDGE_DIVIDE maxlength\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  LANCZOS_  '(' rexpr ',' rexpr ')' { $$.i = makenode(LANCZOS_,$3.i,$5.i); }
+
+vcommand:  LANCZOS_  rexpr { $$.i = makenode(LANCZOS_,$2.i,0); }
+
+vcommand:  LANCZOS_  error 
+   { kb_error(2359,"Syntax: lanczos rexpr   or   lanczos(expr,count) \n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand:  RITZ_  '(' rexpr ',' rexpr ')' { $$.i = makenode(RITZ_,$3.i,$5.i); }
+
+vcommand:  RITZ_ error { kb_error(2360,"Syntax: RITZ(probe_value, number_of_eigenvalues)\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand:  EIGENPROBE_  '(' rexpr ',' rexpr ')'
+   { $$.i = makenode(EIGENPROBE_,$3.i,$5.i); }
+
+vcommand:  EIGENPROBE_  rexpr { $$.i = makenode(EIGENPROBE_,$2.i,0); }
+
+vcommand:  EIGENPROBE_ error { kb_error(2361,
+ "Syntax: EIGENPROBE probe_value   or  EIGENPROBE(probe_value, iterationmax)\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand:  MOVE_  rexpr { $$.i = makenode(MOVE_,$2.i,0); }
+vcommand:  MOVE_ error { kb_error(2362,"Syntax: MOVE stepsize\n",Q_ERROR); }
+/**************************************************************************/
+
+vcommand: HESSIAN_SADDLE_ { $$.i = makenode(HESSIAN_SADDLE_,0,0); }
+vcommand: HESSIAN_SADDLE_  rexpr { $$.i = makenode(HESSIAN_SADDLE_,$2.i,0); }
+vcommand: HESSIAN_SADDLE_ error { kb_error(2363,"Syntax: SADDLE   or   SADDLE maxstepsize\n",
+   Q_ERROR); }
+
+/**************************************************************************/
+vcommand: HESSIAN_SEEK_ { $$.i = makenode(HESSIAN_SEEK_,0,0); }
+vcommand: HESSIAN_SEEK_  rexpr { $$.i = makenode(HESSIAN_SEEK_,$2.i,0); }
+vcommand: HESSIAN_SEEK_ error { kb_error(2364,
+   "Syntax: HESSIAN_SEEK   or   HESSIAN_SEEK maxstepsize\n", Q_ERROR); }
+/**************************************************************************/
+
+vcommand:  COUNTS_  { $$.i = makenode(COUNTS_,0,0); }
+
+vcommand:  QUIT_  { $$.i = makenode(SINGLE_LETTER_,'q',0); }
+
+vcommand:  SUBCOMMAND_  { $$.i = makenode(SUBCOMMAND_,'q',0); }
+
+vcommand:  ABORT_  { $$.i = makenode(ABORT_,'q',0); }
+
+vcommand:  SIMPLEX_TO_FE_  { $$.i = makenode(SIMPLEX_TO_FE_,'q',0); }
+
+vcommand:  REORDER_STORAGE_  { $$.i = makenode(REORDER_STORAGE_,0,0); }
+
+vcommand:  RENUMBER_ALL_  { $$.i = makenode(RENUMBER_ALL_,0,0); }
+
+vcommand:  DUMP_MEMLIST_  { $$.i = makenode(DUMP_MEMLIST_,0,0); }
+
+vcommand:  FREE_DISCARDS_  { $$.i = makenode(FREE_DISCARDS_,0,0); }
+
+vcommand:  REPARTITION_  { $$.i = makenode(REPARTITION_,0,0); }
+
+vcommand:  EXTRAPOLATE_  { $$.i = makenode(EXTRAPOLATE_,0,0); }
+
+vcommand:  REBODY_   { $$.i = makenode(REBODY_,0,0); }
+/**************************************************************************/
+
+vcommand:  ZOOM_   { $$.i = makenode(ZOOM_,0,0); }
+vcommand:  ZOOM_  rexpr  rexpr  { $$.i = makenode(ZOOM_,$2.i,$3.i); }
+vcommand:  ZOOM_ error { kb_error(2365,"Syntax: ZOOM [ vertex_id radius ]\n",Q_ERROR);}
+/**************************************************************************/
+
+vcommand:  BURCHARD_ INTEGER_   { $$.i = makenode(BURCHARD_,$2.i,0); }
+/**************************************************************************/
+
+vcommand:  LAGRANGE_ rexpr   { $$.i = makenode(LAGRANGE_,$2.i,0); }
+vcommand:  LAGRANGE_ error { kb_error(2366,"Syntax: LAGRANGE order\n",Q_ERROR); }
+/**************************************************************************/
+
+vcommand:      SHOW_VOL_  { $$.i = makenode(tok,0,0); }
+      | PAUSE_ { $$.i = makenode(tok,0,0); }
+      | PRINT_ PROFILING_ { $$.i = makenode(PRINT_PROFILING_,0,0); }
+      | RESET_PROFILING_ { $$.i = makenode(tok,0,0); }
+      | FLUSH_COUNTS_ { $$.i = makenode(tok,0,0); }
+      | RESET_COUNTS_ { $$.i = makenode(tok,0,0); }
+      | CHECK_  { $$.i = makenode(tok,0,0); }
+      | SHOWQ_  { $$.i = makenode(tok,0,0); }
+      | LONG_JIGGLE_  { $$.i = makenode(tok,0,0); }
+      | RAW_VERAVG_  { $$.i = makenode(tok,0,0); }
+      | RAWEST_VERAVG_  { $$.i = makenode(tok,0,0); }
+      | ALICE_ { $$.i = makenode(tok,0,0); }
+      | LINEAR_ { $$.i = makenode(tok,0,0); }
+      | QUADRATIC_ { $$.i = makenode(tok,0,0); }
+      | STABILITY_TEST_ { $$.i = makenode(tok,0,0); }
+      | UTEST_  { $$.i = makenode(tok,0,0); }
+      | SHELL_ { $$.i = makenode(tok,0,0); }
+      | CONVERT_TO_QUANTS_ { $$.i = makenode(tok,0,0); }
+      | METIS_FACTOR_ { $$.i = makenode(tok,0,0); }
+      | DIRICHLET_ { $$.i = makenode(tok,0,0); }
+      | DIRICHLET_SEEK_ { $$.i = makenode(tok,0,0); }
+      | SOBOLEV_ { $$.i = makenode(tok,0,0); }
+      | SOBOLEV_SEEK_ { $$.i = makenode(tok,0,0); }
+      | HESSIAN_ { $$.i = makenode(tok,0,0); }
+      | HESSIAN_MENU_ { $$.i = makenode(tok,0,0); }
+      | HELP_ { $$.i = makenode(SINGLE_LETTER_,'h',0); }
+      | RECALC_ { $$.i = makenode(tok,0,0); }
+      | LIST_ TOPINFO_ { $$.i = makenode(TOPINFO_,0,0); }
+      | LIST_ BOTTOMINFO_ { $$.i = makenode(BOTTOMINFO_,0,0); }
+      | LIST_ ATTRIBUTE_ { $$.i = makenode(LIST_ATTRIBUTES_,0,0); }
+      | LIST_ PROCEDURES_ { $$.i = makenode(LIST_PROCS_,0,0); }
+      | LIST_ BOUNDARY_ rexpr 
+            { $$.i = makenode(LIST_BOUNDARY_,$3.i,0);}
+      | LIST_ BOUNDARY_NAME_ 
+            { int k = makenode(PUSHCONST,$2.i,0);
+              $$.i = makenode(LIST_BOUNDARY_,k,0);
+              list[$$.i].op1.bdry_id = $2.i;
+            }
+      | LIST_ CONSTRAINT_ rexpr 
+            { $$.i = makenode(LIST_CONSTRAINT_,$3.i,0);}
+      | LIST_ CONSTRAINT_NAME_ 
+            { int k = makenode(PUSHCONST,$2.i,0);
+              $$.i = makenode(LIST_CONSTRAINT_,k,0);
+              list[$$.i].op1.con_id = $2.i;
+            }
+      | LIST_ QUANTITY_ QUANTITY_NAME_ 
+            { $$.i = makenode(LIST_QUANTITY_,$3.i,0);}
+      | LIST_ QUANTITY_NAME_ 
+            { $$.i = makenode(LIST_QUANTITY_,$2.i,0);}
+      | LIST_ METHOD_INSTANCE_ METHOD_NAME_ 
+            { $$.i = makenode(LIST_METHOD_INSTANCE_,$3.i,0);}
+      | LIST_ METHOD_NAME_ 
+            { $$.i = makenode(LIST_METHOD_INSTANCE_,$2.i,0);}
+      | CLOSE_SHOW_ { $$.i = makenode(CLOSE_SHOW_,0,0); }
+      | TOGGLENAME_ toggle { $$.i = makenode($1.i,$2.i,0); }
+      | TOGGLENAME_  { $$.i = makenode($1.i,ON_,0); }
+      | OPTIMIZE_ toggle { $$.i = makenode($1.i,$2.i,0); }
+      | OPTIMIZE_  { $$.i = makenode($1.i,ON_,0); }
+      | AUTOCHOP_ toggle { $$.i = makenode($1.i,$2.i,0); }
+      | AUTOCHOP_  { $$.i = makenode($1.i,ON_,0); }
+      | JIGGLE_ { $$.i = makenode($1.i,ON_,0); }
+
+/**************************************************************************/
+estart :EXPRESSION_START_ {verb_flag=0;} 
+
+whole : estart rexpr { YYACCEPT; } 
+
+whole : estart rexpr ',' { YYACCEPT; } 
+
+/**************************************************************************/
+command : INTERNAL_VARIABLE_ assignop {verb_flag=0;} rexpr
+              { assigntype = $2.i; $$.i = makenode(SET_INTERNAL_,$1.i,$4.i); }
+
+command : INTERNAL_VARIABLE_ assignop error
+  { kb_error(3673,"Expected expression to assign to internal variable.\n",Q_ERROR);}
+
+vcommand : SET_ INTERNAL_VARIABLE_ {verb_flag=0;} rexpr
+              { assigntype = ASSIGN_; $$.i = makenode(SET_INTERNAL_,$2.i,$4.i); }
+
+vcommand : SET_ INTERNAL_VARIABLE_ error
+  { kb_error(3661,"Expected expression for setting internal variable.\n",Q_ERROR);}
+/**************************************************************************/
+vcommand : SET_ GRAVITY_  rexpr { $$.i = makenode(SET_GRAVITY_,$3.i,0); }
+vcommand : SET_ GRAVITY_  error
+  { kb_error(3675,"Expected expression for setting gravity.\n",Q_ERROR);}
+
+command : GRAVITY_ assignop rexpr 
+   {assigntype = $2.i; $$.i = makenode(SET_GRAVITY_,$3.i,0); }
+
+command : GRAVITY_ error 
+  { kb_error(2367,"Syntax: GRAVITY := rexpr \n       GRAVITY ON|OFF\n",Q_ERROR);}
+
+/***************************************************************************/
+vcommand : SET_ CONSTRAINT_ rexpr GLOBAL_ 
+            { $$.i = makenode(SET_CONSTRAINT_GLOBAL,$3.i,0); }
+vcommand : UNSET_ CONSTRAINT_ rexpr GLOBAL_ 
+            { $$.i = makenode(UNSET_CONSTRAINT_GLOBAL,$3.i,0); }
+vcommand : SET_ CONSTRAINT_ CONSTRAINT_NAME_ GLOBAL_ 
+            { $$.i = makenode(SET_CONSTRAINT_NAME_GLOBAL,$3.i,0); }
+vcommand : UNSET_ CONSTRAINT_ CONSTRAINT_NAME_ GLOBAL_ 
+            { $$.i = makenode(SET_CONSTRAINT_NAME_GLOBAL,$3.i,0); }
+vcommand : SET_ CONSTRAINT_NAME_ GLOBAL_ 
+            { $$.i = makenode(SET_CONSTRAINT_NAME_GLOBAL,$2.i,0); }
+vcommand : UNSET_ CONSTRAINT_NAME_ GLOBAL_ 
+            { $$.i = makenode(SET_CONSTRAINT_NAME_GLOBAL,$2.i,0); }
+/**************************************************************************/
+vcommand : SET_ SCALE_ rexpr 
+  { assigntype = ASSIGN_;  $$.i = makenode(SET_INTERNAL_,V_SCALE,$3.i); }
+vcommand : SET_ SCALE_ error 
+         { kb_error(3676,"Syntax: SET SCALE expr\n",Q_ERROR);}
+
+command : SCALE_ assignop rexpr 
+  { assigntype = $2.i;  $$.i = makenode(SET_INTERNAL_,V_SCALE,$3.i); }
+command : SCALE_ assignop error 
+         { kb_error(3677,"Syntax: SCALE := expr\n",Q_ERROR);}
+
+vcommand : SET_ DIFFUSION_ rexpr
+  { assigntype = ASSIGN_;  $$.i = makenode(SET_INTERNAL_,V_DIFFUSION,$3.i); }
+vcommand : SET_ DIFFUSION_ error
+         { kb_error(3662,"Syntax: SET DIFFUSION expr\n",Q_ERROR);}
+
+/**************************************************************************/
+command : GAP_CONSTANT_ assignop rexpr
+  { assigntype = $2.i;  $$.i = makenode(SET_INTERNAL_,V_GAP_CONSTANT,$3.i); }
+
+command : GAP_CONSTANT_ error 
+         { kb_error(2369,"Syntax: GAP_CONSTANT := expr\n",Q_ERROR);}
+
+command : AREA_FIXED_ ASSIGN_ rexpr { $$.i = makenode(SET_FIXED_AREA_,$3.i,0); }
+
+/**************************************************************************/
+vcommand : NOTCH_ rexpr { $$.i = makenode(NOTCH_,$2.i,0); }
+vcommand : NOTCH_ error { kb_error(2371,"Syntax: NOTCH maxangle\n",Q_ERROR);}
+/**************************************************************************/
+
+command : AUTOCHOP_ rexpr { $$.i = makenode(SET_AUTOCHOP_,$2.i,0); }
+command : AUTOCHOP_ ASSIGN_ rexpr { $$.i = makenode(SET_AUTOCHOP_,$3.i,0); }
+command : AUTOCHOP_ error { kb_error(2372,
+       "Syntax: AUTOCHOP ON|OFF  or AUTOCHOP choplength\n", Q_ERROR); }
+/**************************************************************************/
+
+command : QUANTITY_NAME_ '.' TARGET_ assignop rexpr 
+            { assigntype = $4.i; $$.i = makenode(SET_QTARGET_,$5.i,$1.i); }
+command : QUANTITY_NAME_ '.' MODULUS_ assignop rexpr 
+            { assigntype = $4.i; $$.i = makenode(SET_QMODULUS_,$5.i,$1.i); }
+command : QUANTITY_NAME_ '.' TOLERANCE_ assignop rexpr 
+            { assigntype = $4.i; $$.i = makenode(SET_QTOLERANCE_,$5.i,$1.i); }
+command : METHOD_NAME_ '.' MODULUS_ assignop rexpr 
+            { assigntype = $4.i; $$.i = makenode(SET_MMODULUS_,$5.i,$1.i); }
+command : QUANTITY_NAME_ '.' VOLCONST_ assignop rexpr 
+            { assigntype = $4.i; $$.i = makenode(SET_QVOLCONST_,$5.i,$1.i); }
+command : QUANTITY_NAME_ '.'  error { kb_error(3372,
+    "Syntax: QUANTITY_NAME . TARGET|MODULUS|TOLERANCE|VOLCONST := expr\n", 
+     Q_ERROR); }
+command : METHOD_NAME_ '.'  error { kb_error(3379,
+    "Syntax: METHOD_NAME . MODULUS\n", Q_ERROR); }
+/**************************************************************************/
+
+command : SET_ QUANTITY_NAME_  TARGET_  rexpr 
+            { assigntype = ASSIGN_; $$.i = makenode(SET_QTARGET_,$4.i,$2.i); }
+command : SET_ QUANTITY_NAME_  MODULUS_  rexpr 
+            { assigntype = ASSIGN_; $$.i = makenode(SET_QMODULUS_,$4.i,$2.i); }
+command : SET_ QUANTITY_NAME_ TOLERANCE_  rexpr 
+            { assigntype = ASSIGN_; $$.i = makenode(SET_QTOLERANCE_,$4.i,$2.i); }
+
+command : SET_ METHOD_NAME_ MODULUS_  rexpr 
+            { assigntype = ASSIGN_; $$.i = makenode(SET_MMODULUS_,$4.i,$2.i); }
+command : SET_ QUANTITY_NAME_  VOLCONST_  rexpr 
+            { assigntype = ASSIGN_; $$.i = makenode(SET_QVOLCONST_,$4.i,$2.i); }
+
+command : SET_ QUANTITY_NAME_  FIXED_
+            { $$.i = makenode(SET_Q_FIXED_,$2.i,0); }
+command : SET_ QUANTITY_NAME_  INFO_ONLY_
+            { $$.i = makenode(SET_Q_INFO_,$2.i,0); }
+command : SET_ QUANTITY_NAME_  ENERGY_
+            { $$.i = makenode(SET_Q_ENERGY_,$2.i,0); }
+command : SET_ QUANTITY_NAME_  CONSERVED_
+            { $$.i = makenode(SET_Q_CONSERVED_,$2.i,0); }
+
+command : SET_ QUANTITY_NAME_  error
+        { strcpy(errmsg,"Syntax:\n");
+          strcat(errmsg,"  SET quantityname TARGET expr\n");
+          strcat(errmsg,"  SET quantityname MODULUS expr\n");
+          strcat(errmsg,"  SET quantityname TOLERANCE expr\n");
+          strcat(errmsg,"  SET quantityname VOLCONST expr\n");
+          strcat(errmsg,"  SET quantityname FIXED\n");
+          strcat(errmsg,"  SET quantityname INFO_ONLY\n");
+          strcat(errmsg,"  SET quantityname ENERGY\n");
+          strcat(errmsg,"  SET quantityname CONSERVED\n");
+          kb_error(3663,errmsg,Q_ERROR);
+        }
+/**************************************************************************/
+command : SUPPRESS_WARNING_ rexpr
+          { $$.i = makenode(SUPPRESS_WARNING_,$2.i,0); }
+command : SUPPRESS_WARNING_ error  { kb_error(3456,
+              "Syntax: SUPPRESS_WARNING number\n",Q_ERROR) }
+command : UNSUPPRESS_WARNING_ rexpr
+          { $$.i = makenode(UNSUPPRESS_WARNING_,$2.i,0); }
+command : UNSUPPRESS_WARNING_ error  { kb_error(3457,
+              "Syntax: UNSUPPRESS_WARNING number\n",Q_ERROR) }
+/**************************************************************************/
+
+vcommand : LOAD_ stringexpr { $$.i = makenode(LOAD_,$2.i,0); }
+vcommand : LOAD_ error { kb_error(2373,"Syntax: LOAD \"filename\"   (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand : ADDLOAD_ stringexpr { $$.i = makenode(ADDLOAD_,$2.i,0); }
+vcommand : ADDLOAD_ error { kb_error(3544,"Syntax: ADDLOAD \"filename\"   (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand : PERMLOAD_ stringexpr { $$.i = makenode(PERMLOAD_,$2.i,0); }
+vcommand : PERMLOAD_ error { kb_error(2544,"Syntax: PERMLOAD \"filename\"   (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+vcommand : DUMP_ stringexpr { $$.i = makenode(DUMP_,$2.i,0); }
+vcommand : DUMP_ { $$.i = makenode(DUMP_,0,0); }
+vcommand : DUMP_ error { kb_error(2374,"Syntax: DUMP \"filename\"   (need quoted string or string expression)\n",Q_ERROR);}
+
+/**************************************************************************/
+command : COLORFILE_ ASSIGN_ stringexpr { $$.i = makenode(SET_COLORMAP_,$3.i,0); }
+
+/**************************************************************************/
+vcommand : OPTIMIZE_ rexpr {$$.i = makenode(SET_OPTIMIZE_,$2.i,0);}
+command : OPTIMIZE_ error { kb_error(2375,"Syntax: OPTIMIZE maxscale\n",Q_ERROR); }
+
+/**************************************************************************/
+identassign : IDENT_ ASSIGN_  { $$.i = $1.i; }
+
+permidentassign : PERM_IDENT_ PERM_ASSIGN_  { $$.i = $1.i; }
+
+command : STRINGGLOBAL_ ASSIGN_ stringexpr {
+         $$.i = makenode(SET_SGLOBAL_,$1.i,$3.i); }
+command : identassign stringexpr {
+         $$.i = makenode(SET_SGLOBAL_,$1.i,$2.i); }
+command : STRINGGLOBAL_ ASSIGN_ rexpr {
+         $$.i = makenode(SET_GLOBAL_,$1.i,$3.i); }
+command : PERM_STRINGGLOBAL_ PERM_ASSIGN_ stringexpr {
+         $$.i = makenode(SET_PERM_SGLOBAL_,$1.i,$3.i); }
+command : STRINGGLOBAL_ PERM_ASSIGN_  
+            { kb_error(2604,"Cannot make permanent assigment to nonpermanent variable.\n",Q_ERROR) };
+
+command : PERM_STRINGGLOBAL_ ASSIGN_  
+            { kb_error(2603,"Cannot make nonpermanent assigment to permanent variable.\n",Q_ERROR) };
+
+command : identassign  rexpr
+           { $$.i = makenode(SET_GLOBAL_,$1.i,$2.i); }
+
+command : permidentassign  rexpr
+           { $$.i = makenode(SET_PERM_GLOBAL_,$1.i,$2.i); }
+
+elidassign : ELEMENT_IDENT_ ASSIGN_ { $$ = $1; }
+
+command : elidassign rexpr
+        { $$.i = makenode(SET_ELEMENT_GLOBAL_,$1.i,$2.i); }
+
+lvalue : IDENT_ '.' DELTA_ { $$.i = makenode(PDELTA_LVALUE_,$1.i,0); }
+lvalue : IDENT_ '.' SCALE_ { $$.i = makenode(PSCALE_LVALUE_,$1.i,0); }
+command : lvalue assignop rexpr
+             { subtree_swap(&$1.i,&$3.i);
+               switch ( list[$1.i].type )
+               { case PDELTA_LVALUE_:
+                      list[$1.i].type = SET_DELTA_;
+                      list[$1.i].left = $3.i - $1.i;
+                      break;
+                 case PSCALE_LVALUE_:
+                      list[$1.i].type = SET_PARAM_SCALE;
+                      list[$1.i].left = $3.i - $1.i;
+                      break;
+                 default:
+                      sprintf(errmsg,"Internal error: lvalue type %d\n",
+                          list[$1.i].type);
+                      kb_error(2882,errmsg,COMMAND_ERROR);
+               }
+               list[$1.i].op2.assigntype = $2.i;
+               list[$1.i].stack_delta = -1;
+               $$ = $1;
+            }
+
+rexpr : IDENT_ '.' FIXED_ { $$.i = makenode(PUSH_PARAM_FIXED,$1.i,0); }
+rexpr : lvalue
+             { switch ( list[$1.i].type )
+               { case PDELTA_LVALUE_:
+                      list[$1.i].type = PUSHDELTA_;
+                      list[$1.i].datatype = REAL_TYPE;
+                      break;
+                 case PSCALE_LVALUE_:
+                      list[$1.i].type = PUSH_PARAM_SCALE;
+                      list[$1.i].datatype = REAL_TYPE;
+                      break;
+                 default:
+                      sprintf(errmsg,"Internal error: lvalue type %d\n",
+                          list[$1.i].type);
+                      kb_error(2883,errmsg,COMMAND_ERROR);
+               }
+               list[$1.i].stack_delta = 1;
+               $$ = $1;
+            }
+command : IDENT_ '.'  error { kb_error(3380,
+    "Syntax: VARIABLE . PDELTA|PSCALE \n", Q_ERROR); }
+
+command : IDENT_ ASSIGNOP_  rexpr
+           { $$.i = makenode($2.i,$1.i,$3.i); }
+
+/*
+command : arrayhead ASSIGNOP_  rexpr
+           { assigntype = $2.i;
+             $$.i = makenode(ARRAYASSIGN,$1.i,$3.i);
+            }
+
+
+command : arrayhead ASSIGN_  rexpr
+           { assigntype = ASSIGN_;
+             $$.i = makenode(ARRAYASSIGN,$1.i,$3.i); 
+            }
+
+command : arrayhead EQ_ 
+           { kb_error(3423,"Got '=' instead of the assignment operator ':='\n",
+                Q_ERROR);
+           }
+*/
+
+command : IDENT_ ASSIGN_ error 
+         { kb_error(2376,"Syntax: variable := expr\n",Q_ERROR);}
+
+command : IDENT_  EQ_ 
+           { kb_error(3422,"Got '=' instead of the assignment operator ':='\n",
+                Q_ERROR);
+           }
+
+command : NEWIDENT_ EQ_ 
+           { kb_error(3424,"Got '=' instead of the assignment operator ':='\n",
+                Q_ERROR);
+           }
+
+command : IDENT_  error 
+         { kb_error(2377,"Syntax: variable := expr\n",Q_ERROR);}
+
+/**************************************************************************/
+datatype : DATATYPE_ { $$.i = $1.datatype; } 
+
+datatype : STRING_ { $$.i = STRING_TYPE; } 
+
+argident : NEWIDENT_ { $$.i = add_local_var($1.lexeme,1); }
+argident : IDENT_ { $$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                  "Argument \"%s\" shadows already declared variable.\n",
+                     $1.lexeme);
+                   kb_error(2635,errmsg,WARNING); 
+                }
+              }
+argident : ARRAYIDENT_ { $$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                    "Argument \"%s\" shadows already declared variable.\n",
+                       $1.lexeme);
+                  kb_error(2636,errmsg,WARNING);
+                }
+             }
+argident : PROCEDURE_ { $$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                    "Argument \"%s\" shadows already declared procedure.\n",
+                        $1.lexeme);
+                  kb_error(2637,errmsg,WARNING);
+                }
+              }
+argident : FUNCTION_IDENT_ { $$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                    "Argument \"%s\" shadows already declared function.\n",
+                        $1.lexeme);
+                  kb_error(2638,errmsg,WARNING); 
+                }
+             }
+argident : STRINGGLOBAL_ { $$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                "Argument \"%s\" shadows already declared string variable.\n",
+                    $1.lexeme);
+                  kb_error(2639,errmsg,WARNING); 
+                }
+               }
+argident : QUANTITY_NAME_ { $$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                {  sprintf(errmsg,
+                  "Argument \"%s\" shadows already declared quantity name.\n",
+                     $1.lexeme);
+                  kb_error(2640,errmsg,WARNING);
+                }
+               }
+argident : METHOD_NAME_ {$$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                  "Argument \"%s\" shadows already declared method name.\n",
+                    $1.lexeme);
+                     kb_error(2641,errmsg,WARNING); 
+                }
+              }
+argident : CONSTRAINT_NAME_ {$$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                  "Argument \"%s\" shadows already declared constraint.\n",
+                     $1.lexeme);
+                  kb_error(2642,errmsg,WARNING); 
+                } 
+              }
+argident : BOUNDARY_NAME_ { $$.i = add_local_var($1.lexeme,1);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                  "Argument \"%s\" shadows already declared boundary.\n",
+                    $1.lexeme);
+                  kb_error(2643,errmsg,WARNING);
+                }
+              }
+
+
+arglist :  '(' ')'
+         { $$.i = makenode(ARGLIST_,0,0);  }
+
+argliststart : '(' datatype argident
+         {  int_val = $2.i; $$.i = makenode(ARGLIST_,0,$3.i); }
+
+argliststart : argliststart ',' datatype argident 
+        {  int_val = $3.i; $$.i = makenode(ARGLIST_,$1.i,$4.i); }
+
+arglist :  '(' error 
+         { if ( strcmp(yytext,"int") == 0 )
+             kb_error(3604,"Expecting datatype or ')' after '('\n ('integer' is the Evolver datatype, not 'int'.\n",Q_ERROR);  
+           else
+             kb_error(3636,"Expecting datatype or ')' after '('\n",Q_ERROR);  
+         }
+
+argliststart : '(' datatype 
+         { kb_error(3605,"Expecting identifier after datatype.\n",Q_ERROR);  }
+
+argliststart : argliststart ',' error
+         { kb_error(3606,"Expecting datatype after ','\n",Q_ERROR);  }
+
+
+argliststart : argliststart ',' datatype error 
+         { kb_error(3625,"Expecting identifier after datatype.\n",Q_ERROR);  }
+
+argliststart : argliststart error 
+         { kb_error(3525,"Expecting comma or right parenthesis after argument.\n",Q_ERROR);  }
+
+arglist :  argliststart ')'
+         { $$.i = $1.i };
+
+/**************************************************************************/
+protobody : commandblock { $$.i = $1.i; }
+protobody : ';'   { $$.i = 0; }
+protobody : { kb_error(2624,"Missing function body, or ';' after prototype.\n",
+               Q_ERROR);
+            }
+/**************************************************************************/
+
+functionname : NEWIDENT_ { $$.i = $1.i; }
+functionname : FUNCTION_IDENT_ { $$.i = $1.i; }
+
+vcommand : FUNCTION_ datatype functionname 
+        { in_function = 1;
+          if ( $3.i == 0 ) $3.i = add_global($3.lexeme);
+          init_local_scope($3.i); begin_local_scope();
+          $$.i = makenode(FUNCTION_DEF_START_,$3.i,$2.i); }
+         arglist { $$.i = makenode(FUNCTION_HEAD_,$4.i,$5.i); }
+         protobody
+         { int insize = inputbufferspot - $1.qnum;
+           in_function = 0;
+           globals($3.i)->attr.procstuff.proc_text = mycalloc(insize+1,1); 
+           strncpy(globals($3.i)->attr.procstuff.proc_text,inputbuffer+$3.qnum,insize);
+           globals($3.i)->attr.procstuff.proc_text[insize] = 0;
+           list[$4.i].op5.locals = globals($3.i)->attr.procstuff.locals =
+                localbase;
+           if ( localbase )
+             localbase->flags |= LL_IN_USE;
+           int_val = $2.i;
+           if ( $7.i )
+             $$.i = makenode(SET_FUNCTION_,$6.i,$7.i); 
+           else 
+           { makenode(FUNCTION_PROTO_,$6.i,0);
+             $$.i = 0;
+           }
+           exit_local_scope();
+         }
+
+procedurename : NEWIDENT_ { $$.i = $1.i; }
+procedurename : PROCEDURE_IDENT_ { $$.i = $1.i; }
+
+vcommand : PROCEDURE_WORD_ procedurename 
+        { in_function = 1; /* for lex*/
+           if ( $2.i == 0 ) $2.i = add_global($2.lexeme);
+             init_local_scope($2.i); begin_local_scope();
+              $$.i = makenode(PROCEDURE_DEF_START_,$2.i,0); }
+         arglist { $$.i = makenode(PROCEDURE_HEAD_,$3.i,$4.i); }
+         protobody
+         { int insize = inputbufferspot - $1.qnum;
+           in_function = 0;
+           globals($2.i)->attr.procstuff.proc_text = mycalloc(insize+1,1); 
+           strncpy(globals($2.i)->attr.procstuff.proc_text,inputbuffer+$2.qnum,insize);
+           globals($2.i)->attr.procstuff.proc_text[insize] = 0;
+           list[$3.i].op5.locals = globals($2.i)->attr.procstuff.locals = 
+              localbase;
+           if ( localbase )
+             localbase->flags |= LL_IN_USE;
+           if ( $6.i )
+             $$.i = makenode(SET_ARGSPROC_,$5.i,$6.i); 
+           else 
+           { makenode(PROCEDURE_PROTO_,$5.i,0);
+             $$.i = 0;
+           }
+           exit_local_scope();
+         }
+vcommand : FUNCTION_ datatype error
+    { kb_error(3704,"Expected function name after datatype.\n",Q_ERROR); }
+vcommand : FUNCTION_  error
+    { kb_error(3705,"Expected datatype for function.\n",Q_ERROR); }
+vcommand : PROCEDURE_WORD_  error
+    { kb_error(3706,"Expected name of procedure.\n",Q_ERROR); }
+vcommand : FUNCTION_
+    { kb_error(3496,"Function returns a value; it's not a stand-alone command.\n",Q_ERROR); }
+/**************************************************************************/
+
+vcommand : DEFINE_ IDENT_ datatype { $$.i = makenode(DEFINE_IDENT_,$2.i,$3.i); }
+vcommand : DEFINE_ NEWIDENT_ datatype  
+   {int g; if ( $2.i == 0 )g = add_global($2.lexeme);
+           else g = $2.i; /* local */
+     $$.i = makenode(DEFINE_IDENT_,g,$3.i); }
+
+vcommand : DEFINE_ IDENT_  { $$.i = makenode(DEFINE_IDENT_,$2.i,REAL_TYPE); }
+vcommand : DEFINE_ NEWIDENT_  
+   {int g = $2.i ? $2.i : add_global($2.lexeme); 
+    $$.i = makenode(DEFINE_IDENT_,g,REAL_TYPE); }
+
+vcommand : DEFINE_ STRINGGLOBAL_ 
+           { $$.i = makenode(DEFINE_IDENT_,$2.i,STRING_TYPE); }
+
+indexset : '[' rexpr ']' { $$.i = makenode(INDEXSET_,0,$2.i); }
+indexset : indexset '[' rexpr ']' { $$.i = makenode(INDEXSET_,$1.i,$3.i); }
+
+dimensionset : '[' rexpr ']' { $$.i = makenode(DIMENSIONSET_,0,$2.i); }
+dimensionset : dimensionset '[' rexpr ']' 
+    { $$.i = makenode(DIMENSIONSET_,$1.i,$3.i); }
+
+arraydecl : DEFINE_ ARRAYIDENT_ datatype dimensionset 
+        { 
+          $$.qnum = $2.i ; $$.datatype = $3.i;
+          int_val= $$.datatype;
+          $$.i = makenode(DEFINE_ARRAY_,$2.i,$4.i);
+        }
+
+arraydecl : DEFINE_ NEWIDENT_ datatype dimensionset
+      { $$.qnum = $2.i ? $2.i : add_global($2.lexeme);  
+         $$.datatype = $3.i;
+         int_val= $$.datatype;
+         $$.i = makenode(DEFINE_ARRAY_,$$.qnum,$4.i);
+       }
+
+arraydecl : DEFINE_ IDENT_ datatype dimensionset 
+        { 
+          $$.qnum = $2.i ; $$.datatype = $3.i;
+          int_val= $$.datatype;
+          $$.i = makenode(DEFINE_ARRAY_,$2.i,$4.i);
+        }
+
+vcommand : arraydecl
+         { $$.i = $1.i; }
+
+
+/*
+arrayhead :  ARRAYIDENT_  indexset
+        { $$.i = makenode(ARRAY_HEAD_,$2.i,$1.i);
+          $$.qnum = $2.i ;
+        }
+
+arrayhead :  ARRAYIDENT_ error {
+             sprintf(errmsg,"%s is an array; needs indexing.\n",
+                  globals($1.i)->name);
+             kb_error(2378,errmsg,Q_ERROR);
+           }
+*/
+
+/**************************************************************
+   Some whole-array arithmetic syntax.
+   To handle both stand-alone and attribute arrays, 
+   datastart of array is pushed on stack for each operand. 
+***************************************************************/
+
+arraylvalue : ARRAYIDENT_
+             { $$.i = makenode(ARRAYIDENT_,$1.i,0);
+             }
+
+arraylvalue : VERTEXNORMAL_
+             { /* for implicit generator */
+               $$.i = makenode(ATTRIB_LVALUE_,0,0);
+               list[$$.i].op1.localnum = 0;
+               list[$$.i].op2.name_id = set_name_eltype(V_NORMAL_ATTR,VERTEX);
+               list[$$.i].type = ARRAY_VERTEX_NORMAL_; 
+               list[$$.i].op3.localnum = add_local_var(NULL,SDIM);
+             }
+
+arraylvalue : ARRAY_ATTRIBUTE_
+             { /* for implicit generator */
+               $$.i = makenode(ATTRIB_LVALUE_,0,0);
+               list[$$.i].op1.localnum = 0;
+               list[$$.i].op2.name_id = set_name_eltype($1.qnum,$1.etype);
+               if ( ($1.etype == VERTEX) && ($1.qnum == V_NORMAL_ATTR) )
+               { list[$$.i].type = ARRAY_VERTEX_NORMAL_; 
+                 list[$$.i].op3.localnum = add_local_var(NULL,SDIM);
+                 list[$$.i].flags |= IS_VIRTUAL_ATTR;
+               }
+               else if ( ($1.etype == EDGE) && ($1.qnum == E_VECTOR_ATTR) )
+               { list[$$.i].type = ARRAY_EDGE_VECTOR_; 
+                 list[$$.i].op3.localnum = add_local_var(NULL,SDIM);
+                 list[$$.i].flags |= IS_VIRTUAL_ATTR;
+               }
+               else if ( ($1.etype == FACET) && ($1.qnum == F_NORMAL_ATTR) )
+               { list[$$.i].type = ARRAY_FACET_NORMAL_; 
+                 list[$$.i].op3.localnum = add_local_var(NULL,SDIM);
+                 list[$$.i].flags |= IS_VIRTUAL_ATTR;
+               }
+             }
+
+arraylvalue : singlep ARRAY_ATTRIBUTE_
+             { 
+               if ( $2.etype != $1.etype )
+               { sprintf(errmsg, "\"%s\" is a %s attribute, not %s.\n",
+                    EXTRAS($2.etype)[$2.qnum].name,typenames[$2.etype],
+                    typenames[$1.etype]);
+                 kb_error(3678,errmsg,Q_ERROR);
+               }
+               $$.i = makenode(ATTRIB_LVALUE_,$1.i,0);
+               list[$$.i].op1.localnum = list[$1.i].op2.localnum;
+               list[$$.i].op2.name_id = set_name_eltype($2.qnum,$2.etype);
+               if ( ($2.etype == VERTEX) && ($2.qnum == V_NORMAL_ATTR) )
+               { list[$$.i].type = ARRAY_VERTEX_NORMAL_; 
+                 list[$$.i].op3.localnum = add_local_var(NULL,SDIM);
+                 list[$$.i].flags |= IS_VIRTUAL_ATTR;
+               }
+               else if ( ($2.etype == EDGE) && ($2.qnum == E_VECTOR_ATTR) )
+               { list[$$.i].type = ARRAY_EDGE_VECTOR_; 
+                 list[$$.i].op3.localnum = add_local_var(NULL,SDIM);
+                 list[$$.i].flags |= IS_VIRTUAL_ATTR;
+               }
+               else if ( ($2.etype == FACET) && ($2.qnum == F_NORMAL_ATTR) )
+               { list[$$.i].type = ARRAY_FACET_NORMAL_; 
+                 list[$$.i].op3.localnum = add_local_var(NULL,SDIM);
+                 list[$$.i].flags |= IS_VIRTUAL_ATTR;
+               }
+             }
+
+arraylvalue : singlep NEWIDENT_
+       { sprintf(errmsg,"\"%s\" is not an attribute name.\n",$2.lexeme);
+         kb_error(3573,errmsg,Q_ERROR);
+       }
+arraylvalue : singlep error
+       { sprintf(errmsg,"Missing attribute.\n");
+         kb_error(3574,errmsg,Q_ERROR);
+       }
+
+
+arraylvalueindexset : arraylvalue indexset
+           { $$.i = makenode(ARRAY_LVALUE_INDEXED_,$1.i,$2.i);
+           }
+
+vcommand : arraylvalueindexset assignop rexpr
+           { 
+             $$.i = makenode(ARRAY_ASSIGNOP_SINGLE_,$1.i,$3.i);
+             list[$$.i].op1.assigntype = $2.i;
+             list[$$.i].op2.name_id = list[$1.i].op2.name_id;
+             list[$$.i].stack_delta = list[$1.i].op1.indexcount + 2;
+           }
+
+vcommand : arraylvalue assignop arraylvalue
+           { 
+             $$.i = makenode(ARRAY_ASSIGNOP_ARRAY_,$1.i,$3.i);
+             list[$$.i].op1.assigntype = $2.i;
+             list[$3.i].flags |= IS_RVALUE;
+           }
+
+vcommand : arraylvalue assignop rexpr
+           { $$.i = makenode(ARRAY_ASSIGNOP_SCALAR_,$1.i,$3.i);
+             list[$$.i].op1.assigntype = $2.i;
+           }
+
+vcommand : arraylvalue assignop rexpr '*' arraylvalue 
+           { int k = makenode(ARRAY_RVALUE_,$3.i,$5.i);
+             list[k].op1.intval = '*';
+             $$.i = makenode(ARRAY_ASSIGNOP_S_X_A_,$1.i,k);
+             list[$$.i].op1.assigntype = $2.i;
+             list[$$.i].op3.name_id = list[$5.i].op2.name_id;
+             list[$5.i].flags |= IS_RVALUE;
+             check_special_attr(list[$5.i].op2.name_id);
+             /* Can do dimension check now */
+             if ( check_array_dims_same(list[$1.i].op2.name_id,
+                       list[$5.i].op2.name_id ) == 0 )
+                kb_error(4379,"Arrays don't have same number of dimensions or types are different.\n",
+                   COMMAND_ERROR);
+           }
+
+vcommand : arraylvalue assignop arraylvalue '+' arraylvalue 
+           { int k = makenode(ARRAY_RVALUE_,$3.i,$5.i);
+             list[k].op1.intval = '+';
+             $$.i = makenode(ARRAY_ASSIGNOP_A_P_A_,$1.i,k);
+             list[$$.i].op1.assigntype = $2.i;
+             list[$$.i].op3.name_id = list[$3.i].op2.name_id;
+             list[$$.i].op4.name_id = list[$5.i].op2.name_id;
+             list[$3.i].flags |= IS_RVALUE;
+             list[$5.i].flags |= IS_RVALUE;
+             check_special_attr(list[$3.i].op2.name_id);
+             check_special_attr(list[$5.i].op2.name_id);
+             /* Can do dimension check now */
+             if ( check_array_dims_same(list[$1.i].op2.name_id,
+                   list[$3.i].op2.name_id) == 0 )
+                kb_error(4380,"Arrays don't have same number of dimensions or types are different.\n",
+                   COMMAND_ERROR);
+             if ( check_array_dims_same(list[$1.i].op2.name_id,
+                   list[$5.i].op2.name_id) == 0 )
+                kb_error(4381,"Arrays don't have same number of dimensions or types are different.\n",
+                   COMMAND_ERROR);
+           }
+
+vcommand : arraylvalue assignop arraylvalue '-' arraylvalue 
+           { int k = makenode(ARRAY_RVALUE_,$3.i,$5.i);
+             list[k].op1.intval = '-';
+             $$.i = makenode(ARRAY_ASSIGNOP_A_S_A_,$1.i,k);
+             list[$$.i].op1.assigntype = $2.i;
+             list[$$.i].op3.name_id = list[$3.i].op2.name_id;
+             list[$$.i].op4.name_id = list[$5.i].op2.name_id;
+             list[$3.i].flags |= IS_RVALUE;
+             list[$5.i].flags |= IS_RVALUE;
+             check_special_attr(list[$3.i].op2.name_id);
+             check_special_attr(list[$5.i].op2.name_id);
+             /* Can do dimension check now */
+             if ( check_array_dims_same(list[$1.i].op2.name_id,
+                   list[$3.i].op2.name_id) == 0 )
+                kb_error(3030,"Arrays don't have same number of dimensions or types are different.\n",
+                   COMMAND_ERROR);
+             if ( check_array_dims_same(list[$1.i].op2.name_id,
+                   list[$5.i].op2.name_id) == 0 )
+                kb_error(4383,"Arrays don't have same number of dimensions or types are different.\n",
+                   COMMAND_ERROR);
+           }
+
+rexpr : arraylvalue DOT_ arraylvalue
+         { $$.i = makenode(DOT_,$1.i,$3.i); 
+           list[$1.i].flags |= IS_RVALUE;
+           list[$3.i].flags |= IS_RVALUE;
+         }
+
+rexpr : arraylvalue indexset
+         { $$.i = makenode(ARRAY_EVAL_,$1.i,$2.i); 
+           list[$1.i].flags |= IS_RVALUE;
+         }
+
+/*********** end whole-array syntax *************************/
+
+extraat : EXTRA_ATTRIBUTE_ { $$.i = $1.i; }
+extraat : ARRAY_ATTRIBUTE_ { $$.i = $1.i; }
+
+defextra : DEFINE_ eltype ATTRIBUTE_ extraat datatype
+          { struct extra *ex;
+            $$.qnum = $4.qnum; 
+            $$.etype = $4.etype;
+            if ( $2.i != $$.etype )
+              kb_error(1885,"This extra attribute already defined on different element type.\n",COMMAND_ERROR);
+            ex = EXTRAS($$.etype) + $$.qnum;
+            if ( ex->type != $5.i )
+            { sprintf(errmsg,
+                "Attribute %s already defined with different type, %s.\n",
+                   ex->name,datatype_name[ex->type]);
+              kb_error(1886,errmsg,COMMAND_ERROR);
+            }
+           $$.i = makenode(DEFINE_EXTRA_,0,$2.i); 
+           list[$$.i].op1.extranum = $$.qnum;
+          }
+
+defextra : DEFINE_ eltype ATTRIBUTE_ NEWIDENT_ datatype
+         { int attr_type=INTEGER_TYPE;
+           if ( $4.i ) 
+           { sprintf(errmsg,"Cannot use local variable \"%s\" as attribute.\n",
+                $4.lexeme);
+             kb_error(2615,errmsg,COMMAND_ERROR);
+           }
+           attr_type = $5.i;
+           $$.qnum = add_attribute($2.i,$4.lexeme,attr_type,0,NULL,DUMP_ATTR,NULL); 
+           /* being a declaration, has effect when parsed */
+           $$.i = makenode(DEFINE_EXTRA_,0,$2.i); 
+           list[$$.i].op1.extranum = $$.qnum;
+         }
+
+vcommand : defextra dimensionset
+         { $$.i = makenode(DEFINE_EXTRA_INDEX_,$1.i,$2.i);
+         }
+
+vcommand : defextra FUNCTION_
+         {
+           begin_scope(); /* ended right below */
+           elsym = symbol_add("self",list[$1.i].op2.eltype);
+           $$.i = makenode(ATTR_FUNCTION_,$1.i,0);
+          }
+         '{' { init_local_scope(0); begin_local_scope(); }
+         commands '}' 
+         { struct extra *ext;
+           end_local_scope();
+           $$.i = makenode(ATTR_FUNCTION_END_,$3.i,$6.i);
+           list[$$.i].op1.extranum = list[$1.i].op1.extranum;  /* attr number */
+           list[$$.i].op2.eltype = list[$1.i].op2.eltype;  /* element type */
+           list[$3.i].op1.skipsize = $$.i - $3.i;
+           ext = EXTRAS(list[$$.i].op2.eltype) + list[$$.i].op1.extranum;
+           ext->code.locals = localbase;
+           if ( localbase )
+             localbase->flags |= LL_IN_USE;
+           exit_local_scope();
+           ext->flags |= FUNCTION_ATTR;
+           end_scope();
+         }
+vcommand : defextra
+         { $$.i = $1.i; }
+
+vcommand : DEFINE_ QUANTITY_   { $$.i = makenode(DEFINE_QUANTITY_,0,0); }
+vcommand : DEFINE_ METHOD_INSTANCE_  
+            { $$.i = makenode(DEFINE_METHOD_INSTANCE_,0,0); }
+vcommand : DEFINE_ CONSTRAINT_   { $$.i = makenode(DEFINE_CONSTRAINT_,0,0); }
+vcommand : DEFINE_ BOUNDARY_   { $$.i = makenode(DEFINE_BOUNDARY_,0,0); }
+
+
+vcommand : DEFINE_ error { kb_error(2379,
+   "Syntax: DEFINE name [REAL|INTEGER]\n or:    DEFINE elementtype ATTRIBUTE name REAL|INTEGER  [ dimension ]   \n",Q_ERROR); }
+
+newlvalue : NEWIDENT_  ASSIGN_ { 
+           strncpy($$.lexeme,$1.lexeme,31);
+          /*  if ( $$.i == 0 )  ?? */
+           $$.i = add_global($1.lexeme);  
+          /*  else $$.i = $1.i; */ /* local ?? */
+            $$.qnum = assignbacktrack();
+          } 
+
+new_permlvalue : NEWIDENT_ PERM_ASSIGN_ { 
+             $$.i = add_perm_global($1.lexeme);  
+             perm_globals($$.i)->flags |= PERMANENT;   
+             perm_flag++;
+             $$.qnum = assignbacktrack();
+            }
+
+newlvalue : SET_ NEWIDENT_ { 
+           /* if ( $$.i == 0 )  ??  */
+                $$.i = add_global($2.lexeme);  
+           /*  else $$.i = $2.i; ?? */ /* local */
+         } ASSIGN_ { $$.i = $2.i;$$.qnum = assignbacktrack(); }
+
+newlvalue : SET_ NEWIDENT_ { 
+            /* if ( $$.i == 0 )  ?? */
+               $$.i = add_global($2.lexeme);
+             /* else $$.i = $2.i;  ?? */
+             $$.qnum = assignbacktrack();
+             strcpy($$.lexeme,$2.lexeme); 
+           } 
+
+command : NEWIDENT_  error 
+         { kb_error(2380,"Syntax: variable := rexpr | {command} \n",Q_ERROR);}
+
+rexpr : NEWIDENT_  error 
+         { sprintf(errmsg,"Syntax error: Unexpected new identifier '%s'.\n",$1.lexeme);
+       kb_error(2381,errmsg, Q_ERROR);}
+
+command : NEWIDENT_ ASSIGN_  error 
+         { kb_error(2382,"Syntax: variable := rexpr | {command}     (braces needed around command) \n",Q_ERROR);}
+
+command : newlvalue stringexpr { $$.i = makenode(SET_SGLOBAL_,$1.i,$2.i); }
+command : newlvalue rexpr  { $$.i = makenode(SET_GLOBAL_,$1.i,$2.i); }
+command : newlvalue error  
+         { sprintf(errmsg,"Illegal right side of assignment.\n");
+       kb_error(3756,errmsg, Q_ERROR);}
+
+command : new_permlvalue stringexpr 
+        { $$.i = makenode(SET_PERM_SGLOBAL_,$1.i,$2.i); }
+
+command : new_permlvalue rexpr  { $$.i = makenode(SET_PERM_GLOBAL_,$1.i,$2.i); }
+
+command : newlvalue  { init_local_scope($1.i); 
+             begin_local_scope(); }
+         vcommand 
+         { int insize = inputbufferspot - $1.qnum;
+           globals($1.i)->attr.procstuff.proc_text = mycalloc(insize+1,1); 
+           strncpy(globals($1.i)->attr.procstuff.proc_text,inputbuffer+$1.qnum,insize);
+           $$.i = makenode(SET_PROCEDURE_,$3.i,$1.i); 
+           globals($1.i)->attr.procstuff.proc_text[insize] = 0;
+           exit_local_scope();
+         }
+
+command : newlvalue '{' { init_local_scope($1.i); begin_local_scope(); }
+         commands '}' 
+         { int k,insize = inputbufferspot - $1.qnum;
+           globals($1.i)->attr.procstuff.proc_text = mycalloc(insize+1,1); 
+           strncpy(globals($1.i)->attr.procstuff.proc_text,inputbuffer+$1.qnum,insize);
+           globals($1.i)->attr.procstuff.proc_text[insize] = 0;
+           k = makenode(COMMAND_BLOCK_,$4.i,0);
+           $$.i = makenode(SET_PROCEDURE_,k,$1.i); 
+           exit_local_scope();
+         }
+
+command : newlvalue '{' '}' 
+         { int k = makenode(NULLBLOCK_,0,0);
+           localbase = NULL;
+           $$.i = makenode(SET_PROCEDURE_,k,$1.i); 
+         }
+
+command : new_permlvalue '{' { init_local_scope($1.i); begin_local_scope(); }
+          commands '}' 
+         { int k,insize = inputbufferspot - $1.qnum;
+           perm_globals($1.i)->attr.procstuff.proc_text = calloc(insize+1,1); 
+           strncpy(perm_globals($1.i)->attr.procstuff.proc_text,inputbuffer+$1.qnum,insize);
+           perm_globals($1.i)->attr.procstuff.proc_text[insize] = 0;
+           k = makenode(COMMAND_BLOCK_,$4.i,0);
+           $$.i = makenode(SET_PERM_PROCEDURE_,k,$1.i); 
+           exit_local_scope();
+         }
+
+command : new_permlvalue '{' '}' 
+         { int k = makenode(NULLBLOCK_,0,0);
+           localbase = NULL;
+           $$.i = makenode(SET_PERM_PROCEDURE_,k,$1.i); 
+         }
+
+command : PROCEDURE_ ASSIGN_ { $$.qnum = assignbacktrack();
+                     init_local_scope($1.i); begin_local_scope();
+    } command 
+         { int insize = inputbufferspot - $3.qnum;
+           myfree(globals($1.i)->attr.procstuff.proc_text);
+           globals($1.i)->attr.procstuff.proc_text = mycalloc(insize+1,1); 
+           strncpy(globals($1.i)->attr.procstuff.proc_text,inputbuffer+$3.qnum,insize);
+           globals($1.i)->attr.procstuff.proc_text[insize] = 0;
+           $$.i = makenode(SET_PROCEDURE_,$4.i,$1.i); 
+           exit_local_scope();
+         }
+
+command : PERM_PROCEDURE_ PERM_ASSIGN_
+      { $$.i = perm_flag++; $$.qnum = assignbacktrack(); 
+           init_local_scope($1.i); begin_local_scope(); } 
+     command
+         { int insize = inputbufferspot - $3.qnum;
+           free(perm_globals($1.i)->attr.procstuff.proc_text);
+           perm_globals($1.i)->attr.procstuff.proc_text = calloc(insize+1,1); 
+           strncpy(perm_globals($1.i)->attr.procstuff.proc_text,inputbuffer+$3.qnum,insize);
+           perm_globals($1.i)->attr.procstuff.proc_text[insize] = 0;
+           perm_globals($1.i)->flags |= PERMANENT; 
+           $$.i = makenode(SET_PERM_PROCEDURE_,$4.i,$1.i); 
+           perm_flag = $3.i; 
+           exit_local_scope();
+         }
+
+command : PROCEDURE_ ASSIGN_ error 
+         { kb_error(2383,"Syntax: procedure_name := {command} \n",Q_ERROR);}
+
+command : PROCEDURE_ PERM_ASSIGN_ error 
+         { kb_error(2384,"Syntax: procedure_name ::= {command} \n",Q_ERROR);}
+
+
+command : identassign '{' 
+         {  sprintf(errmsg,
+              "'%s' is a variable; cannot be assigned a procedure.\n",
+               globals($1.i)->name);
+            kb_error(3899,errmsg,Q_ERROR);
+         }
+
+/**************************************************************************/
+
+vcommand : LOCAL_ localidlist { $$.i = makenode(LOCAL_LIST_START_,$2.i,0); }
+localidlist: localid  { $$.i = $1.i; }
+localidlist: localidlist ',' localid  
+ { $$.i = $3.i; list[$3.i].left = -1; }
+
+localid :  NEWIDENT_ { ident_t iid = add_local_var($1.lexeme,1);
+                $$.i = makenode(DECLARE_LOCAL_,iid,0); }
+
+localid :  IDENT_ { ident_t iid = add_local_var($1.lexeme,1);
+                $$.i = makenode(DECLARE_LOCAL_,iid,0);
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                  "Local name \"%s\" shadows already declared variable.\n",
+                   $1.lexeme);
+                  kb_error(2625,errmsg,WARNING); 
+                }
+             }
+localid :  ARRAYIDENT_ { ident_t iid = add_local_var($1.lexeme,1);
+                $$.i = makenode(DECLARE_LOCAL_,iid,0); 
+                if ( shadow_warn_flag )
+                { sprintf(errmsg,
+                  "Local name \"%s\" shadows already declared variable.\n",
+                  $1.lexeme);
+                  kb_error(2626,errmsg,WARNING); 
+                }
+              }
+localid :  PROCEDURE_ { ident_t iid = add_local_var($1.lexeme,1);
+               $$.i = makenode(DECLARE_LOCAL_,iid,0); 
+               if ( shadow_warn_flag )
+               { sprintf(errmsg,
+                  "Local name \"%s\" shadows already declared procedure.\n",
+                    $1.lexeme);
+                 kb_error(2627,errmsg,WARNING); 
+               }
+             }
+localid :  FUNCTION_IDENT_ { ident_t iid = add_local_var($1.lexeme,1);
+               $$.i = makenode(DECLARE_LOCAL_,iid,0); 
+               if ( shadow_warn_flag )
+               { sprintf(errmsg,
+                  "Local name \"%s\" shadows already declared function.\n",
+                    $1.lexeme);
+                 kb_error(2628,errmsg,WARNING); 
+               }
+             }
+localid :  STRINGGLOBAL_ { ident_t iid = add_local_var($1.lexeme,1);
+               $$.i = makenode(DECLARE_LOCAL_,iid,0); 
+               if ( shadow_warn_flag )
+               { sprintf(errmsg,
+                "Local name \"%s\" shadows already declared string variable.\n",
+                  $1.lexeme);
+                 kb_error(2629,errmsg,WARNING); 
+               }
+              }
+localid :  QUANTITY_NAME_ {ident_t iid = add_local_var($1.lexeme,1);
+               $$.i = makenode(DECLARE_LOCAL_,iid,0); 
+               if ( shadow_warn_flag )
+               { sprintf(errmsg,
+                  "Local name \"%s\" shadows already declared quantity name.\n",
+                    $1.lexeme);
+                 kb_error(2630,errmsg,WARNING); 
+               }
+             }
+localid :  METHOD_NAME_ {ident_t iid = add_local_var($1.lexeme,1);
+               $$.i = makenode(DECLARE_LOCAL_,iid,0); 
+               if ( shadow_warn_flag )
+               { sprintf(errmsg,
+                  "Local name \"%s\" shadows already declared method name.\n",
+                    $1.lexeme);
+                 kb_error(2631,errmsg,WARNING); 
+               }
+             }
+localid :  CONSTRAINT_NAME_ {ident_t iid = add_local_var($1.lexeme,1);
+               $$.i = makenode(DECLARE_LOCAL_,iid,0); 
+               if ( shadow_warn_flag )
+               { sprintf(errmsg,
+                  "Local name \"%s\" shadows already declared constraint.\n",
+                    $1.lexeme);
+                 kb_error(2632,errmsg,WARNING); 
+               }
+             }
+localid :  BOUNDARY_NAME_ {ident_t iid = add_local_var($1.lexeme,1);
+               $$.i = makenode(DECLARE_LOCAL_,iid,0); 
+               if ( shadow_warn_flag )
+               { sprintf(errmsg,
+                  "Local name \"%s\" shadows already declared boundary.\n",
+                    $1.lexeme);
+                 kb_error(2633,errmsg,WARNING); 
+               }
+             }
+
+localid :  error { kb_error(2614,"Syntax: LOCAL varname; \n",Q_ERROR);}
+
+
+/**************************************************************************/
+
+vcommand : SINGLE_LETTER_ REDEFINE_
+          { init_local_scope(0); begin_local_scope(); } 
+          command 
+          { $$.i = makenode(REDEFINE_SINGLE_,$4.i,$1.i);
+            exit_local_scope();
+          }
+
+vcommand : SINGLE_LETTER_ARG_ REDEFINE_
+          { init_local_scope(0); begin_local_scope(); } 
+          command 
+          {
+            $$.i = makenode(REDEFINE_SINGLE_,$4.i,$1.i);
+            exit_local_scope();
+          }
+
+vcommand : SINGLE_REDEFD_ REDEFINE_ 
+          { init_local_scope(0); begin_local_scope(); } 
+          command 
+          {
+            $$.i = makenode(REDEFINE_SINGLE_,$4.i,$1.i);
+            exit_local_scope();
+          }
+vcommand : SINGLE_LETTER_ REDEFINE_ 
+         { $$.i = makenode(UNREDEFINE_SINGLE_,0,$1.i); }
+vcommand : SINGLE_REDEFD_ REDEFINE_ 
+         { $$.i = makenode(UNREDEFINE_SINGLE_,0,$1.i); }
+
+/**************************************************************************/
+exprlist : rexpr ',' exprlist { $$.i = makenode(EXPRLIST_,$1.i,$3.i); }
+exprlist : rexpr ',' error { kb_error(3801,"Missing expression after ','\n",
+                      Q_ERROR); }
+exprlist : rexpr  { $$.i = makenode(EXPRLIST_,$1.i,0); }
+exprlist : stringexpr ',' exprlist { $$.i = makenode(EXPRLIST_,$1.i,$3.i); }
+exprlist : stringexpr ',' error 
+            { kb_error(3891,"Missing expression after ','\n", Q_ERROR); }
+exprlist : stringexpr  { $$.i = makenode(EXPRLIST_,$1.i,0); }
+
+/**************************************************************************/
+
+printfhead : PRINTF_   stringexpr { $$.i = makenode(PRINTFHEAD_,$2.i,0); }
+printfhead : PRINTF_   error 
+            { kb_error(3892,"Missing format string after printf.\n", Q_ERROR); }
+binaryprintfhead : BINARY_PRINTF_   stringexpr { $$.i = makenode(BINARY_PRINTFHEAD_,$2.i,0); }
+binaryprintfhead : BINARY_PRINTF_   error 
+            { kb_error(4892,"Missing format string after printf.\n", Q_ERROR); }
+errprintfhead : ERRPRINTF_   stringexpr 
+         { $$.i = makenode(ERRPRINTFHEAD_,$2.i,0); }
+errprintfhead : ERRPRINTF_   error
+         { kb_error(3802,"Missing format string after errprintf.\n", Q_ERROR); }
+vcommand : printfhead { $$.i = $1.i; }
+vcommand : printfhead ',' exprlist { $$.i = makenode(PRINTF_,$1.i,$3.i); }
+vcommand : printfhead ',' error
+            { kb_error(3893,"Missing expression after ','\n", Q_ERROR); }
+
+vcommand : binaryprintfhead { $$.i = $1.i; }
+vcommand : binaryprintfhead ',' exprlist { $$.i = makenode(BINARY_PRINTF_,$1.i,$3.i); }
+vcommand : binaryprintfhead ',' error
+            { kb_error(4893,"Missing expression after ','\n", Q_ERROR); }
+
+vcommand : errprintfhead { $$.i = $1.i; }
+vcommand : errprintfhead ',' exprlist { $$.i = makenode(ERRPRINTF_,$1.i,$3.i); }
+vcommand : errprintfhead ',' error { $$.i = makenode(ERRPRINTF_,$1.i,$3.i); }
+            { kb_error(3803,"Missing expression after ','\n", Q_ERROR); }
+/**************************************************************************/
+
+print : PRINT_ 
+vcommand : print PROCEDURE_WORD_ { $$.i = makenode(LIST_PROCS_,0,0); }
+vcommand : print stringexpr { $$.i = makenode(STRPRINT_,$2.i,0); }
+vcommand : print  PROCEDURE_ { $$.i = makenode(PRINT_PROCEDURE_,$2.i,0); }
+vcommand : print  FUNCTION_IDENT_ { $$.i = makenode(PRINT_PROCEDURE_,$2.i,0); }
+vcommand : print  PROCEDURE_IDENT_ { $$.i = makenode(PRINT_PROCEDURE_,$2.i,0); }
+vcommand : print  PERM_PROCEDURE_ 
+  { $$.i = makenode(PRINT_PERM_PROCEDURE_,$2.i,0); }
+vcommand : EXPRINT_  PROCEDURE_ { $$.i = makenode(EXPRINT_PROCEDURE_,$2.i,0); }
+
+/*
+vcommand : print  arrayhead { $$.i = makenode(PRINT_ARRAYPART_,$2.i,0); }
+*/
+
+vcommand : print rexpr { $$.i = makenode(PRINT_,$2.i,0); }
+/* the previous two rules give a reduce/reduce conflict, resolved by yacc
+   in favor of the first, which is ok since it prints a fully indexed
+   array entry as a scalar. */
+
+vcommand : print arraylvalue
+     { $$.i = makenode(PRINT_ARRAY_LVALUE_,$2.i,0);
+       list[$2.i].flags |= IS_RVALUE;
+     }
+
+vcommand: print singlep ggetattrib
+     { int k;
+       switch ( $3.i )
+       { case COORD_:
+           switch ( $2.etype )
+           { case VERTEX: case EDGE: case FACET:
+               k = makenode(ATTRIBUTE,$3.i,$3.qnum); 
+               list[k].op1.localnum = list[$2.i].op2.localnum;
+               list[k].op2.coordnum = $3.qnum - 1; /* 1-based indexing to 0 */
+               k = makenode(QUALIFIED_ATTRIBUTE,$2.i,k); 
+               $$.i = makenode(PRINT_,k,0);
+               goto vnexit;
+
+             default:
+               sprintf(errmsg,"\"x\" is not a %s attribute.\n",
+                typenames[$2.etype]);
+               kb_error(2650,errmsg,COMMAND_ERROR);
+           }
+           break;
+         case GET_VERTEXNORMAL_:
+           if ( $2.etype != VERTEX )
+           { sprintf(errmsg,"\"vertexnormal\" is vertex attribute; cannot be on %s.\n",
+                typenames[$2.etype]);
+             kb_error(2651,errmsg,COMMAND_ERROR);
+           }
+           $$.i = makenode(PRINT_VERTEXNORMAL_,$2.i,0);
+           list[$$.i].op1.localnum = list[$2.i].op2.localnum;
+           goto vnexit;
+           break;
+         case PARAM_:
+           if ( $2.etype != VERTEX )
+           { sprintf(errmsg,"\"p\" is %s attribute; cannot be on %s.\n",
+                typenames[VERTEX], typenames[$2.etype]);
+             kb_error(2652,errmsg,COMMAND_ERROR);
+           }
+           int_val = V_PARAM_ATTR;
+           break;
+         case GET_EXTRA_ATTR_:
+           if ( $2.etype != $3.etype )
+           { sprintf(errmsg,"\"%s\" is %s attribute; cannot be on %s.\n",
+                EXTRAS($3.etype)[$3.qnum & YYSHIFTMASK].name,
+                   typenames[$3.etype], typenames[$2.etype]);
+             kb_error(2653,errmsg,COMMAND_ERROR);
+           }
+           int_val = $3.qnum;
+           break;
+         default:
+           k = makenode(ATTRIBUTE,$3.i,$3.qnum); 
+           list[k].op1.localnum = list[$2.i].op2.localnum;
+           k = makenode(QUALIFIED_ATTRIBUTE,$2.i,k); 
+           $$.i = makenode(PRINT_,k,0);
+           goto vnexit;
+       }
+       int_val |= ($2.etype << YYTYPESHIFT);
+       $$.i = makenode(PRINT_ATTR_ARRAY_,$2.i,0);
+vnexit: ;
+     }
+
+/*
+rexpr : arrayhead 
+           { $$.i = makenode(ARRAYEVAL,$1.i,0); }
+*/
+
+vcommand : print  SINGLE_LETTER_ { $$.i = makenode(PRINT_LETTER_,$2.i,0); }
+vcommand : print  SINGLE_LETTER_ARG_ { $$.i = makenode(PRINT_LETTER_,$2.i,0); }
+vcommand : print  SINGLE_REDEFD_ { $$.i = makenode(PRINT_LETTER_,$2.i,0); }
+vcommand : print  error { kb_error(2385,
+  "Syntax: PRINT  procedure | expression | stringexpression \n",Q_ERROR ); }
+
+/**************************************************************************/
+
+vcommand : SHOW_TRANS_ stringexpr { $$.i = makenode(SHOW_TRANS_,$2.i,0); }
+vcommand : SHOW_TRANS_ error { kb_error(2386,"Syntax: SHOW_TRANS \"string\"\n",Q_ERROR);}
+
+/**************************************************************************/
+backquote : '`' { backquote_flag = 1; $$.i = makenode(BACKQUOTE_START_,0,0);
+            if ( local_nest_depth == 0 )
+               init_local_scope(0);
+            begin_local_scope();
+            list[listtop++].type = SETUP_FRAME_; }
+
+rexpr : backquote commands BACKQUOTE_COMMA_
+   { verb_flag = 0; backquote_flag = 0;  end_local_scope();
+       $$.i = makenode(BACKQUOTE_END_,$1.i,$2.i);}  
+   rexpr { $$.i = makenode(ACOMMANDEXPR_,$4.i,$5.i);  }
+
+rexpr : backquote error 
+   { 
+     backquote_flag = 0;
+     kb_error(3805,"Backquote syntax: ` commands ` , expression\n",
+         Q_ERROR);
+   }
+ 
+/**************************************************************************/
+rexpr : FUNCTION_IDENT_ '(' ')'
+      { $$.i = makenode(FUNCTION_CALL_,$1.i,0);
+        $$.i = makenode(FUNCTION_CALL_RETURN_,$$.i,0);
+      }
+
+rexpr : FUNCTION_IDENT_ '(' exprlist ')'
+      { $$.i = makenode(FUNCTION_CALL_,$1.i,$3.i); 
+        makenode(FUNCTION_CALL_RETURN_,$$.i,0);
+      }
+
+rexpr : FUNCTION_IDENT_  error
+   { kb_error(2870, "Function call needs argument list.\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand : PROCEDURE_IDENT_ '(' ')'
+      { $$.i = makenode(PROCEDURE_CALL_,$1.i,0); 
+        $$.i = makenode(PROCEDURE_CALL_RETURN_,$$.i,0);
+      }
+
+vcommand : PROCEDURE_IDENT_ '(' exprlist ')'
+      { $$.i = makenode(PROCEDURE_CALL_,$1.i,$3.i); 
+        makenode(PROCEDURE_CALL_RETURN_,$$.i,0);
+      }
+
+vcommand : PROCEDURE_IDENT_ error
+   { kb_error(2871, "Procedure call needs argument list.\n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand : WRAP_VERTEX_ '(' rexpr ',' rexpr ')'
+      { $$.i = makenode(WRAP_VERTEX_,$3.i,$5.i); }
+
+vcommand : WRAP_VERTEX_ error
+   { kb_error(3808,"Syntax: wrap_vertex(vertex_number,wrap_code_number)\n",
+          Q_ERROR); }
+
+/**************************************************************************/
+
+rexpr : VIEW_TRANSFORM_PARITY_ '[' rexpr ']'
+     {  $$.i = makenode(VIEW_TRANSFORM_PARITY_,$3.i,0); }
+
+rexpr : VIEW_TRANSFORM_PARITY_ error { kb_error(2602,
+          "view_transform_parity needs one index.\n", Q_ERROR); }
+
+/**************************************************************************/
+
+rexpr : DISPLAY_TEXT_ '(' rexpr ',' rexpr ',' stringexpr ')'
+    { int nn = makenode(TEXT_SPOT_,$3.i,$5.i);
+      $$.i = makenode(DISPLAY_TEXT_,nn,$7.i);
+    }
+
+rexpr : DISPLAY_TEXT_ error
+    { kb_error(4683,"Syntax: text_id := DISPLAY_TEXT(x,y,string)\n",Q_ERROR );
+    }
+
+command : DISPLAY_TEXT_ 
+    { kb_error(3254,"Syntax: text_id := DISPLAY_TEXT(x,y,string)\n",Q_ERROR );
+    }
+
+command : DELETE_TEXT_ '(' rexpr ')'
+   { $$.i = makenode(DELETE_TEXT_,$3.i,0);
+   }
+
+command : DELETE_TEXT_ error
+    { kb_error(4684,"Syntax: DELETE_TEXT(text_id)\n",Q_ERROR );
+    }
+
+/**************************************************************************/
+
+rexpr : NEWVERTEX_  '(' exprlist ')'
+  { $$.i = makenode(CREATE_VERTEX_,$3.i,0); }
+
+rexpr : NEWVERTEX_  error { kb_error(2387,"Syntax: NEW_VERTEX(x,y,...) \n",Q_ERROR); }
+
+/**************************************************************************/
+
+rexpr : NEWEDGE_ '(' rexpr ',' rexpr ')' 
+             { $$.i = makenode(CREATE_EDGE_,$3.i,$5.i); }
+
+rexpr : NEWEDGE_  error { kb_error(2388,"Syntax: NEW_EDGE(tail_id,head_id) \n",Q_ERROR); }
+
+/**************************************************************************/
+rexpr : NEWFACET_ '(' exprlist ')'
+  { $$.i = makenode(CREATE_FACET_,$3.i,0); }
+
+rexpr : NEWFACET_  error { kb_error(2389,"Syntax: NEW_FACET(edge1,edge2,...) \n",Q_ERROR); }
+
+/**************************************************************************/
+rexpr : NEWBODY_ { $$.i = makenode(CREATE_BODY_,0,0); }
+rexpr : NEWBODY_  error { kb_error(2390,"Syntax: NEW_BODY \n",Q_ERROR); }
+/**************************************************************************/
+
+elindex : rexpr           { $$.i = makenode(ELINDEX_,$1.i,0); }
+elindex : rexpr '@' rexpr { $$.i = makenode(ELINDEX_,$1.i,$3.i); }
+elindex : INTEGER_AT_ { $$.i = makenode(PUSH_ELEMENT_ID_,$1.i,$1.qnum); }
+elindex : UMINUS_ INTEGER_AT_ { $$.i = makenode(PUSH_ELEMENT_ID_,-$1.i,$1.qnum); }
+elindex : LEAD_INTEGER_AT_ { $$.i = makenode(PUSH_ELEMENT_ID_,$1.i,$1.qnum); }
+elindex : UMINUS_ LEAD_INTEGER_AT_ { $$.i = makenode(PUSH_ELEMENT_ID_,-$1.i,$1.qnum); }
+
+rexpr : VALID_ELEMENT_ '(' eltype '[' elindex ']' ')'
+   { $$.i = makenode(VALID_ELEMENT_,$3.i,$5.i); }
+rexpr : VALID_ELEMENT_  error 
+   { kb_error(3904,"Syntax: valid_element(element_type[expr]) \n",Q_ERROR); }
+/**************************************************************************/
+
+rexpr : VALID_CONSTRAINT_ '(' rexpr ')'
+   { $$.i = makenode(VALID_CONSTRAINT_,$3.i,0); }
+rexpr : VALID_CONSTRAINT_  error 
+   { kb_error(1901,"Syntax: valid_constraint(expr) \n",Q_ERROR); }
+
+/**************************************************************************/
+
+rexpr : VALID_BOUNDARY_ '(' rexpr ')'
+   { $$.i = makenode(VALID_BOUNDARY_,$3.i,0); }
+rexpr : VALID_BOUNDARY_  error 
+   { kb_error(3029,"Syntax: valid_boundary(expr) \n",Q_ERROR); }
+
+/**************************************************************************/
+
+vcommand : MERGE_VERTEX_ '(' rexpr ',' rexpr ')' 
+             { $$.i = makenode(MERGE_VERTEX_,$3.i,$5.i); }
+
+vcommand : MERGE_VERTEX_  error 
+  { kb_error(3885,"Syntax: VERTEX_MERGE(first_id,second_id) \n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand : MERGE_EDGE_ '(' rexpr ',' rexpr ')' 
+             { $$.i = makenode(MERGE_EDGE_,$3.i,$5.i); }
+
+vcommand : MERGE_EDGE_  error 
+  { kb_error(3637,"Syntax: EDGE_MERGE(first_oid,second_oid) \n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand : MERGE_FACET_ '(' rexpr ',' rexpr ')' 
+             { $$.i = makenode(MERGE_FACET_,$3.i,$5.i); }
+
+vcommand : MERGE_FACET_  error 
+  { kb_error(3607,"Syntax: FACET_MERGE(first_oid,second_oid) \n",Q_ERROR); }
+
+/**************************************************************************/
+vcommand : MATRIX_MULTIPLY_ '(' arraylvalue ',' arraylvalue ',' arraylvalue ')' 
+       { int_val = $7.i; $$.i = makenode(MATRIX_MULTIPLY_,$3.i,$5.i); }
+
+vcommand : MATRIX_MULTIPLY_ error
+   { kb_error(3790,"matrix_multiply syntax: matrix_multiply(mat1,mat2,mat3)\n",
+     COMMAND_ERROR);
+   }
+
+vcommand : MATRIX_MULTIPLY_ '(' arraylvalue ',' arraylvalue ','  error
+   { kb_error(3791,"matrix_multiply third argument is not an array.\n",
+     COMMAND_ERROR);
+   }
+
+vcommand : MATRIX_MULTIPLY_ '(' arraylvalue ','  error
+   { kb_error(3792,"matrix_multiply second argument is not an array.\n",
+     COMMAND_ERROR);
+   }
+
+vcommand : MATRIX_MULTIPLY_ '('  error
+   { kb_error(3793,"matrix_multiply first argument is not an array.\n",
+     COMMAND_ERROR);
+   }
+
+rexpr : MATRIX_DETERMINANT_ '(' arraylvalue ')' 
+       { $$.i = makenode(MATRIX_DETERMINANT_,$3.i,0); }
+
+
+rexpr : MATRIX_INVERSE_ '(' arraylvalue ',' arraylvalue ')' 
+       { $$.i = makenode(MATRIX_INVERSE_,$3.i,$5.i); }
+
+rexpr : MATRIX_INVERSE_ error
+   { kb_error(3794,"matrix_inverse syntax: matrix_inverse(mat1,mat2)\n",
+     COMMAND_ERROR);
+   }
+rexpr : MATRIX_INVERSE_ '(' arraylvalue ',' error
+   { kb_error(3795,"matrix_inverse second argument is not an array.\n",
+     COMMAND_ERROR);
+   }
+rexpr : MATRIX_INVERSE_ '('  error
+   { kb_error(3796,"matrix_inverse first argument is not an array.\n",
+     COMMAND_ERROR);
+   }
+/**************************************************************************/
+
+verb : LIST_       {  $$.i = LIST_; loopdepth++; }
+
+vcommand : LIST_ error 
+   { erroutstring("Syntax: LIST element_gen [ name ] [ WHERE rexpr ]\n");
+     erroutstring("        LIST TOPINFO\n");
+     erroutstring("        LIST BOTTOMINFO\n");
+     erroutstring("        LIST ATTRIBUTES\n");
+     erroutstring("        LIST PROCEDURES\n");
+     erroutstring("        LIST QUANTITY quantityname\n");
+     erroutstring("        LIST METHOD_INSTANCE instancename\n");
+     erroutstring("        LIST CONSTRAINT rexpr or name\n");
+     erroutstring("        LIST BOUNDARY rexpr or name\n");
+     kb_error(1899,NULL,Q_ERROR);
+   }
+
+/**************************************************************************/
+verb : DELETE_     {   $$.i = DELETE_; loopdepth++; }
+
+vcommand : DELETE_ error 
+    { kb_error(2391,"Syntax: DELETE element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+/**************************************************************************/
+
+verb : VERTEX_AVERAGE_     {   $$.i = VERTEX_AVERAGE_; loopdepth++; }
+verb : RAW_VERTEX_AVERAGE_     {   $$.i = RAW_VERTEX_AVERAGE_; loopdepth++; }
+verb : RAWEST_VERTEX_AVERAGE_     {   $$.i = RAWEST_VERTEX_AVERAGE_; loopdepth++; }
+
+vcommand : VERTEX_AVERAGE_ error 
+    { kb_error(2392,"Syntax: VERTEX_AVERAGE element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+
+vcommand : RAW_VERTEX_AVERAGE_ error 
+    { kb_error(2393,"Syntax: RAW_VERTEX_AVERAGE element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+
+vcommand : RAWEST_VERTEX_AVERAGE_ error 
+    { kb_error(2394,"Syntax: RAWEST_VERTEX_AVERAGE element_gen [ name ] [ WHERE expr ]\n",Q_ERROR); }
+
+/**************************************************************************/
+verb : DISSOLVE_     {   $$.i = DISSOLVE_; loopdepth++; }
+vcommand : DISSOLVE_ error 
+    { kb_error(2395,"Syntax: DISSOLVE element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+
+/**************************************************************************/
+verb : REVERSE_ORIENTATION_     {   $$.i = REVERSE_ORIENTATION_; loopdepth++; }
+vcommand : REVERSE_ORIENTATION_ error 
+    { kb_error(3250,"Syntax: REVERSE_ORIENTATION element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+
+/**************************************************************************/
+verb : REFINE_     {   $$.i = REFINE_; loopdepth++; }
+vcommand : REFINE_ error 
+    { kb_error(2396,"Syntax: REFINE element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+
+
+/**************************************************************************/
+verb : EDGESWAP_     {   $$.i = EDGESWAP_; loopdepth++; }
+vcommand : EDGESWAP_ error 
+    { kb_error(2397,"Syntax: EDGESWAP edge_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+
+/**************************************************************************/
+
+verb : T1_EDGESWAP_     {   $$.i = T1_EDGESWAP_; loopdepth++; }
+vcommand : T1_EDGESWAP_ error 
+    { kb_error(4009,"Syntax: T1_EDGESWAP edge_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+/**************************************************************************/
+
+verb : EQUIANGULATE_     {   $$.i = EQUIANGULATE_; loopdepth++; }
+
+vcommand : EQUIANGULATE_ error 
+    { kb_error(2545,"Syntax: EQUIANGULATE_ edge_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+
+/**************************************************************************/
+verb : POP_     {   $$.i = POP_; loopdepth++; }
+vcommand : POP_ error 
+    { kb_error(2431,"Syntax: POP element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+/**************************************************************************/
+
+verb : POP_TRI_TO_EDGE_     {   $$.i = POP_TRI_TO_EDGE_; loopdepth++; }
+vcommand : POP_TRI_TO_EDGE_ error 
+    { kb_error(2800,
+     "Syntax: POP_TRI_TO_EDGE facet_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+/**************************************************************************/
+
+verb : POP_EDGE_TO_TRI_     {   $$.i = POP_EDGE_TO_TRI_; loopdepth++; }
+vcommand : POP_EDGE_TO_TRI_ error 
+    { kb_error(2801,"Syntax: POP_EDGE_TO_TRI edge_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+/**************************************************************************/
+
+verb : POP_QUAD_TO_QUAD_     {   $$.i = POP_QUAD_TO_QUAD_; loopdepth++; }
+vcommand : POP_QUAD_TO_QUAD_ error 
+    { kb_error(2802,"Syntax: POP_QUAD_TO_QUAD facet_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR); }
+
+/**************************************************************************/
+verb : FIX_     {   $$.i = FIX_; loopdepth++; }
+verb : UNFIX_     {  $$.i = UNFIX_; loopdepth++; }
+
+vcommand : FIX_ IDENT_ { $$.i = makenode(FIX_PARAMETER_,$2.i,0); }
+vcommand : UNFIX_ IDENT_ { $$.i = makenode(UNFIX_PARAMETER_,$2.i,0); }
+vcommand : FIX_ QUANTITY_NAME_
+    { $$.i = makenode(FIX_QUANTITY_,$2.i,0);}
+
+vcommand : UNFIX_ QUANTITY_NAME_ 
+    { $$.i = makenode(UNFIX_QUANTITY_,$2.i,0);}
+
+vcommand : FIX_ error 
+    { kb_error(2398,"Syntax: FIX element_gen [ name ] [ WHERE rexpr ] or FIX quantity_name\n",
+      Q_ERROR); }
+
+vcommand : UNFIX_ error 
+    { kb_error(2399,"Syntax: UNFIX element_gen [ name ] [ WHERE rexpr ] or UNFIX quantity_name\n",
+      Q_ERROR); }
+/**************************************************************************/
+
+eltype: VERTICES_  { if ( const_expr_flag ) YYABORT; $$.etype = $$.i = VERTEX; }
+eltype: EDGES_     { if ( const_expr_flag ) YYABORT; $$.etype = $$.i = EDGE   ; }
+eltype: FACETS_    { if ( const_expr_flag ) YYABORT; $$.etype = $$.i = FACET  ; }
+eltype: BODIES_    { if ( const_expr_flag ) YYABORT; $$.etype = $$.i = BODY  ; }
+eltype: FACETEDGES_  { if ( const_expr_flag ) YYABORT; $$.etype = $$.i = FACETEDGE; }
+multiple: eltype          
+       { int next;
+         next = makenode(INIT_ELEMENT_,$1.i,0); 
+         $$.i = makenode(NEXT_ELEMENT_,next,0);
+         $$.etype = $1.i;
+       }
+multiple: singlep eltype
+       { int next;
+         next = makenode(INIT_SUBELEMENT_,$1.i,$2.i); 
+         $$.i = makenode(NEXT_ELEMENT_,next,0);
+         $$.etype = $2.etype;
+       }
+
+/*
+single: rexpr { if ( list[$1].datatype < VERTEX_TYPE ||
+                     list[$1].datatype > FACETEDGE_TYPE )
+                  kb_error(3712,"Need element here.\n",COMMAND_ERROR);
+                $$ = $1;
+               }
+*/
+
+single: eltype '[' elindex ']'  
+    { verb_flag = 0; $$.i = makenode(INDEXED_ELEMENT_,$1.i,$3.i);
+       $$.etype = $1.i; }
+
+single: eltype '[' error
+  { kb_error(3809,"Missing index of element.\n",Q_ERROR); }
+single: eltype '[' rexpr  error
+  { kb_error(3832,"Missing right bracket after index expression.\n",Q_ERROR); }
+
+
+single: SYMBOL_     { verb_flag = 0; $$.i = makenode(SYMBOL_ELEMENT_,$1.i,0);
+                        $$.etype = list[$$.i].op1.eltype; }
+single: SELF_    
+   { verb_flag = 0;
+     elsym = symbol_lookup("self");
+     if ( elsym == NULL )
+       kb_error(2400,"SELF not defined, since not in attribute function def.\n",
+           COMMAND_ERROR);
+     $$.i = makenode(SELF_ELEMENT_,elsym->type,0);
+     $$.etype = elsym->type;
+   }
+single: ELEMENT_IDENT_  { verb_flag = 0; $$.i = makenode(ELEMENT_IDENT_,$1.i,0);
+                          list[$$.i].op1.eltype = $1.etype;
+                        $$.etype = $1.etype; }
+
+singlep: single '.' { $$ = $1; } 
+singlep: single { $$ = $1; }
+single: singlep  eltype '[' rexpr ']'
+        {  subtype = $2.i; $$.i = makenode(INDEXED_SUBTYPE_,$1.i,$4.i);
+           $$.etype = $2.etype; }
+single: singlep  eltype '[' error
+  { kb_error(3810,"Missing index of element.\n",Q_ERROR); }
+single: singlep  eltype '[' rexpr error
+  { kb_error(3812,"Missing right bracket after index expression.\n",Q_ERROR); }
+
+/*  turn off element as datatype for now
+rexpr: single  { $$.i = makenode(SINGLE_ELEMENT_EXPR_,$1.i,$1.etype); }
+*/
+
+element_gen: singlep 
+        { int type = list[$1.i].op1.eltype;
+          begin_scope(); /* ended at end of aggregate */
+          elsym = symbol_add(default_name,type);
+          elsym->localnum = list[$1.i].op2.localnum;
+          strcpy(last_name,default_name);
+          $1.symptr = elsym;
+          $$.i = makenode(SINGLE_ELEMENT_,$1.i,0);
+          $$.symptr = elsym;
+          $$.etype = $1.etype;
+        }
+
+element_gen: single NEWIDENT_
+        { int type = list[$1.i].op1.eltype;
+          begin_scope(); /* ended at end of aggregate */
+          elsym = symbol_add($2.lexeme,type);
+          elsym->localnum = list[$1.i].op2.localnum;
+          strcpy(last_name,$2.lexeme);
+          $$.i = makenode(SINGLE_ELEMENT_,$1.i,0);
+          list[$1.i].op5.string =
+            (char*)mycalloc(strlen(elsym->name)+1,1);
+          list[$1.i].flags |= HAS_STRING_5;
+          strcpy(list[$1.i].op5.string,elsym->name);
+          $1.symptr = elsym;
+          $$.symptr = elsym;
+          elsym = symbol_add(default_name,type); /* current id as default */
+          elsym->localnum = list[$1.i].op2.localnum;
+          $$.etype = $1.etype;
+        }
+element_gen: multiple
+        { int type = list[$1.i+list[$1.i].left].op1.eltype;
+          begin_scope(); /* ended at end of aggregate */
+          elsym = symbol_add(default_name,type);
+          elsym->localnum = list[$1.i].op2.localnum;
+          strcpy(last_name,default_name);
+          list[$1.i].op5.string =
+            (char*)mycalloc(strlen(default_name)+1,1);
+          list[$1.i].flags |= HAS_STRING_5;
+          strcpy(list[$1.i].op5.string,default_name);
+          $1.symptr = elsym;
+          $$.symptr = elsym;
+          $$.i = $1.i;
+          $$.etype = $1.etype;
+        }
+element_gen: multiple NEWIDENT_
+        { int type = list[$1.i+list[$1.i].left].op1.eltype;
+          begin_scope(); /* ended at end of aggregate */
+          elsym = symbol_add($2.lexeme,type);
+          elsym->localnum = list[$1.i].op2.localnum;
+          strcpy(last_name,$2.lexeme);
+          list[$1.i].op5.string =
+            (char*)mycalloc(strlen(elsym->name)+1,1);
+          list[$1.i].flags |= HAS_STRING_5;
+          strcpy(list[$1.i].op5.string,elsym->name);
+          $1.symptr = elsym;
+          $$.symptr = elsym;
+          $$.i = $1.i;
+          elsym = symbol_add(default_name,type); /* current id as default */
+          elsym->localnum = list[$1.i].op2.localnum;
+          $$.etype = $1.etype;
+        }
+element_gen: single PROCEDURE_
+         { kb_error(1890,"Name already in use as procedure name.\n",COMMAND_ERROR); }
+element_gen: multiple PROCEDURE_
+         { kb_error(1891,"Name already in use as procedure name.\n",COMMAND_ERROR); }
+element_gen: single IDENT_
+         { kb_error(1892,"Name already in use as variable name.\n",COMMAND_ERROR); }
+element_gen: multiple IDENT_
+         { kb_error(1893,"Name already in use as variable name.\n",COMMAND_ERROR); }
+element_gen : element_gen WHERE_ rexpr 
+         { $$.i = makenode(WHERE_,$1.i,$3.i); 
+           $$.symptr = $1.symptr;
+           }
+element_gen : element_gen WHERE_ error
+   { kb_error(3901,"Missing boolean expression after WHERE.\n",Q_ERROR); }
+
+/*****************************************************************************/
+toggle:  ON_            { $$.i = ON_; }
+toggle:  OFF_            { $$.i = OFF_; }
+/**************************************************************************/
+quotation_concat : QUOTATION_  { $$.i = makenode(QUOTATION_,0,0); }
+quotation_concat : quotation_concat QUOTATION_
+     { int size1 = strlen(list[$$.i].op1.string);
+       int size2 = strlen(yytext);
+       $$.i = $1.i;
+       list[$$.i].op1.string = (char*)kb_realloc(list[$$.i].op1.string,
+                                    size1+size2+1);
+       strncpy(list[$$.i].op1.string+size1,yytext,size2);
+     }
+stringexpr : quotation_concat { $$.i = $1.i }
+stringexpr : STRINGGLOBAL_  { $$.i = makenode(STRINGGLOBAL_,$1.i,0); }
+stringexpr : PERM_STRINGGLOBAL_  { $$.i = makenode(PERM_STRINGGLOBAL_,$1.i,0); }
+stringexpr : DATAFILENAME_  { $$.i = makenode(DATAFILENAME_,$1.i,0); }
+stringexpr : WARNING_MESSAGES_  { $$.i = makenode(WARNING_MESSAGES_,$1.i,0); }
+stringexpr : DATE_AND_TIME_  { $$.i = makenode(DATE_AND_TIME_,0,0); }
+stringexpr : TRANSFORM_EXPR_ { $$.i = makenode(GET_TRANSFORM_EXPR_,0,0); }
+sprintfhead : SPRINTF_   stringexpr 
+               { $$.i = makenode(SPRINTFHEAD_,$2.i,0); }
+sprintfhead : SPRINTF_   error
+   { kb_error(3894,"Missing format string after SPRINTF.\n",Q_ERROR); } 
+stringexpr : sprintfhead       { $$.i = $1.i; }
+stringexpr : sprintfhead ',' exprlist { $$.i = makenode(SPRINTF_,$1.i,$3.i); }
+stringexpr : sprintfhead ',' error
+   { kb_error(3806,"Error in SPRINTF arguments.\n",Q_ERROR); } 
+/**************************************************************************/
+
+getattrib : COORD_  { $$.qnum = $1.i; $$.i = COORD_; $$.datatype=REAL_TYPE; }
+getattrib : PARAM_ { $$.qnum = $1.i; $$.i = PARAM_; $$.datatype=REAL_TYPE; }
+getattrib : LENGTH_     { $$.i = GET_LENGTH_; $$.datatype=REAL_TYPE; }
+getattrib : MEAN_CURVATURE_     { $$.i = GET_MEANCURV_; $$.datatype=REAL_TYPE; }
+getattrib : SHOW_     { $$.i = GET_SHOW_; $$.datatype=REAL_TYPE; }
+getattrib : ORIENTATION_     { $$.i = GET_ORIENTATION_; $$.datatype=REAL_TYPE; }
+getattrib : STAR_     { $$.i = GET_STAR_; $$.datatype=REAL_TYPE; }
+getattrib : SQ_MEAN_CURV_     { $$.i = GET_SQ_MEAN_CURV_; $$.datatype=REAL_TYPE; }
+getattrib : DIHEDRAL_     { $$.i = GET_DIHEDRAL_; $$.datatype=REAL_TYPE; }
+getattrib : VALENCE_     { $$.i = GET_VALENCE_; $$.datatype=REAL_TYPE; }
+getattrib : AREA_     { $$.i = GET_AREA_; $$.datatype=REAL_TYPE; }
+getattrib : VOLUME_     { $$.i = GET_VOLUME_; $$.datatype=REAL_TYPE; }
+getattrib : VOLCONST_     { $$.i = GET_VOLCONST_; $$.datatype=REAL_TYPE; }
+getattrib : TARGET_     { $$.i = GET_TARGET_; $$.datatype=REAL_TYPE; }
+getattrib : MPI_TASK_ATTR_     { $$.i = GET_MPI_TASK_; $$.datatype=REAL_TYPE; }
+getattrib : DENSITY_     { $$.i = GET_DENSITY_; $$.datatype=REAL_TYPE; }
+getattrib : PRESSURE_     { $$.i = GET_PRESSURE_; $$.datatype=REAL_TYPE; }
+getattrib : ID_     { $$.i = GET_ID_; $$.datatype=REAL_TYPE; }
+getattrib : OID_     { $$.i = GET_OID_; $$.datatype=REAL_TYPE; }
+getattrib : TAG_     { $$.i = GET_TAG_; $$.datatype=REAL_TYPE; }
+getattrib : COLOR_     { $$.i = GET_COLOR_; $$.datatype=REAL_TYPE; }
+getattrib : FRONTCOLOR_     { $$.i = GET_FRONTCOLOR_; $$.datatype=REAL_TYPE; }
+getattrib : BACKCOLOR_     { $$.i = GET_BACKCOLOR_; $$.datatype=REAL_TYPE; }
+getattrib : BACKBODY_     { $$.i = GET_BACKBODY_; $$.datatype=REAL_TYPE; }
+getattrib : FRONTBODY_     { $$.i = GET_FRONTBODY_; $$.datatype=REAL_TYPE; }
+getattrib : ORIGINAL_     { $$.i = GET_ORIGINAL_; $$.datatype=REAL_TYPE; }
+getattrib : FIXED_     { $$.i = GET_FIXED_; $$.datatype=REAL_TYPE; }
+getattrib : NO_REFINE_     { $$.i = GET_NO_REFINE_; $$.datatype=REAL_TYPE; }
+getattrib : HIT_PARTNER_   { $$.i = GET_HIT_PARTNER_; $$.datatype=REAL_TYPE;}
+getattrib : NONCONTENT_     { $$.i = GET_NONCONTENT_; $$.datatype=REAL_TYPE; }
+getattrib : NODISPLAY_     { $$.i = GET_NO_DISPLAY_; $$.datatype=REAL_TYPE; }
+getattrib : FIXEDVOL_     { $$.i = GET_FIXEDVOL_; $$.datatype=REAL_TYPE; }
+getattrib : AXIAL_POINT_     { $$.i = GET_AXIAL_POINT_; $$.datatype=REAL_TYPE; }
+getattrib : TRIPLE_POINT_     { $$.i = GET_TRIPLE_PT_; $$.datatype=REAL_TYPE; }
+getattrib : TETRA_POINT_     { $$.i = GET_TETRA_PT_; $$.datatype=REAL_TYPE; }
+getattrib : MIDV_     { $$.i = GET_MIDV_; $$.datatype=REAL_TYPE; }
+getattrib : WRAP_     { $$.i = GET_WRAP_; $$.datatype=REAL_TYPE; }
+getattrib : MID_EDGE_     { $$.i = GET_MID_EDGE_; $$.datatype=REAL_TYPE; }
+getattrib : MID_FACET_     { $$.i = GET_MID_FACET_; $$.datatype=REAL_TYPE; }
+getattrib : BARE_     { $$.i = GET_BARE_; $$.datatype=REAL_TYPE; }
+getattrib : PHASE_     { $$.i = GET_PHASE_; $$.datatype=REAL_TYPE; }
+getattrib : QUANTITY_NAME_     { $$.qnum = $1.i;  $$.i = GET_QUANTITY_; $$.datatype=REAL_TYPE; }
+getattrib : METHOD_NAME_     { $$.qnum = $1.i;  $$.i = GET_INSTANCE_; $$.datatype=REAL_TYPE; }
+getattrib : EXTRA_ATTRIBUTE_  
+          { struct extra *ex;
+            $$.i = GET_EXTRA_ATTR_ ;  
+            $$.qnum = $1.qnum + ($1.etype << YYTYPESHIFT); 
+            $$.etype = $1.etype; 
+            ex = EXTRAS($1.etype) + $1.qnum;
+            $$.datatype= (ex->type <= MAX_NUMERIC_TYPE) ? REAL_TYPE : ex->type; 
+          }
+ggetattrib: getattrib
+        { if ( const_expr_flag ) { YYABORT; /* illegal for const rexpr */ }
+          $$= $1;
+        }
+fullattrib: ggetattrib
+     { 
+        if ( (datafile_flag && boundary_expr_flag && ($1.i==PARAM_))
+          ||  ( datafile_flag &&  ($1.i==COORD_)  ) )
+             { coord_num = $1.qnum; $$.i = makenode(PUSHPARAM,0,0); }
+        else
+        { 
+          $$.i = makenode(ATTRIBUTE,$1.i,$1.qnum); 
+          $$.datatype = list[$$.i].datatype = $1.datatype;
+        }
+     }
+
+fullattrib: ggetattrib indexset
+     {
+       if ( const_expr_flag ) { YYABORT; /* illegal for const rexpr */ }
+       switch ( $1.i )
+       { case COORD_:
+           $$.i = makenode(INDEXED_COORD_,$2.i,0);
+           break;
+         case GET_VERTEXNORMAL_:
+           $$.i = makenode(GET_VERTEXNORMAL_,$2.i,0);
+           break;
+         case PARAM_:
+           if ( $1.etype == VERTEX )
+           { $$.qnum = V_PARAM_ATTR;
+             $$.i =
+               makenode(INDEXED_ATTRIBUTE,$2.i,$$.qnum+($1.etype<<YYTYPESHIFT));
+           } else
+           kb_error(1895,"Illegal subscript.\n",COMMAND_ERROR);
+           break;
+         case GET_EXTRA_ATTR_:
+           $$.i = makenode(INDEXED_ATTRIBUTE,$2.i,$1.qnum);
+           $$.qnum = $1.qnum;
+           break;
+         default:
+            kb_error(1498,"Illegal subscript.\n",COMMAND_ERROR);
+       }
+       $$.datatype = list[$$.i].datatype = $1.datatype;
+    }
+
+fullattrib: ON_CONSTRAINT_  CONSTRAINT_NAME_ 
+     {  $$.i = makenode(ON_CONSTRAINT_NAME,$2.i,0);
+        $$.datatype = REAL_TYPE;
+     }
+fullattrib: ON_CONSTRAINT_  rexpr 
+     {  $$.i = makenode($1.i,$2.i,0);
+        $$.datatype = REAL_TYPE;
+     }
+fullattrib: ON_CONSTRAINT_  error
+     { kb_error(3807,"Need constraint name or number after ON_CONSTRAINT\n",
+         Q_ERROR); } 
+
+fullattrib: ON_BOUNDARY_  BOUNDARY_NAME_ 
+     {  $$.i = makenode(ON_BOUNDARY_NAME,$2.i,0);
+        $$.datatype = REAL_TYPE;
+     }
+fullattrib: ON_BOUNDARY_  rexpr 
+     {  $$.i = makenode($1.i,$2.i,0); 
+        $$.datatype = REAL_TYPE;
+     }
+fullattrib: ON_BOUNDARY_  error
+     { kb_error(3897,"Need constraint name or number after ON_BOUNDARY\n",
+         Q_ERROR); } 
+
+fullattrib: HIT_CONSTRAINT_  CONSTRAINT_NAME_ 
+     {  $$.i = makenode(HIT_CONSTRAINT_NAME,$2.i,0); 
+        $$.datatype = REAL_TYPE;
+     }
+fullattrib: HIT_CONSTRAINT_  rexpr 
+     {  $$.i = makenode($1.i,$2.i,0); 
+        $$.datatype = REAL_TYPE;
+     }
+fullattrib: HIT_CONSTRAINT_  error
+     { kb_error(3898,"Need constraint name or number after HIT_CONSTRAINT\n",
+         Q_ERROR); } 
+
+fullattrib: ON_QUANTITY_  QUANTITY_NAME_ 
+     {  $$.i = makenode($1.i,$2.i,0); 
+        $$.datatype = REAL_TYPE;
+     }
+fullattrib: ON_QUANTITY_  error
+     { kb_error(4004,"Need constraint name or number after ON_QUANTITY\n",
+         Q_ERROR); } 
+
+fullattrib: ON_METHOD_INSTANCE_  METHOD_NAME_ 
+     {  $$.i = makenode($1.i,$2.i,0); 
+        $$.datatype = REAL_TYPE;
+     }
+fullattrib: ON_METHOD_INSTANCE_  error
+  { kb_error(3813,"Need constraint name or number after ON_METHOD_INSTANCE_\n",
+         Q_ERROR); } 
+
+rexpr : fullattrib 
+      { 
+        if ( datafile_flag ) $$.i = $1.i;
+        else
+        {
+          elsym = symbol_lookup(default_name);
+          if ( elsym ) 
+          {
+            check_element_type(list[$1.i].type,elsym->type);
+            list[$1.i].op1.localnum = elsym->localnum;
+          }
+          else kb_error(1896,"\nMissing element for attribute. (Get quantity value with name.value) \n",COMMAND_ERROR);
+        }
+        list[$1.i].datatype = $1.datatype;
+      }
+rexpr : singlep fullattrib  
+           { $$.i = makenode(QUALIFIED_ATTRIBUTE,$1.i,$2.i); 
+             list[$2.i].op1.localnum = list[$1.i].op2.localnum;
+             list[$$.i].datatype = $2.datatype;
+           }
+
+rexpr : singlep NEWIDENT_
+         { sprintf(errmsg,"\"%s\" is not a attribute name.\n",$2.lexeme);
+           kb_error(3458,errmsg,Q_ERROR); 
+         }
+
+/**************************************************************************/
+rexpr : IS_DEFINED_ '(' stringexpr ')' { $$.i = makenode(IS_DEFINED_,$3.i,0); }
+rexpr : IS_DEFINED_ error
+   { kb_error(3814,"Syntax: IS_DEFINED ( quoted_string )\n",Q_ERROR); }
+rexpr : IS_DEFINED_ '(' stringexpr 
+   { kb_error(3815,"Missing closing parenthesis for IS_DEFINED\n",Q_ERROR); }
+/**************************************************************************/
+
+
+rexpr : SIZEOF_ '(' ARRAY_ATTRIBUTE_ ')'
+           { int etype;
+             $$.qnum = $3.qnum; 
+             etype = $3.etype;
+             $$.i = makenode(SIZEOF_ATTR_,$$.qnum,etype); }
+
+rexpr : SIZEOF_ '(' ARRAYIDENT_ ')'
+           { $$.i = makenode(SIZEOF_ARRAY_,$3.i,0); }
+rexpr : SIZEOF_ '(' stringexpr ')'
+           { $$.i = makenode(SIZEOF_STRING_,$3.i,0); }
+rexpr : SIZEOF_ error
+     { strcpy(errmsg,"Syntax: SIZEOF ( extra_attribute )\n");
+       strcat(errmsg,"        SIZEOF ( array_name ) \n");
+       strcat(errmsg,"        SIZEOF ( string_expr ) \n");
+       kb_error(3816,errmsg,Q_ERROR);
+     }
+/**************************************************************************/
+
+rexpr : TOGGLEVALUE_ { $$.i = makenode(TOGGLEVALUE,$1.i,0); }
+rexpr : AUTOCHOP_  { $$.i = makenode(TOGGLEVALUE,AUTOCHOP_,0); }
+rexpr : LAGRANGE_ { $$.i = makenode(TOGGLEVALUE,LAGRANGE_,0); }
+rexpr : EPRINT_  rexpr      { $$.i = makenode(EPRINT_,$2.i,0); } 
+rexpr : EPRINT_  error
+    { kb_error(2886,"Syntax: EPRINT expression\n",Q_ERROR); }
+/**************************************************************************/
+rexpr : '('  rexpr ')'     { $$.i = $2.i; } 
+rexpr : '(' error  { kb_error(2401,"Missing closing parenthesis?\n",Q_ERROR); }
+/**************************************************************************/
+rexpr : INTERNAL_VARIABLE_ { $$.i = makenode(GET_INTERNAL_,$1.i,0); }
+rexpr : SCALE_ { $$.i = makenode(GET_INTERNAL_,V_SCALE,0); }
+rexpr : IDENT_           { $$.i = makenode(PUSHGLOBAL_,$1.i,0); } 
+rexpr : PERM_IDENT_           { $$.i = makenode(PUSH_PERM_GLOBAL_,$1.i,0); } 
+/**************************************************************************/
+rexpr : IDENT_ '.' EXTRA_ATTRIBUTE_    { $$.i = makenode(PUSH_PARAM_EXTRA_,$1.i,$3.i); } 
+rexpr : IDENT_ '.' error
+   { kb_error(3817,"Permitted optimizing parameter attributes: pdelta pscale\n",
+       Q_ERROR);
+   }
+/**************************************************************************/
+rexpr : DYNAMIC_LOAD_FUNC_   { $$.i = makenode(DYNAMIC_LOAD_FUNC_,$1.i,0); } 
+rexpr : TOTAL_ QUANTITY_NAME_  { $$.i = makenode(PUSHQVALUE_,$2.i,0); } 
+rexpr : QUANTITY_NAME_  '.' PRESSURE_ { $$.i = makenode(PUSHQPRESSURE_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' MODULUS_ { $$.i = makenode(PUSHQMODULUS_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' TOLERANCE_ { $$.i = makenode(PUSHQTOLERANCE_,$1.i,0); } 
+rexpr : METHOD_NAME_  '.' MODULUS_ { $$.i = makenode(PUSHMMODULUS_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' TARGET_ { $$.i = makenode(PUSHQTARGET_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' VALUE_ { $$.i = makenode(PUSHQVALUE_,$1.i,0); } 
+rexpr : METHOD_NAME_  '.' VALUE_ { $$.i = makenode(PUSHMVALUE_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' VOLCONST_ { $$.i = makenode(PUSHQVOLCONST_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' FIXED_ { $$.i = makenode(PUSHQFIXED_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' ENERGY_ { $$.i = makenode(PUSHQENERGY_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' INFO_ONLY_ { $$.i = makenode(PUSHQINFO_ONLY_,$1.i,0); } 
+rexpr : QUANTITY_NAME_  '.' CONSERVED_ { $$.i = makenode(PUSHQCONSERVED_,$1.i,0); } 
+
+rexpr : QUANTITY_NAME_  error
+ { strcpy(errmsg,
+       "Quantity name needs attribute.  Syntax: quantityname.attribute\n");
+   strcat(errmsg,"Possible quantity attributes: \n");
+   strcat(errmsg,"   value, modulus, pressure, target, tolerance, volconst,\n");
+   strcat(errmsg,"   fixed, energy, info_only, conserved\n");
+   kb_error(3818,errmsg,Q_ERROR);
+  }
+
+rexpr : QUANTITY_NAME_  '.' error
+ { strcpy(errmsg,"Possible quantity attributes: \n");
+   strcat(errmsg,"   value, modulus, pressure, target, tolerance, volconst,\n");
+   strcat(errmsg,"   fixed, energy, info_only, conserved\n");
+   kb_error(3819,errmsg,Q_ERROR);
+  }
+rexpr : METHOD_NAME_  '.' error
+   { kb_error(3907,"Possible method instance attributes: value, modulus \n",
+             Q_ERROR); 
+   }
+rexpr : METHOD_NAME_  error
+ { strcpy(errmsg,
+     "Method instance name needs attribute.  Syntax: instancename.attribute\n");
+   strcat(errmsg,"Possible method instance attributes: value, modulus \n");
+   kb_error(3820,errmsg,Q_ERROR);
+ }
+     
+/**************************************************************************/
+rexpr : INTEGER_         { real_val = (REAL)$1.i; $$.i = makenode(PUSHCONST,0,0); } 
+rexpr : LEAD_INTEGER_ 
+        { 
+          real_val = (REAL)$1.i; $$.i = makenode(PUSHCONST,0,0); 
+        } 
+rexpr : REAL_            { real_val = $1.r; $$.i = makenode(PUSHCONST,0,0); } 
+signed_expr : SIGNED_NUMBER_   { real_val = $1.r; $$.i = makenode(PUSHCONST,0,0); } 
+rexpr : signed_expr        { $$.i = $1.i; }
+rexpr : PI_              { $$.i = makenode(PUSHPI,0,0); } 
+rexpr : E_               { $$.i = makenode(PUSHE,0,0); } 
+rexpr : G_               { $$.i = makenode(PUSHG,0,0); } 
+rexpr : USERFUNC_           { int_val = $1.i; $$.i = makenode(USERFUNC,0,0); } 
+rexpr : MATHFUNC_ '(' rexpr ')'   { $$.i = makenode($1.i,(NTYPE)$3.i,0); } 
+rexpr : MATHFUNC_ error
+    { sprintf(errmsg,"Syntax: %s ( rexpr )\n",keywordname($1.i));
+      kb_error(3821,errmsg,Q_ERROR);
+    }
+rexpr : MATHFUNC2_ '(' rexpr ',' rexpr ')' { $$.i = makenode($1.i,(NTYPE)$3.i,$5.i); }
+rexpr : MATHFUNC2_ 
+    { sprintf(errmsg,"Syntax: %s ( rexpr , rexpr )\n",keywordname($1.i));
+      kb_error(3822,errmsg,Q_ERROR);
+    }
+
+  /* binary operations kept separate for precedence purposes */
+rexpr : rexpr '+' rexpr       { $$.i = makenode('+',(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr '-' rexpr       { $$.i = makenode('-',(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr '=' rexpr      { $$.i = makenode('=',(NTYPE)$1.i,(NTYPE)$3.i); }  /* for constraints */
+rexpr : rexpr '/' rexpr       { $$.i = makenode('/',(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr '*' rexpr       { $$.i = makenode('*',(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr '%' rexpr       { $$.i = makenode('%',(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr IMOD_ rexpr     { $$.i = makenode(IMOD_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr IDIV_ rexpr     { $$.i = makenode(IDIV_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr '^' rexpr       { $$.i = makenode(POW,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr '<' rexpr       { $$.i = makenode(LT_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr '>' rexpr       { $$.i = makenode(GT_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr NE_ rexpr       { $$.i = makenode(NE_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr EQ_ rexpr       { $$.i = makenode(EQ_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr LE_ rexpr       { $$.i = makenode(LE_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr GE_ rexpr       { $$.i = makenode(GE_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr AND_ rexpr       { $$.i = makenode(AND_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr OR_ rexpr       { $$.i = makenode(OR_,(NTYPE)$1.i,(NTYPE)$3.i); } 
+rexpr : rexpr '+' arraylvalue error 
+   { kb_error(3031,"Cannot add scalar and array\n",Q_ERROR);  }
+rexpr : rexpr '-' arraylvalue error
+   { kb_error(3027,"Cannot subtract scalar and array\n",Q_ERROR);  }
+rexpr : rexpr '+' error 
+   { kb_error(3823,"Bad second expression after +\n",Q_ERROR);  }
+rexpr : rexpr '-' error 
+   { kb_error(3825,"Bad second expression after -\n",Q_ERROR);  }
+rexpr : rexpr '=' error 
+   { kb_error(3828,"Bad second expression after =\n",Q_ERROR);  }
+rexpr : rexpr '/' error 
+   { kb_error(3829,"Bad second expression after /\n",Q_ERROR);  }
+rexpr : rexpr '*' error 
+   { kb_error(3830,"Bad second expression after *\n",Q_ERROR);  }
+rexpr : rexpr '%' error 
+   { kb_error(3831,"Bad second expression after %\n",Q_ERROR);  }
+rexpr : rexpr IMOD_ error 
+   { kb_error(2887,"Bad second expression after IMOD\n",Q_ERROR);  }
+rexpr : rexpr IDIV_ error 
+   { kb_error(3919,"Bad second expression after IDIV\n",Q_ERROR);  }
+rexpr : rexpr '^' error 
+   { kb_error(3920,"Bad second expression after ^\n",Q_ERROR);  }
+rexpr : rexpr '<' error 
+   { kb_error(3921,"Bad second expression after <\n",Q_ERROR);  }
+rexpr : rexpr '>' error 
+   { kb_error(3922,"Bad second expression after >\n",Q_ERROR);  }
+rexpr : rexpr NE_ error 
+   { kb_error(3923,"Bad second expression after !=\n",Q_ERROR);  }
+rexpr : rexpr EQ_ error 
+   { kb_error(3924,"Bad second expression after ==\n",Q_ERROR);  }
+rexpr : rexpr LE_ error 
+   { kb_error(3925,"Bad second expression after <=\n",Q_ERROR);  }
+rexpr : rexpr GE_ error 
+   { kb_error(3926,"Bad second expression after >=\n",Q_ERROR);  }
+rexpr : rexpr AND_ error 
+   { kb_error(3927,"Bad second expression after AND\n",Q_ERROR);  }
+rexpr : rexpr OR_ error 
+   { kb_error(3928,"Bad second expression after OR\n",Q_ERROR);  }
+
+/**************************************************************************/
+rexpr : UMINUS_ rexpr     { $$.i = makenode(CHS,(NTYPE)$2.i,0); } 
+rexpr : UMINUS_ error
+   { kb_error(3826,"Bad expression after unary minus.\n",Q_ERROR); }
+rexpr : UPLUS_ rexpr     { $$.i = $2.i; } 
+rexpr : NOT_ rexpr           { $$.i = makenode(NOT_,(NTYPE)$2.i,0); } 
+rexpr : NOT_ error
+   { kb_error(3827,"Bad expression after NOT.\n",Q_ERROR); }
+/**************************************************************************/
+
+rexpr : rexpr '?' { cond_expr_flag++; $$.i = makenode(COND_TEST_,$1.i,0); } 
+    rexpr ':' { cond_expr_flag--; $$.i = makenode(COND_EXPR_,$3.i,$4.i); }
+    rexpr { $$.i = makenode(COND_ELSE_,$6.i,$7.i); } 
+rexpr : rexpr '?' error
+   { kb_error(3824,"Conditional expression syntax:  expr1 ? expr2 : expr3\n",
+       Q_ERROR);
+   }
+     
+/**************************************************************************/
+aggregate : MAX_          { $$.i = MAX_;  } 
+aggregate : MIN_          { $$.i = MIN_;  } 
+aggregate : SUM_          { $$.i = SUM_;  } 
+aggregate : AVG_          { $$.i = AVG_;  } 
+aggregate : COUNT_        { $$.i = COUNT_; } 
+histotype : HISTOGRAM_        { $$.i = HISTOGRAM_;  } 
+histotype : LOGHISTOGRAM_        { $$.i = LOGHISTOGRAM_;  } 
+vcommand : HISTOGRAM_   error 
+   { kb_error(2402,"Syntax: HISTOGRAM(element_gen,expression)\n", Q_ERROR); }
+vcommand : LOGHISTOGRAM_   error 
+   { kb_error(2403,"Syntax: LOGHISTOGRAM(element_gen,expression)\n", Q_ERROR); }
+/**************************************************************************/
+foreachhead : FOREACH_ { aggrtype = FOREACH_; loopdepth++; 
+                 $$.i = makenode(AGGREGATE_INIT_,0,0); }
+vcommand:  foreachhead element_gen DO_ command
+              {  int aggr;
+                 aggrtype = FOREACH_;
+                 aggr = makenode(AGGREGATE_,$2.i,$4.i); 
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                 end_scope();
+              }
+vcommand : FOREACH_ error 
+ { kb_error(2404,
+   "Syntax: FOREACH element_gen [ name ] [WHERE expr] DO command\n",Q_ERROR);}
+/**************************************************************************/
+vcommand : SHOWVERB_  { use_given_id = 1; /* in eval() */  } element_gen
+              { $$.i = makenode(SHOW_,$3.i,0);
+                use_given_id = 0;
+                end_scope();
+              }
+vcommand: SHOWVERB_ { $$.i = makenode(SINGLE_LETTER_,'s',0); }
+vcommand: SHOWVERB_ error 
+   { kb_error(2405,"Syntax: SHOW element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR);}
+/**************************************************************************/
+vcommand : SHOW_EXPR_  { use_given_id = 1; /* in eval() */ } element_gen
+              { $$.i = makenode(SHOW_EXPR_,$3.i,0);
+                use_given_id = 0;
+                end_scope();
+              }
+vcommand : SHOW_EXPR_ error 
+   { kb_error(2406,"Syntax: SHOW_EXPR element_gen [ name ] [ WHERE rexpr ]\n",Q_ERROR);}
+/**************************************************************************/
+vcommand : histotype  { loopdepth++;
+           aggrtype = $1.i; $$.i = makenode(AGGREGATE_INIT_,0,0); }
+        '(' element_gen ',' rexpr ')'
+              {  int aggr;
+                 aggrtype = $1.i;
+                 aggr = makenode(AGGREGATE_,$4.i,$6.i); 
+                 $$.i = makenode(AGGREGATE_END_,$2.i,aggr);
+                 end_scope();
+              }
+rexpr : aggregate  { loopdepth++;
+            aggrtype = $1.i; $$.i = makenode(AGGREGATE_INIT_,0,0); }
+        '(' element_gen ',' rexpr ')'
+              {  int aggr;
+                 aggrtype = $1.i;
+                 aggr = makenode(AGGREGATE_,$4.i,$6.i); 
+                 $$.i = makenode(AGGREGATE_END_,$2.i,aggr);
+                 end_scope();
+              }
+vcommand : verb
+              {  aggrtype = $1.i; 
+                 $$.i = makenode(AGGREGATE_INIT_,0,0);  
+              }
+             element_gen 
+              {  int aggr;
+                 aggrtype = $1.i; 
+                 aggr = makenode(AGGREGATE_,$3.i,0);
+                 $$.i = makenode(AGGREGATE_END_,$2.i,aggr);
+                 end_scope();
+              }
+set :  SET_  {  $$.i = makenode(SET_INIT_,0,0); }
+
+/* set_attrib for settable attributes without values */
+set_attrib : NO_REFINE_ { $$.i = SET_NO_REFINE_ ; }
+set_attrib : HIT_PARTNER_ { $$.i = SET_HIT_PARTNER_ ; }
+set_attrib : FIXED_ { $$.i = SET_FIXED_ ; }
+set_attrib : BARE_ { $$.i = SET_BARE_ ; }
+set_attrib : NONCONTENT_ { $$.i = SET_NONCONTENT_ ; }
+set_attrib : NODISPLAY_ { $$.i = SET_NO_DISPLAY_ ; }
+set_attrib : AXIAL_POINT_ { $$.i = SET_AXIAL_POINT_ ; }
+set_attrib : TETRA_POINT_      { $$.i = SET_TETRA_PT_;  }
+set_attrib : TRIPLE_POINT_      { $$.i = SET_TRIPLE_PT_; }
+
+vcommand : set element_gen set_attrib
+              {  int aggr;
+                 aggrtype = $3.i;
+                 aggr = makenode(AGGREGATE_,$2.i,0);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : set element_gen set_attrib WHERE_ rexpr
+              { int aggr,where; 
+                aggrtype = $3.i;
+                where = makenode(WHERE_,$2.i,$5.i);
+                aggr = makenode(AGGREGATE_,where,0);
+                $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+/* setattrib for settable attributes with values */
+setattrib : FRONTBODY_      { $$.i = SET_FRONTBODY_; tok=0; /* for UMINUS */ }
+setattrib : BACKBODY_      { $$.i = SET_BACKBODY_; tok=0; }
+setattrib : COLOR_      { $$.i = SET_COLOR_; tok=0; }
+setattrib : FRONTCOLOR_      { $$.i = SET_FRONTCOLOR_; tok=0; }
+setattrib : BACKCOLOR_      { $$.i = SET_BACKCOLOR_; tok=0; }
+setattrib : DENSITY_      { $$.i = SET_DENSITY_; tok=0; }
+setattrib : ORIGINAL_      { $$.i = SET_ORIGINAL_; tok=0; }
+setattrib : VOLCONST_      { $$.i = SET_VOLCONST_; tok=0; }
+setattrib : VOLUME_      { $$.i = SET_VOLUME_; tok=0; }
+setattrib : TARGET_      { $$.i = SET_TARGET_; tok=0; }
+setattrib : PRESSURE_      { $$.i = SET_PRESSURE_; tok=0; }
+setattrib : OPACITY_      { $$.i = SET_OPACITY_; tok=0; }
+setattrib : CONSTRAINT_      { $$.i = SET_CONSTRAINT_; tok=0; }
+setattrib : BOUNDARY_      { $$.i = SET_BOUNDARY_; tok=0; }
+setattrib : TAG_      { $$.i = SET_TAG_; tok=0; }
+setattrib : COORD_      { $$.i = SET_COORD_+$1.i; tok = 0; /* UMINUS bug */ }
+setattrib : PARAM_      { $$.i = SET_PARAM_+$1.i; tok=0; }
+setattrib : PHASE_      { $$.i = SET_PHASE_; tok=0; }
+setattrib : EXTRA_ATTRIBUTE_ { $$.i = SET_EXTRA_ATTR_ ; tok=0; 
+            $$.qnum = $1.qnum; 
+            $$.etype = $1.etype;
+           strcpy(set_extra_name,EXTRAS($$.etype)[$$.qnum].name); }
+setattrib : ORIENTATION_ { $$.i = SET_ORIENTATION_ ; tok=0; }
+setattrib : WRAP_ { $$.i = SET_WRAP_ ; tok = 0;}
+setattribb : '.' setattrib { $$.i = $2.i;} 
+setattribb :  setattrib { $$.i = $1.i;} 
+assignop : ASSIGN_   { $$.i = ASSIGN_; }
+assignop : ASSIGNOP_ { $$.i = $1.i; }
+assignop : EQ_ { kb_error(3415,"Expected assignment operator, got '='\n",
+                  Q_ERROR);
+               }
+command : single '.' setattrib { $$.i = makenode(SINGLE_ELEMENT_,$1.i,0); }
+                            assignop rexpr
+              {  int  mm;
+                 int type = list[$1.i].op1.eltype;
+                 begin_scope(); /* ended at end of aggregate */
+                 elsym = symbol_add(default_name,type);
+                 elsym->localnum = list[$1.i].op2.localnum;
+                 strcpy(last_name,default_name);
+                 $1.symptr = elsym; 
+                 attr_kind = $3.i;
+                 $4.symptr = 0; /* in case of WHERE */
+                 assigntype = $5.i;
+                 mm = makenode(SET_ATTRIBUTE_A,$6.i,0); 
+                 $$.i = makenode(SINGLE_ASSIGN_,$4.i,mm);
+                end_scope();
+              }
+
+command : single '.' setattrib { $$.i = makenode(SINGLE_ELEMENT_,$1.i,0); }
+                           indexset assignop rexpr
+              {  int mm;
+                 int type = list[$1.i].op1.eltype;
+                 begin_scope(); /* ended at end of aggregate */
+                 elsym = symbol_add(default_name,type);
+                 elsym->localnum = list[$1.i].op2.localnum;
+                 strcpy(last_name,default_name);
+                 $1.symptr = elsym;
+                 attr_kind = $3.i;
+                 subtree_swap(&$5.i,&$7.i);
+                 $4.symptr = 0; /* in case of WHERE */
+                 assigntype = $6.i;
+                 mm = makenode(SET_ATTRIBUTE_A,$7.i,$5.i);
+                 $$.i = makenode(SINGLE_ASSIGN_,$4.i,mm);
+                end_scope();
+              }
+
+vcommand : set element_gen setattribb  rexpr
+              {  int aggr;
+                 int nn;
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 attr_kind = $3.i;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 nn = makenode(SET_ATTRIBUTE_L,$4.i,0); 
+                 aggr = makenode(AGGREGATE_,$2.i,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : set element_gen setattribb indexset  rexpr
+              {  int aggr;
+                 int nn;
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 attr_kind = $3.i;
+                 subtree_swap(&$4.i,&$5.i); /* get index eval in top of stack */
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 nn = makenode(SET_ATTRIBUTE_L,$5.i,$4.i); 
+                 aggr = makenode(AGGREGATE_,$2.i,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+vcommand : set element_gen  ARRAY_ATTRIBUTE_ indexset  rexpr
+              {  int aggr;
+                 int nn,mm,kk;
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 kk = makenode(ATTRIB_LVALUE_,0,0);
+                 list[kk].op1.localnum = 0;
+                 list[kk].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+
+                 subtree_swap(&$5.i,&kk); /* so datastart before rexpr */
+                 subtree_swap(&$4.i,&kk); /* so datastart before indexset */
+                 mm  = makenode(ARRAY_LVALUE_INDEXED_,kk,$4.i);
+                 nn = makenode(ARRAY_ASSIGNOP_SINGLE_,mm,$5.i);
+                 list[nn].flags |= SET_ASSIGNOP;
+                 list[nn].op1.assigntype = ASSIGN_;
+                 list[nn].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+                 aggr = makenode(AGGREGATE_,$2.i,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                 end_scope();
+              }
+
+vcommand : set element_gen  ARRAY_ATTRIBUTE_  arraylvalue
+              {  int aggr;
+                 int nn,kk;
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 attr_kind = $3.i;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 kk = makenode(ATTRIB_LVALUE_,0,0);
+                 list[kk].op1.localnum = 0;
+                 list[kk].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+                 subtree_swap(&$4.i,&kk); /* so lvalue before rvalue */
+                 nn = makenode(ARRAY_ASSIGNOP_ARRAY_,kk,$4.i);
+                 list[nn].flags |= SET_ASSIGNOP;
+                 list[nn].op1.assigntype = ASSIGN_;
+                 list[nn].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+                 aggr = makenode(AGGREGATE_,$2.i,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                 end_scope();
+              }
+vcommand : set element_gen  ARRAY_ATTRIBUTE_  rexpr
+              {  int aggr;
+                 int nn,kk;
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 attr_kind = $3.i;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 kk = makenode(ATTRIB_LVALUE_,0,0);
+                 list[kk].op1.localnum = 0;
+                 list[kk].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+                 subtree_swap(&$4.i,&kk); /* so rexpr before datastart */
+                 nn = makenode(ARRAY_ASSIGNOP_SCALAR_,kk,$4.i);
+                 list[nn].op1.assigntype = ASSIGN_;
+                 list[nn].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+                 list[nn].flags |= SET_ASSIGNOP;
+                 aggr = makenode(AGGREGATE_,$2.i,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                 end_scope();
+              }
+
+vcommand : set element_gen  ARRAY_ATTRIBUTE_  rexpr WHERE_ rexpr
+              {  int aggr,where;
+                 int nn,kk;
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 attr_kind = $3.i;
+
+                 /* splice in the WHERE clause */
+                 subtree_swap(&$4.i,&$6.i);
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&$4.i,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+
+
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 kk = makenode(ATTRIB_LVALUE_,0,0);
+                 list[kk].op1.localnum = 0;
+                 list[kk].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+                 subtree_swap(&$4.i,&kk); /* so rexpr before datastart */
+                 nn = makenode(ARRAY_ASSIGNOP_SCALAR_,kk,$4.i);
+                 list[nn].flags |= SET_ASSIGNOP;
+                 list[nn].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+                 list[nn].op1.assigntype = ASSIGN_;
+                 aggr = makenode(AGGREGATE_,$2.i,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                 end_scope();
+              }
+
+
+vcommand : set element_gen  ARRAY_ATTRIBUTE_ indexset  rexpr WHERE_ rexpr
+              {  int aggr,where;
+                 int nn,mm,kk;
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+
+                 /* splice in the WHERE clause */
+                 subtree_swap(&$5.i,&$7.i);
+                 subtree_swap(&$4.i,&$7.i);
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&$5.i,&where); /* get in proper linear order */
+                 subtree_swap(&$4.i,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $7.i - where;
+
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 kk = makenode(ATTRIB_LVALUE_,0,0);
+                 list[kk].op1.localnum = 0;
+                 list[kk].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+
+                 subtree_swap(&$5.i,&kk); /* so datastart before rexpr */
+                 subtree_swap(&$4.i,&kk); /* so datastart before indexset */
+                 mm  = makenode(ARRAY_LVALUE_INDEXED_,kk,$4.i);
+                 nn = makenode(ARRAY_ASSIGNOP_SINGLE_,mm,$5.i);
+                 list[nn].flags |= SET_ASSIGNOP;
+                 list[nn].op1.assigntype = ASSIGN_;
+                 aggr = makenode(AGGREGATE_,$2.i,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                 end_scope();
+              }
+
+vcommand : set element_gen  ARRAY_ATTRIBUTE_  arraylvalue WHERE_ rexpr
+              {  int aggr,where;
+                 int nn,kk;
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 attr_kind = $3.i;
+
+                 /* splice in the WHERE clause */
+                 subtree_swap(&$4.i,&$6.i);
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&$4.i,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 kk = makenode(ATTRIB_LVALUE_,0,0);
+                 list[kk].op1.localnum = 0;
+                 list[kk].op2.name_id = set_name_eltype($3.qnum,$3.etype);
+                 subtree_swap(&$4.i,&kk); /* so lvalue before rvalue */
+                 nn = makenode(ARRAY_ASSIGNOP_ARRAY_,kk,$4.i);
+                 list[nn].flags |= SET_ASSIGNOP;
+                 list[nn].op1.assigntype = ASSIGN_;
+                 aggr = makenode(AGGREGATE_,$2.i,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                 end_scope();
+              }
+
+
+vcommand : set element_gen setattribb rexpr WHERE_ rexpr
+              {  int aggr,where,nn; 
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 attr_kind = $3.i;
+
+                 subtree_swap(&$4.i,&$6.i);
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&$4.i,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 nn = makenode(SET_ATTRIBUTE_L,$4.i,0); 
+                 aggr = makenode(AGGREGATE_,where,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : set element_gen setattribb indexset rexpr WHERE_ rexpr
+              {         int aggr,where,nn; 
+                 aggrtype = SET_ATTRIBUTE_LOOP_;
+                 attr_kind = $3.i;
+                 subtree_swap(&$4.i,&$5.i); /* get index eval in top of stack */
+                 subtree_swap(&$4.i,&$7.i); /* get index eval in top of stack */
+                 subtree_swap(&$5.i,&$7.i);
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&$4.i,&where); /* get in proper linear order */
+                 subtree_swap(&$5.i,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $7.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 nn = makenode(SET_ATTRIBUTE_L,$5.i,$4.i); 
+                 aggr = makenode(AGGREGATE_,where,nn);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : set element_gen QUANTITY_ QUANTITY_NAME_ 
+              {         int aggr,idnode; 
+                 aggrtype = SET_NAMED_QUANTITY_;
+                 idnode = makenode(PUSH_NAMED_QUANTITY,$4.i,0);  
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,$2.i,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen QUANTITY_ QUANTITY_NAME_ 
+              {         int aggr,idnode; 
+                 aggrtype = UNSET_NAMED_QUANTITY_;
+                 idnode = makenode(PUSH_NAMED_QUANTITY,$4.i,0);  
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,$2.i,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : set element_gen QUANTITY_ QUANTITY_NAME_ WHERE_ rexpr
+              {         int aggr,where,idnode; 
+                 aggrtype = SET_NAMED_QUANTITY_;
+                 idnode = makenode(PUSH_NAMED_QUANTITY,$4.i,0);  
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&idnode,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,where,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen QUANTITY_ QUANTITY_NAME_ WHERE_ rexpr
+              {         int aggr,where,idnode; 
+                 aggrtype = UNSET_NAMED_QUANTITY_;
+                 idnode = makenode(PUSH_NAMED_QUANTITY,$4.i,0);  
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&idnode,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,where,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+vcommand : set element_gen METHOD_INSTANCE_ METHOD_NAME_ 
+              {         int aggr,idnode; 
+                 aggrtype = SET_METHOD_INSTANCE_;
+                 idnode = makenode(PUSH_METHOD_INSTANCE_,$4.i,0);  
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,$2.i,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen METHOD_INSTANCE_ METHOD_NAME_ 
+              {         int aggr,idnode; 
+                 aggrtype = UNSET_METHOD_INSTANCE_;
+                 idnode = makenode(PUSH_METHOD_INSTANCE_, $4.i,0);  
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,$2.i,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : set element_gen METHOD_INSTANCE_ METHOD_NAME_ WHERE_ rexpr
+              {         int aggr,where,idnode; 
+                 aggrtype = SET_METHOD_INSTANCE_;
+                 idnode = makenode(PUSH_METHOD_INSTANCE_,$4.i,0);  
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&idnode,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,where,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen METHOD_INSTANCE_ METHOD_NAME_ WHERE_ rexpr
+              {         int aggr,where,idnode; 
+                 aggrtype = UNSET_METHOD_INSTANCE_;
+                 idnode = makenode(PUSH_METHOD_INSTANCE_,$4.i,0);  
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&idnode,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,where,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+vcommand : set element_gen QUANTITY_NAME_ 
+              {         int aggr,idnode; 
+                 aggrtype = SET_NAMED_QUANTITY_;
+                 idnode = makenode(PUSH_NAMED_QUANTITY,$3.i,0);  
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,$2.i,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen QUANTITY_NAME_ 
+              {         int aggr,idnode; 
+                 aggrtype = UNSET_NAMED_QUANTITY_;
+                 idnode = makenode(PUSH_NAMED_QUANTITY,$3.i,0);  
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,$2.i,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : set element_gen QUANTITY_NAME_ WHERE_ rexpr
+              {         int aggr,where,idnode; 
+                 aggrtype = SET_NAMED_QUANTITY_;
+                 idnode = makenode(PUSH_NAMED_QUANTITY,$3.i,0);  
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&idnode,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $5.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,where,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen QUANTITY_NAME_ WHERE_ rexpr
+              {         int aggr,where,idnode; 
+                 aggrtype = UNSET_NAMED_QUANTITY_;
+                 idnode = makenode(PUSH_NAMED_QUANTITY,$3.i,0);  
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&idnode,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $5.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,where,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+vcommand : set element_gen METHOD_NAME_ 
+              {         int aggr,idnode; 
+                 aggrtype = SET_METHOD_INSTANCE_;
+                 idnode = makenode(PUSH_METHOD_INSTANCE_,$3.i,0);  
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,$2.i,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen METHOD_NAME_ 
+              {         int aggr,idnode; 
+                 aggrtype = UNSET_METHOD_INSTANCE_;
+                 idnode = makenode(PUSH_METHOD_INSTANCE_,$3.i,0);  
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,$2.i,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : set element_gen METHOD_NAME_ WHERE_ rexpr
+              {         int aggr,where,idnode; 
+                 aggrtype = SET_METHOD_INSTANCE_;
+                 idnode = makenode(PUSH_METHOD_INSTANCE_,$3.i,0);  
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&idnode,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $5.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,where,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen METHOD_NAME_ WHERE_ rexpr
+              {         int aggr,where,idnode; 
+                 aggrtype = UNSET_METHOD_INSTANCE_;
+                 idnode = makenode(PUSH_METHOD_INSTANCE_,$3.i,0);  
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&idnode,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $5.i - where;
+                 elsym = $2.symptr;
+                 $2.symptr = 0; /* in case of WHERE */
+                 aggr = makenode(AGGREGATE_,where,idnode);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+vcommand : set  error 
+   {
+     if ( tok == '-' )
+       kb_error(1897,"Syntax kludge: cannot have leading minus sign after ]. Use parentheses.\n",
+             Q_ERROR);
+    else
+ kb_error(2532,
+   "Syntax: SET element_gen [ name ] attribute rexpr [ WHERE rexpr ]\n",Q_ERROR);
+  }
+
+/**************************************************************************/
+unset :  UNSET_  {  $$.i = makenode(SET_INIT_,0,0); }
+unsetattrib: FIXED_   { $$.i = UNSET_FIXED_; }
+unsetattrib: HIT_PARTNER_   { $$.i = UNSET_HIT_PARTNER_; }
+unsetattrib: BARE_   { $$.i = UNSET_BARE_; }
+unsetattrib: NO_REFINE_   { $$.i = UNSET_NO_REFINE_; }
+unsetattrib: NONCONTENT_   { $$.i = UNSET_NONCONTENT_; }
+unsetattrib: NODISPLAY_   { $$.i = UNSET_NO_DISPLAY_; }
+unsetattrib: DENSITY_   { $$.i = UNSET_DENSITY_; }
+unsetattrib: VOLUME_   { $$.i = UNSET_TARGET_; }
+unsetattrib: TARGET_   { $$.i = UNSET_TARGET_; }
+unsetattrib: PRESSURE_   { $$.i = UNSET_PRESSURE_; }
+unsetattrib: TRIPLE_POINT_   { $$.i = UNSET_TRIPLE_PT_; }
+unsetattrib: TETRA_POINT_   { $$.i = UNSET_TETRA_PT_; }
+unsetattrib: AXIAL_POINT_   { $$.i = UNSET_AXIAL_POINT_; }
+unsetattrib: FRONTBODY_   { $$.i = UNSET_FRONTBODY_; }
+unsetattrib: BACKBODY_   { $$.i = UNSET_BACKBODY_; }
+unsetattrib: BODIES_   { $$.i = UNSET_FACET_BODY_; }
+vcommand : unset element_gen unsetattrib 
+              {  int aggr;
+                 aggrtype = $3.i;
+                 aggr = makenode(AGGREGATE_,$2.i,0);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen unsetattrib  WHERE_ rexpr
+              {         int aggr,where; 
+                 aggrtype = $3.i;
+                 elsym = $2.symptr;
+                 where = makenode(WHERE_,$2.i,$5.i);
+                 aggr = makenode(AGGREGATE_,where,0);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+conname : CONSTRAINT_NAME_  { $$.i = $1.i; }
+
+vcommand : unset element_gen conname
+              {  int aggr;
+                 aggrtype = UNSET_CONSTRAINT_NAME;
+                 elsym = $2.symptr;
+                 aggr = makenode(AGGREGATE_,$2.i,0);
+                 list[aggr].stack_delta = 0;
+                 list[aggr].op3.connum = globals($3.i)->value.cnum;
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+rexpr : CONSTRAINT_NAME_ { real_val = globals($1.i)->value.cnum;
+                           $$.i = makenode(PUSHCONST,0,0); } 
+
+vcommand : unset element_gen CONSTRAINT_ rexpr 
+              {  int aggr;
+                 aggrtype = UNSET_CONSTRAINT_;
+                 elsym = $2.symptr;
+                 aggr = makenode(AGGREGATE_,$2.i,$4.i);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen CONSTRAINT_ rexpr WHERE_ rexpr
+              {         int aggr,where; 
+                 aggrtype = UNSET_CONSTRAINT_;
+                 subtree_swap(&$4.i,&$6.i);
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&$4.i,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+                 elsym = $2.symptr;
+                 aggr = makenode(AGGREGATE_,where,$4.i);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen conname WHERE_ rexpr
+              {         int aggr,where; 
+                 aggrtype = UNSET_CONSTRAINT_NAME;
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 list[where].left = $2.i - where;
+                 list[where].right = $5.i - where;
+                 elsym = $2.symptr;
+                 aggr = makenode(AGGREGATE_,where,0);
+                 list[aggr].op3.connum = globals($3.i)->value.cnum;
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+bdryname : BOUNDARY_NAME_ { $$.i = $1.i; }
+vcommand : unset element_gen bdryname
+              {  int aggr;
+                 aggrtype = UNSET_BOUNDARY_NAME;
+                 elsym = $2.symptr;
+                 aggr = makenode(AGGREGATE_,$2.i,0);
+                 list[aggr].stack_delta = 0;
+                 list[aggr].op3.bdrynum = globals($3.i)->value.bnum;
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+rexpr : BOUNDARY_NAME_ { real_val = globals($1.i)->value.bnum;
+                           $$.i = makenode(PUSHCONST,0,0); } 
+vcommand : unset element_gen BOUNDARY_ rexpr 
+              {  int aggr;
+                 aggrtype = UNSET_BOUNDARY_;
+                 elsym = $2.symptr;
+                 aggr = makenode(AGGREGATE_,$2.i,$4.i);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+vcommand : unset element_gen bdryname WHERE_ rexpr
+              {         int aggr,where; 
+                 aggrtype = UNSET_BOUNDARY_NAME;
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 list[where].left = $2.i - where;
+                 list[where].right = $5.i - where;
+                 elsym = $2.symptr;
+                 aggr = makenode(AGGREGATE_,where,0);
+                 list[aggr].op3.bdrynum = globals($3.i)->value.bnum;
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+vcommand : unset element_gen BOUNDARY_ rexpr WHERE_ rexpr
+              {         int aggr,where; 
+                 aggrtype = UNSET_BOUNDARY_;
+                 subtree_swap(&$4.i,&$6.i);
+                 where = makenode(WHERE_,0,0);
+                 list[where].left = 0;
+                 list[where].right = 0;
+                 subtree_swap(&$4.i,&where); /* get in proper linear order */
+                 list[where].left = $2.i - where;
+                 list[where].right = $6.i - where;
+                 elsym = $2.symptr;
+                 aggr = makenode(AGGREGATE_,where,$4.i);
+                 $$.i = makenode(AGGREGATE_END_,$1.i,aggr);
+                end_scope();
+              }
+
+vcommand : UNSET_  error 
+   { kb_error(1898, "Syntax: UNSET element_gen attribute [ WHERE rexpr ]\n",Q_ERROR); }
+
+/**************************************************************************/
+
+whole : EXPRESSION_START_ { YYABORT; /* no expression */ }
+
+vcommand : HELP_  WHILE_ { $$.i = makenode(HELP_KEYWORD,0,0); help_flag = 0; tok = 0; yyerrok; yyclearin ; }
+
+
+vcommand : HELP_  error { $$.i = makenode(HELP_KEYWORD,0,0); help_flag = 0; tok = 0; yyerrok; yyclearin ; }
+
+/**************************************************************************/
+%%
+
+int yybegin()
+{ int retval;
+
+  PROF_START(yyparse);
+  parse_errors = 0;
+  perm_flag = 0;
+  cond_expr_flag = 0;
+  use_given_id = 0;
+  parens = brace_depth = in_quote = 0;
+  yylex_init();
+  reset_inputbuffer();
+  /* unput command start token */
+  tok = COMMAND_START_; unput_tok();
+  retval = yyparse();
+  PROF_FINISH(yyparse);
+  return retval;
+}
+
+int yyerror(s)
+char *s;
+{ char modmsg[1000];
+  if ( help_flag ) return 0;
+  parens = brace_depth = in_quote = 0;
+  strncpy(modmsg,s,998);
+  if ( modmsg[strlen(modmsg)-1] != '\n' )
+    strcat(modmsg,"\n");
+  if ( datafile_flag )
+   {
+     if ( listtop == 2 ) return 0;  /* no expression */
+     kb_error(2407,modmsg,PARSE_ERROR);
+   }
+  else
+    { /* fprintf(stderr,"tok = %d\n",tok); */
+      kb_error(2408,modmsg,SYNTAX_ERROR);
+    }   
+  return 0;
+}
+

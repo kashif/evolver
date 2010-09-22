@@ -1,0 +1,284 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 3</title></head>
+
+<BODY>
+<a name="newsletter 3"></a>
+<h1>Surface Evolver Newsletter no. 3</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+		      Surface Evolver Newsletter Number 3
+			      April 3, 1993
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+  A question
+  DOS 32-bit version
+  Version 1.90 
+  Some examples of using new language features
+
+A question:
+
+Is anybody out there still using Minneview?  That was the precursor
+to geomview.  Any objections if I drop Minneview support from the
+Evolver?
+
+DOS 32-bit version:
+
+I have made a DOS version of the Surface Evolver using a 
+32-bit compiler and DOS extender, the DJGPP package from 
+the Free Software Foundation.  It requires at least a 386
+with math coprocessor, and will use any extended memory it
+finds.  Also VGA graphics. It is available for anonymous ftp 
+from geom.umn.edu as pub/evolver.zip.  This contains the binary, 
+the extender, and a short documentation file.  Version 1.90 for
+DOS may not be posted for ftp for a day or two after this newsletter
+goes out, so check the date when you get it.
+
+This is my first venture into DOS extenders, and I've tested it
+on just my own machine, so there may be some glitches.  However,
+it is vastly superior to any 16 bit version.  I do not intend to
+support a 16-bit version any more.
+
+Version 1.90:
+
+Now available for ftp.
+
+Version 1.90 new features:
+
+Named quantities and methods.
+These are an effort to provide a more systematic way of adding new
+energies and constraints.  A "method" is a way of calculating a scalar
+value from some particular type of element (vertex, edge, facet, body).
+A "quantity" is the sum total of various methods applied to various
+elements, although usually just one method is involved. Any quantities
+may be declared to be one of three types: 
+1) energy quantities are added to the overall energy of the surface; 
+2) fixed quantities that are constrained to a fixed target value (by a 
+single Newton step at each iteration); and
+3) information quantities whose values are merely reported to the user.
+Each quantity has a "modulus", which is just a scalar multiplier of
+the whole quantity. A modulus of 0 will turn off an energy quantity.
+Adding a new method involves writing C routines to calculate the value
+and the gradient as a function of vertex coordinates, and adding a
+structure to the method name  array in quantity.c.  Currently implemented 
+methods include edge_length, facet_area, mean_curvature_integral (first 
+power, not square), gauss_curvature_integral (first power),  hooke_energy 
+(for edges as springs with an equilibrium length), and various knot energies.
+See the Datafile chapter for details on how to set these up. The sample
+datafile  knotty.fe contains some examples. Quantity values can be seen 
+with the Q or A command, and the A command can be used to change the 
+target value of a fixed quantity, the modulus of a quantity, or some 
+parameters associated to various methods.  NOTE: named quantities and
+methods are still under development, and the syntax and usage may
+change as I get more experience with them.  But they are the way I
+intend to add all new energies and quantity constraints to the Evolver.  
+In particular, the `AREA_FIXED' feature should be regarded as obsolete,
+and you should use something like
+`quantity surface_area fixed = 6 modulus 1 global_method facet_area'
+in the top of your datafile. This may seem a little long-winded,
+but that's the price of generality.
+
+Conjugate gradient ON/OFF state saved in dump file.
+Note that conjugate gradient history vector is not saved.
+
+Notching and "dihedral" attribute apply to vertices in the string model.
+
+FOREACH iterator added to the command language to iterate over elements.
+See examples below.
+
+LOAD command added. Syntax: LOAD ``filename''. Useful
+for starting new surfaces, especially in scripts.
+
+PRINTF command added for formatted printing. Syntax:
+      PRINTF "format string",expr,expr,...
+expr is floating point, so use %f or %g formats.  Everything is passed
+to the C printf functions, so you can use all its precision and
+format options on %f and %g. See examples below.
+
+String variables have been added.  Can be used where quoted strings needed.  
+Can be assigned to.  SPRINTF is a version of PRINTF giving string output.
+NOTE: Piping and `system' command work only with quoted strings or
+string variables.
+
+A view_transformation matrix in the datafile may be preceded by "color n" 
+to give that transform a color (overrides any facet color).
+
+In queries, element attribute ``oid'' added, which returns a 
+signed version of id.  Useful if you want to use the command language
+to make a special version of a datafile.  See example below.
+
+Many knot energies added.  Also a ``hooke energy'' that keeps edges near 
+a uniform length.  These were due to a Knot Workshop held at the
+Geometry Center in March.  It is a popular thing these days to 
+put an "electric charge" on a knot and let it repel itself into
+a nice smooth curve.  Some people even evolver knotted 2-spheres
+in 4-space!
+
+PostScript output now optionally includes color.  When making a
+PostScript file from the P menu, you will be asked if you want
+to include color.  Including color makes the file longer, but
+the files should still print on monochrome postscript devices.
+
+On NeXT version, -t option added to command line arguments (i.e. when
+starting evolver) to give terminal interface instead of menu and
+dialog boxes.
+
+
+Some examples of using new language features
+
+The Evolver command language continues to grow by accretion, and it
+looks like it's headed towards a full programming language.  It has
+variables, expressions, subroutines, conditionals, and iteration constructs.
+But not subroutine arguments, local variables, structures, or arrays.
+Variables are either floating point, string, or subroutine names.
+There are no integer variables, so you can use only floating point
+formats in printf.  But the %g format will print whole number floats
+as integers.  Remember to use at least two-letter names for variables,
+as single letters tend to be interpreted as commands.
+
+One feature different from ordinary C is the presence of iterators
+over geometric elements.  These occur wherever an element type
+(vertices, edges, facets, bodies, singular or plural) appears in a 
+command.  Attributes of the iteration element may be used later in the
+command.  The iteration element may be named (useful in nested iterations),
+in which case the name must be used when the attribute is referenced.
+Element types used as attributes will just generate the elements 
+associated with the parent element, so if ff is a facet, then
+ff.vertex will generate its three vertices.  Also, each iterator
+can take a "where" clause to limit the elements included.
+
+Here are some examples.  Since the language expects one command per
+line, line splicing is needed for long commands.  Hence I tend to
+break long commands up into several little named commands.
+The best way to use these longer commands is to put their definitions
+at the end of your datafile in a "read" section, or have them in a
+separate file you can read with the "read" command.
+
+
+1. A script to evolve and regularly save dumps in different files:
+
+nn := 1
+while nn &lt; 100 do { g 100; ff := sprintf "stage%g.dmp",nn; dump ff; nn:=nn+1}
+
+
+2. Your own iterate command to print out what you want, like energy
+change each step:
+
+olde := total_energy;
+gg := { g; printf "Change: %10.5g\n",total_energy-olde; olde:=total_energy}
+
+
+3. A command to print a file listing vertices and edges (happens to
+be the OFF format for geomview):
+
+aa:=foreach vertex vv do { printf "%f %f %f \n",x,y,z }
+bb:=foreach facet ff do { printf "3 ";\
+       foreach ff.vertex do printf "%g ",id-1; printf "\n"}
+do_off:= {printf "OFF\n%g %g %g\n",vertex_count,facet_count,edge_count;aa;bb}
+
+This prints to stdout, so you would use it with redirection:
+
+Enter command: do_off | "cat &gt; test.off"
+
+
+4. A command to duplicate the fundamental region of a symmetric surface
+across a plane of mirror symmetry. 
+
+// Producing datafile surface duplicated across a mirror.
+// This is set up to do constraint 1 only.
+// Mirrored constraints given x numbers.
+// Resulting datafile needs mirrored constraints added by hand.
+// Usage: mm | "cat &gt; filename.fe"
+
+// Mirror plane aa*x + bb*y + cc*z = dd
+aa := 1; bb := 0; cc := 0; dd := 0
+// You have to set these to the proper coefficients for constraint 1
+// before doing mm.
+
+ma := foreach vertex do { printf "%g  %g %g %g ",id,x,y,z;  \
+           if fixed then printf "fixed "; \
+	   if on_constraint 1 then printf "constraint 1 " ;\
+	   if on_constraint 2 then printf "constraint 2 " ;\
+	   if on_constraint 3 then printf "constraint 3 " ;\
+	   if on_constraint 4 then printf "constraint 4 " ;\
+	   if on_constraint 5 then printf "constraint 5 " ;\
+	   printf "\n";\
+	   }
+mb := { voff := vertex_count }
+mc := foreach vertex do if not on_constraint 1 then { \
+  	   lam := 2*(dd-aa*x-bb*y-cc*z)/(aa*aa+bb*bb+cc*cc);\
+           printf "%g  %g %g %g ",id+voff,x+lam*aa,y+lam*bb,z+lam*cc;  \
+           if fixed then printf "fixed "; \
+	   if on_constraint 1 then printf "constraint 1x " ;\
+	   if on_constraint 2 then printf "constraint 2x " ;\
+	   if on_constraint 3 then printf "constraint 3x " ;\
+	   if on_constraint 4 then printf "constraint 4x " ;\
+	   if on_constraint 5 then printf "constraint 5x " ;\
+	   printf "\n";\
+	   }
+md := foreach edge ee do {\
+	   printf "%g   ",id; \
+	   foreach ee.vertex do printf "%g ",oid; \
+           if ee.fixed then printf "fixed "; \
+	   if ee.on_constraint 1 then printf "constraint 1 " ;\
+	   if ee.on_constraint 2 then printf "constraint 2 " ;\
+	   if ee.on_constraint 3 then printf "constraint 3 " ;\
+	   if ee.on_constraint 4 then printf "constraint 4 " ;\
+	   if ee.on_constraint 5 then printf "constraint 5 " ;\
+	   printf "\n";\
+	   }
+me := { eoff := edge_count }
+mf := foreach edge ee do if not on_constraint 1 then {\
+	   printf "%g   ",id+eoff; \
+	   foreach ee.vertex do { \
+	   if on_constraint 1 then { printf "%g ",oid;} \
+	   else { printf "%g ", id+voff;} };   \
+           if ee.fixed then printf "fixed "; \
+	   if ee.on_constraint 1 then printf "constraint 1x " ;\
+	   if ee.on_constraint 2 then printf "constraint 2x " ;\
+	   if ee.on_constraint 3 then printf "constraint 3x " ;\
+	   if ee.on_constraint 4 then printf "constraint 4x " ;\
+	   if ee.on_constraint 5 then printf "constraint 5x " ;\
+	   printf "\n";\
+	   }
+mg := foreach facet ff do {\
+	   printf "%g   ",id; \
+	   foreach ff.edge do printf "%g ",oid;\
+           if ff.fixed then printf "fixed "; \
+	   if ff.on_constraint 1 then printf "constraint 1 " ;\
+	   if ff.on_constraint 2 then printf "constraint 2 " ;\
+	   if ff.on_constraint 3 then printf "constraint 3 " ;\
+	   if ff.on_constraint 4 then printf "constraint 4 " ;\
+	   if ff.on_constraint 5 then printf "constraint 5 " ;\
+	   printf "\n";\
+	   }
+mh := {foff := facet_count}
+mi := foreach facet ff do if not on_constraint 1 then  {\
+	   printf "%g   ",id+foff; \
+	   foreach ff.edge do \
+	     { if on_constraint 1 then { printf "%g ",id;} \
+	       else printf "%g ",(oid&lt;0?-(id+eoff):id+eoff); }; \
+           if ff.fixed then printf "fixed "; \
+	   if ff.on_constraint 1 then printf "constraint 1x " ;\
+	   if ff.on_constraint 2 then printf "constraint 2x " ;\
+	   if ff.on_constraint 3 then printf "constraint 3x " ;\
+	   if ff.on_constraint 4 then printf "constraint 4x " ;\
+	   if ff.on_constraint 5 then printf "constraint 5x " ;\
+	   printf "\n";\
+	   }
+mm := { list topinfo; \
+	printf "\nVertices\n"; ma;mb;mc;\
+	printf "\nEdges\n"; md;me;mf;\
+	printf "\nFaces\n"; mg;mh;mi;\
+	}
+
+
+End of Evolver Newsletter 3.
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

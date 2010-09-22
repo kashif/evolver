@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 16</title></head>
+
+<BODY>
+<a name="newsletter 16"></a>
+<h1>Surface Evolver Newsletter no. 16</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+                    Surface Evolver Newsletter Number 16
+                               August 18, 1999
+
+                       by Ken Brakke, brakke@susqu.edu
+
+Contents
+  Version 2.14
+  New examples
+  New features and changes
+
+Version 2.14
+
+  Version 2.14 is now available at
+  http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm.
+  It is also available from the Geometry Center, geom.umn.edu,
+  but I don't know how long that site will be available.
+  This is the first publicly announced version since 2.10c a year
+  ago, although version 2.13 was unofficially posted in May.
+
+  There is finally a current Mac version for the PowerPC.
+
+Examples
+  
+  A gallery of triply periodic minimal surfaces (many new) is at
+  http://www.susqu.edu/facstaff/b/brakke/examples/periodic/periodic.html.
+  This page is the result of joint work with Alan Schoen.
+
+  There are three examples of liquid solder models, each with a
+  series of datafiles and commentary:
+
+      Ball Grid Array joint (simple column between circular pads)
+      http://www.susqu.edu/facstaff/b/brakke/evolver/bga/bga.htm
+
+      Gull Wing Lead (curved lead above rectangular pad)
+      http://www.susqu.edu/facstaff/b/brakke/evolver/gullwing/gullwing.html
+
+      Tombstone (chip pulled upright by solder tension)
+      http://www.susqu.edu/facstaff/b/brakke/tombstone/tomb.htm
+
+New features and changes
+
+    Almost all of the changes are bug fixes, internal improvements,
+    and specialized new features. A couple are of general interest:
+
+    hessian_normal is now defaults to ON.
+
+    Put in automatic convert_to_quantities; still a place or two
+    where can't convert on the fly.  Command line option -a-
+    disables.
+
+    Added "verbose" toggle command for action messages from
+    pop edge, pop vertex, delete, notch, refine, dissolve, and edgeswap.
+
+    The "dissolve" command will now dissolve facets on bodies in the
+    soapfilm model, and edges on facets in the string model.
+
+    Edges have frontbody and backbody attributes in the string model.
+
+    There is a chdir command to change the working directory. 
+
+    Element extra attributes can be declared with code to evaluate their
+    values.
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

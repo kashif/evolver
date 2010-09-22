@@ -1,0 +1,669 @@
+/* A Bison parser, made by GNU Bison 2.1.  */
+
+/* Skeleton parser for Yacc-like parsing with Bison,
+   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
+
+/* As a special exception, when this file is copied by Bison into a
+   Bison output file, you may use that output file without restriction.
+   This special exception was added by the Free Software Foundation
+   in version 1.24 of Bison.  */
+
+/* Tokens.  */
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
+   /* Put the tokens into the symbol table, so that GDB and other debuggers
+      know about them.  */
+   enum yytokentype {
+     EXPRESSION_START_ = 258,
+     COMMAND_START_ = 259,
+     HISTORY_ = 260,
+     GEOMVIEW_ = 261,
+     VIEW_MATRIX_ = 262,
+     LEAD_INTEGER_ = 263,
+     INTEGER_ = 264,
+     REAL_ = 265,
+     SIGNED_NUMBER_ = 266,
+     NEWIDENT_ = 267,
+     REDEFINE_ = 268,
+     MATHFUNC_ = 269,
+     MATHFUNC2_ = 270,
+     POW_ = 271,
+     USERFUNC_ = 272,
+     MIDV_ = 273,
+     DATAFILENAME_ = 274,
+     LOGFILE_ = 275,
+     PI_ = 276,
+     E_ = 277,
+     G_ = 278,
+     PARAM_ = 279,
+     SYMBOL_ = 280,
+     TOTAL_ = 281,
+     EXTRA_ATTRIBUTE_ = 282,
+     FIXEDVOL_ = 283,
+     IDENT_ = 284,
+     UMINUS_ = 285,
+     SHELL_ = 286,
+     COLOR_ = 287,
+     HESSIAN_ = 288,
+     VOLCONST_ = 289,
+     TORUS_PERIODS_ = 290,
+     VERTICES_ = 291,
+     EDGES_ = 292,
+     FACETS_ = 293,
+     BODIES_ = 294,
+     HESSIAN_MENU_ = 295,
+     POSTSCRIPT_ = 296,
+     LENGTH_ = 297,
+     AREA_ = 298,
+     VOLUME_ = 299,
+     ID_ = 300,
+     OID_ = 301,
+     TAG_ = 302,
+     ORIGINAL_ = 303,
+     FACETEDGES_ = 304,
+     WRAP_ = 305,
+     QUOTATION_ = 306,
+     UNSET_ = 307,
+     TOPINFO_ = 308,
+     OPACITY_ = 309,
+     VALENCE_ = 310,
+     HESSIAN_SADDLE_ = 311,
+     SET_ = 312,
+     FIXED_ = 313,
+     DENSITY_ = 314,
+     PRESSURE_ = 315,
+     CONSTRAINT_ = 316,
+     COORD_ = 317,
+     DISSOLVE_ = 318,
+     WHERE_ = 319,
+     LIST_ = 320,
+     SHOW_ = 321,
+     DELETE_ = 322,
+     REFINE_ = 323,
+     RECALC_ = 324,
+     SHOWQ_ = 325,
+     EDGESWAP_ = 326,
+     FIX_ = 327,
+     UNFIX_ = 328,
+     TOGGLENAME_ = 329,
+     TOGGLEVALUE_ = 330,
+     STAR_ = 331,
+     QUANTITY_NAME_ = 332,
+     PAUSE_ = 333,
+     GO_ = 334,
+     SHOW_VOL_ = 335,
+     CHECK_ = 336,
+     READ_ = 337,
+     ZOOM_ = 338,
+     ON_ = 339,
+     OFF_ = 340,
+     GEOMPIPE_ = 341,
+     SELF_ = 342,
+     SINGLE_LETTER_ = 343,
+     LONG_JIGGLE_ = 344,
+     RAW_VERAVG_ = 345,
+     COUNTS_ = 346,
+     CHDIR_ = 347,
+     ALICE_ = 348,
+     STABILITY_TEST_ = 349,
+     DEFINE_ = 350,
+     UPLUS_ = 351,
+     DATATYPE_ = 352,
+     FLUSH_COUNTS_ = 353,
+     AUTOCHOP_ = 354,
+     UTEST_ = 355,
+     ATTRIBUTE_ = 356,
+     RITZ_ = 357,
+     MOVE_ = 358,
+     VERTEXNORMAL_ = 359,
+     POP_ = 360,
+     SYSTEM_ = 361,
+     TETRA_POINT_ = 362,
+     TRIPLE_POINT_ = 363,
+     LANCZOS_ = 364,
+     EIGENPROBE_ = 365,
+     EXEC_ = 366,
+     AREAWEED_ = 367,
+     EDGEWEED_ = 368,
+     GRAVITY_ = 369,
+     EDGEDIVIDE_ = 370,
+     LINEAR_ = 371,
+     QUADRATIC_ = 372,
+     DIFFUSION_ = 373,
+     EXTRAPOLATE_ = 374,
+     TRANSFORM_DEPTH_ = 375,
+     PRINTF_ = 376,
+     ERRPRINTF_ = 377,
+     PRINT_ = 378,
+     MAX_ = 379,
+     MIN_ = 380,
+     COUNT_ = 381,
+     SUM_ = 382,
+     AVG_ = 383,
+     BREAK_ = 384,
+     CONTINUE_ = 385,
+     SIZEOF_ = 386,
+     TRANSFORM_EXPR_ = 387,
+     BARE_ = 388,
+     BOTTOMINFO_ = 389,
+     METIS_ = 390,
+     KMETIS_ = 391,
+     KEYLOGFILE_ = 392,
+     SCALE_ = 393,
+     BURCHARD_ = 394,
+     REBODY_ = 395,
+     BOUNDARY_ = 396,
+     ORIENTATION_ = 397,
+     OMETIS_ = 398,
+     SQ_MEAN_CURV_ = 399,
+     FRONTCOLOR_ = 400,
+     SINGLE_REDEFD_ = 401,
+     METHOD_NAME_ = 402,
+     TASK_EXEC_ = 403,
+     RAWEST_VERAVG_ = 404,
+     SINGLE_LETTER_ARG_ = 405,
+     BACKCOLOR_ = 406,
+     LAGRANGE_ = 407,
+     RETURN_ = 408,
+     TRANSFORM_EXPR_VERB_ = 409,
+     OOGLFILE_ = 410,
+     PARALLEL_EXEC_ = 411,
+     BINARY_OFF_FILE_ = 412,
+     SPRINTF_ = 413,
+     CONVERT_TO_QUANTS_ = 414,
+     METIS_FACTOR_ = 415,
+     FUNCTION_ = 416,
+     EXPRINT_ = 417,
+     DIHEDRAL_ = 418,
+     WRAP_VERTEX_ = 419,
+     ARRAYIDENT_ = 420,
+     DATE_AND_TIME_ = 421,
+     LOCAL_ = 422,
+     SHOW_EXPR_ = 423,
+     SHOW_TRANS_ = 424,
+     AXIAL_POINT_ = 425,
+     ENERGY_ = 426,
+     CONSERVED_ = 427,
+     INFO_ONLY_ = 428,
+     ASSIGN_ = 429,
+     PROCEDURE_ = 430,
+     FOREACH_ = 431,
+     STRINGGLOBAL_ = 432,
+     EQUIANGULATE_ = 433,
+     HISTOGRAM_ = 434,
+     LOGHISTOGRAM_ = 435,
+     AREA_FIXED_ = 436,
+     QUIT_ = 437,
+     WARNING_MESSAGES_ = 438,
+     IF_ = 439,
+     WHILE_ = 440,
+     DO_ = 441,
+     NO_REFINE_ = 442,
+     STRING_ = 443,
+     NONCONTENT_ = 444,
+     FOR_ = 445,
+     HIT_PARTNER_ = 446,
+     FRONTBODY_ = 447,
+     BACKBODY_ = 448,
+     COLORFILE_ = 449,
+     PERM_STRINGGLOBAL_ = 450,
+     FUNCTION_IDENT_ = 451,
+     THICKEN_ = 452,
+     COLORMAP_ = 453,
+     REDIRECT_ = 454,
+     NEWVERTEX_ = 455,
+     NEWEDGE_ = 456,
+     NEWFACET_ = 457,
+     MODULUS_ = 458,
+     TARGET_ = 459,
+     VALUE_ = 460,
+     INVERSE_PERIODS_ = 461,
+     NEWBODY_ = 462,
+     DELTA_ = 463,
+     GAP_CONSTANT_ = 464,
+     DUMP_ = 465,
+     NOTCH_ = 466,
+     QUANTITY_ = 467,
+     LOAD_ = 468,
+     PERM_PROCEDURE_ = 469,
+     PROCEDURE_WORD_ = 470,
+     DYNAMIC_LOAD_FUNC_ = 471,
+     PERM_IDENT_ = 472,
+     PERMLOAD_ = 473,
+     HELP_ = 474,
+     VERTEX_AVERAGE_ = 475,
+     METHOD_INSTANCE_ = 476,
+     RAW_VERTEX_AVERAGE_ = 477,
+     OPTIMIZE_ = 478,
+     REDIRECTOVER_ = 479,
+     TOLERANCE_ = 480,
+     RAWEST_VERTEX_AVERAGE_ = 481,
+     JIGGLE_ = 482,
+     VIEW_TRANSFORMS_ = 483,
+     CLOSE_SHOW_ = 484,
+     IS_DEFINED_ = 485,
+     NODISPLAY_ = 486,
+     PERM_ASSIGN_ = 487,
+     PHASE_ = 488,
+     VIEW_TRANSFORM_SWAP_COLORS_ = 489,
+     BACKQUOTE_COMMA_ = 490,
+     INTERNAL_VARIABLE_ = 491,
+     DIRICHLET_ = 492,
+     SOBOLEV_ = 493,
+     VIEW_TRANSFORM_PARITY_ = 494,
+     SOBOLEV_SEEK_ = 495,
+     DIRICHLET_SEEK_ = 496,
+     HESSIAN_SEEK_ = 497,
+     REORDER_STORAGE_ = 498,
+     RENUMBER_ALL_ = 499,
+     CONSTRAINT_NAME_ = 500,
+     BOUNDARY_NAME_ = 501,
+     PROCEDURE_IDENT_ = 502,
+     POP_TRI_TO_EDGE_ = 503,
+     POP_EDGE_TO_TRI_ = 504,
+     POP_QUAD_TO_QUAD_ = 505,
+     SHOWVERB_ = 506,
+     PROCEDURES_ = 507,
+     MPI_TASK_ATTR_ = 508,
+     T1_EDGESWAP_ = 509,
+     MERGE_EDGE_ = 510,
+     MERGE_FACET_ = 511,
+     MERGE_VERTEX_ = 512,
+     RESET_COUNTS_ = 513,
+     VALID_ELEMENT_ = 514,
+     MID_EDGE_ = 515,
+     MID_FACET_ = 516,
+     GO_COUNT_ = 517,
+     ELEMENT_IDENT_ = 518,
+     BODY_METIS_ = 519,
+     REVERSE_ORIENTATION_ = 520,
+     MATRIX_MULTIPLY_ = 521,
+     MATRIX_INVERSE_ = 522,
+     BINARY_PRINTF_ = 523,
+     DUMP_MEMLIST_ = 524,
+     FREE_DISCARDS_ = 525,
+     REPARTITION_ = 526,
+     METIS_READJUST_ = 527,
+     MEAN_CURVATURE_ = 528,
+     GLOBAL_ = 529,
+     LEAD_INTEGER_AT_ = 530,
+     INTEGER_AT_ = 531,
+     MATRIX_DETERMINANT_ = 532,
+     SUBCOMMAND_ = 533,
+     ABORT_ = 534,
+     BREAKPOINT_ = 535,
+     WHEREAMI_ = 536,
+     ADDLOAD_ = 537,
+     SIMPLEX_TO_FE_ = 538,
+     DISPLAY_TEXT_ = 539,
+     DELETE_TEXT_ = 540,
+     SUPPRESS_WARNING_ = 541,
+     UNSUPPRESS_WARNING_ = 542,
+     RESET_PROFILING_ = 543,
+     VALID_CONSTRAINT_ = 544,
+     VALID_BOUNDARY_ = 545,
+     ARRAY_ATTRIBUTE_ = 546,
+     PROFILING_ = 547,
+     ASSIGNOP_ = 548,
+     PIPE_ = 549,
+     THEN_ = 550,
+     ELSE_ = 551,
+     OR_ = 552,
+     AND_ = 553,
+     NOT_ = 554,
+     NE_ = 555,
+     GE_ = 556,
+     LE_ = 557,
+     EQ_ = 558,
+     ON_CONSTRAINT_ = 559,
+     HIT_CONSTRAINT_ = 560,
+     ON_BOUNDARY_ = 561,
+     ON_QUANTITY_ = 562,
+     ON_METHOD_INSTANCE_ = 563,
+     DOT_ = 564,
+     IDIV_ = 565,
+     IMOD_ = 566,
+     EPRINT_ = 567
+   };
+#endif
+/* Tokens.  */
+#define EXPRESSION_START_ 258
+#define COMMAND_START_ 259
+#define HISTORY_ 260
+#define GEOMVIEW_ 261
+#define VIEW_MATRIX_ 262
+#define LEAD_INTEGER_ 263
+#define INTEGER_ 264
+#define REAL_ 265
+#define SIGNED_NUMBER_ 266
+#define NEWIDENT_ 267
+#define REDEFINE_ 268
+#define MATHFUNC_ 269
+#define MATHFUNC2_ 270
+#define POW_ 271
+#define USERFUNC_ 272
+#define MIDV_ 273
+#define DATAFILENAME_ 274
+#define LOGFILE_ 275
+#define PI_ 276
+#define E_ 277
+#define G_ 278
+#define PARAM_ 279
+#define SYMBOL_ 280
+#define TOTAL_ 281
+#define EXTRA_ATTRIBUTE_ 282
+#define FIXEDVOL_ 283
+#define IDENT_ 284
+#define UMINUS_ 285
+#define SHELL_ 286
+#define COLOR_ 287
+#define HESSIAN_ 288
+#define VOLCONST_ 289
+#define TORUS_PERIODS_ 290
+#define VERTICES_ 291
+#define EDGES_ 292
+#define FACETS_ 293
+#define BODIES_ 294
+#define HESSIAN_MENU_ 295
+#define POSTSCRIPT_ 296
+#define LENGTH_ 297
+#define AREA_ 298
+#define VOLUME_ 299
+#define ID_ 300
+#define OID_ 301
+#define TAG_ 302
+#define ORIGINAL_ 303
+#define FACETEDGES_ 304
+#define WRAP_ 305
+#define QUOTATION_ 306
+#define UNSET_ 307
+#define TOPINFO_ 308
+#define OPACITY_ 309
+#define VALENCE_ 310
+#define HESSIAN_SADDLE_ 311
+#define SET_ 312
+#define FIXED_ 313
+#define DENSITY_ 314
+#define PRESSURE_ 315
+#define CONSTRAINT_ 316
+#define COORD_ 317
+#define DISSOLVE_ 318
+#define WHERE_ 319
+#define LIST_ 320
+#define SHOW_ 321
+#define DELETE_ 322
+#define REFINE_ 323
+#define RECALC_ 324
+#define SHOWQ_ 325
+#define EDGESWAP_ 326
+#define FIX_ 327
+#define UNFIX_ 328
+#define TOGGLENAME_ 329
+#define TOGGLEVALUE_ 330
+#define STAR_ 331
+#define QUANTITY_NAME_ 332
+#define PAUSE_ 333
+#define GO_ 334
+#define SHOW_VOL_ 335
+#define CHECK_ 336
+#define READ_ 337
+#define ZOOM_ 338
+#define ON_ 339
+#define OFF_ 340
+#define GEOMPIPE_ 341
+#define SELF_ 342
+#define SINGLE_LETTER_ 343
+#define LONG_JIGGLE_ 344
+#define RAW_VERAVG_ 345
+#define COUNTS_ 346
+#define CHDIR_ 347
+#define ALICE_ 348
+#define STABILITY_TEST_ 349
+#define DEFINE_ 350
+#define UPLUS_ 351
+#define DATATYPE_ 352
+#define FLUSH_COUNTS_ 353
+#define AUTOCHOP_ 354
+#define UTEST_ 355
+#define ATTRIBUTE_ 356
+#define RITZ_ 357
+#define MOVE_ 358
+#define VERTEXNORMAL_ 359
+#define POP_ 360
+#define SYSTEM_ 361
+#define TETRA_POINT_ 362
+#define TRIPLE_POINT_ 363
+#define LANCZOS_ 364
+#define EIGENPROBE_ 365
+#define EXEC_ 366
+#define AREAWEED_ 367
+#define EDGEWEED_ 368
+#define GRAVITY_ 369
+#define EDGEDIVIDE_ 370
+#define LINEAR_ 371
+#define QUADRATIC_ 372
+#define DIFFUSION_ 373
+#define EXTRAPOLATE_ 374
+#define TRANSFORM_DEPTH_ 375
+#define PRINTF_ 376
+#define ERRPRINTF_ 377
+#define PRINT_ 378
+#define MAX_ 379
+#define MIN_ 380
+#define COUNT_ 381
+#define SUM_ 382
+#define AVG_ 383
+#define BREAK_ 384
+#define CONTINUE_ 385
+#define SIZEOF_ 386
+#define TRANSFORM_EXPR_ 387
+#define BARE_ 388
+#define BOTTOMINFO_ 389
+#define METIS_ 390
+#define KMETIS_ 391
+#define KEYLOGFILE_ 392
+#define SCALE_ 393
+#define BURCHARD_ 394
+#define REBODY_ 395
+#define BOUNDARY_ 396
+#define ORIENTATION_ 397
+#define OMETIS_ 398
+#define SQ_MEAN_CURV_ 399
+#define FRONTCOLOR_ 400
+#define SINGLE_REDEFD_ 401
+#define METHOD_NAME_ 402
+#define TASK_EXEC_ 403
+#define RAWEST_VERAVG_ 404
+#define SINGLE_LETTER_ARG_ 405
+#define BACKCOLOR_ 406
+#define LAGRANGE_ 407
+#define RETURN_ 408
+#define TRANSFORM_EXPR_VERB_ 409
+#define OOGLFILE_ 410
+#define PARALLEL_EXEC_ 411
+#define BINARY_OFF_FILE_ 412
+#define SPRINTF_ 413
+#define CONVERT_TO_QUANTS_ 414
+#define METIS_FACTOR_ 415
+#define FUNCTION_ 416
+#define EXPRINT_ 417
+#define DIHEDRAL_ 418
+#define WRAP_VERTEX_ 419
+#define ARRAYIDENT_ 420
+#define DATE_AND_TIME_ 421
+#define LOCAL_ 422
+#define SHOW_EXPR_ 423
+#define SHOW_TRANS_ 424
+#define AXIAL_POINT_ 425
+#define ENERGY_ 426
+#define CONSERVED_ 427
+#define INFO_ONLY_ 428
+#define ASSIGN_ 429
+#define PROCEDURE_ 430
+#define FOREACH_ 431
+#define STRINGGLOBAL_ 432
+#define EQUIANGULATE_ 433
+#define HISTOGRAM_ 434
+#define LOGHISTOGRAM_ 435
+#define AREA_FIXED_ 436
+#define QUIT_ 437
+#define WARNING_MESSAGES_ 438
+#define IF_ 439
+#define WHILE_ 440
+#define DO_ 441
+#define NO_REFINE_ 442
+#define STRING_ 443
+#define NONCONTENT_ 444
+#define FOR_ 445
+#define HIT_PARTNER_ 446
+#define FRONTBODY_ 447
+#define BACKBODY_ 448
+#define COLORFILE_ 449
+#define PERM_STRINGGLOBAL_ 450
+#define FUNCTION_IDENT_ 451
+#define THICKEN_ 452
+#define COLORMAP_ 453
+#define REDIRECT_ 454
+#define NEWVERTEX_ 455
+#define NEWEDGE_ 456
+#define NEWFACET_ 457
+#define MODULUS_ 458
+#define TARGET_ 459
+#define VALUE_ 460
+#define INVERSE_PERIODS_ 461
+#define NEWBODY_ 462
+#define DELTA_ 463
+#define GAP_CONSTANT_ 464
+#define DUMP_ 465
+#define NOTCH_ 466
+#define QUANTITY_ 467
+#define LOAD_ 468
+#define PERM_PROCEDURE_ 469
+#define PROCEDURE_WORD_ 470
+#define DYNAMIC_LOAD_FUNC_ 471
+#define PERM_IDENT_ 472
+#define PERMLOAD_ 473
+#define HELP_ 474
+#define VERTEX_AVERAGE_ 475
+#define METHOD_INSTANCE_ 476
+#define RAW_VERTEX_AVERAGE_ 477
+#define OPTIMIZE_ 478
+#define REDIRECTOVER_ 479
+#define TOLERANCE_ 480
+#define RAWEST_VERTEX_AVERAGE_ 481
+#define JIGGLE_ 482
+#define VIEW_TRANSFORMS_ 483
+#define CLOSE_SHOW_ 484
+#define IS_DEFINED_ 485
+#define NODISPLAY_ 486
+#define PERM_ASSIGN_ 487
+#define PHASE_ 488
+#define VIEW_TRANSFORM_SWAP_COLORS_ 489
+#define BACKQUOTE_COMMA_ 490
+#define INTERNAL_VARIABLE_ 491
+#define DIRICHLET_ 492
+#define SOBOLEV_ 493
+#define VIEW_TRANSFORM_PARITY_ 494
+#define SOBOLEV_SEEK_ 495
+#define DIRICHLET_SEEK_ 496
+#define HESSIAN_SEEK_ 497
+#define REORDER_STORAGE_ 498
+#define RENUMBER_ALL_ 499
+#define CONSTRAINT_NAME_ 500
+#define BOUNDARY_NAME_ 501
+#define PROCEDURE_IDENT_ 502
+#define POP_TRI_TO_EDGE_ 503
+#define POP_EDGE_TO_TRI_ 504
+#define POP_QUAD_TO_QUAD_ 505
+#define SHOWVERB_ 506
+#define PROCEDURES_ 507
+#define MPI_TASK_ATTR_ 508
+#define T1_EDGESWAP_ 509
+#define MERGE_EDGE_ 510
+#define MERGE_FACET_ 511
+#define MERGE_VERTEX_ 512
+#define RESET_COUNTS_ 513
+#define VALID_ELEMENT_ 514
+#define MID_EDGE_ 515
+#define MID_FACET_ 516
+#define GO_COUNT_ 517
+#define ELEMENT_IDENT_ 518
+#define BODY_METIS_ 519
+#define REVERSE_ORIENTATION_ 520
+#define MATRIX_MULTIPLY_ 521
+#define MATRIX_INVERSE_ 522
+#define BINARY_PRINTF_ 523
+#define DUMP_MEMLIST_ 524
+#define FREE_DISCARDS_ 525
+#define REPARTITION_ 526
+#define METIS_READJUST_ 527
+#define MEAN_CURVATURE_ 528
+#define GLOBAL_ 529
+#define LEAD_INTEGER_AT_ 530
+#define INTEGER_AT_ 531
+#define MATRIX_DETERMINANT_ 532
+#define SUBCOMMAND_ 533
+#define ABORT_ 534
+#define BREAKPOINT_ 535
+#define WHEREAMI_ 536
+#define ADDLOAD_ 537
+#define SIMPLEX_TO_FE_ 538
+#define DISPLAY_TEXT_ 539
+#define DELETE_TEXT_ 540
+#define SUPPRESS_WARNING_ 541
+#define UNSUPPRESS_WARNING_ 542
+#define RESET_PROFILING_ 543
+#define VALID_CONSTRAINT_ 544
+#define VALID_BOUNDARY_ 545
+#define ARRAY_ATTRIBUTE_ 546
+#define PROFILING_ 547
+#define ASSIGNOP_ 548
+#define PIPE_ 549
+#define THEN_ 550
+#define ELSE_ 551
+#define OR_ 552
+#define AND_ 553
+#define NOT_ 554
+#define NE_ 555
+#define GE_ 556
+#define LE_ 557
+#define EQ_ 558
+#define ON_CONSTRAINT_ 559
+#define HIT_CONSTRAINT_ 560
+#define ON_BOUNDARY_ 561
+#define ON_QUANTITY_ 562
+#define ON_METHOD_INSTANCE_ 563
+#define DOT_ 564
+#define IDIV_ 565
+#define IMOD_ 566
+#define EPRINT_ 567
+
+
+
+
+#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
+typedef int YYSTYPE;
+# define yystype YYSTYPE /* obsolescent; will be withdrawn */
+# define YYSTYPE_IS_DECLARED 1
+# define YYSTYPE_IS_TRIVIAL 1
+#endif
+
+
+
+
+

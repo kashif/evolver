@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 9</title></head>
+
+<BODY>
+<a name="newsletter 9"></a>
+<h1>Surface Evolver Newsletter no. 9</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+                      Surface Evolver Newsletter Number 9
+                              September 30, 1994
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Version 1.96 is now available.
+
+New features:
+
+   Indexing can be done on element generators in commands.  That is, you
+   can say "list vertex[23]" instead of "list vertex where id==23".
+   The new syntax avoids searching through the entire element list for just
+   one element. You can also apply indices to component elements, as
+   in "foreach edge ee do print ee.vertex[1].id".  Component elements are
+   accessed by linear search through a list, but the list is usually short.
+   Remember indices start at 1.
+
+   Named quantities can be composed of arbitrary functions of method instances,
+   instead of just sums.  The keyword "function" indicates this.  Example:
+   method_instance inst_1 method edge_length global
+   method_instance inst_2 method vertex_scalar_integral global
+   scalar_integrand x^2-y*z
+   quantity comp energy function inst_1^2 + sin(inst_2)
+
+   Named quantities may refer to element attributes in expressions for
+   integrands. This can give more discriminating control over quantities
+   on different elements, by using facet densities in integrands for
+   example.  This feature is especially useful with `extra' attributes,
+   which are added completely under the user's control.
+
+   Hessian: Newton's Method can greatly accelerate convergence to a minimum,
+   but users of the "hessian" command know that one has to be extremely
+   close to the minimum before the command works.  This is largely due
+   to motions tangential to the surface as the triangulation rearranges itself.
+   There is now a toggle "hessian_normal" that constrains motion to be along
+   the surface normal (volume gradient, to be precise).  Points without
+   a well-defined normal (such as along triple junctions or at tetrahedral
+   points) are not constrained.
+
+   More Hessian: Some experimental stuff using the Hessian matrix can be
+   accessed with the command "hessian_menu".  This brings up a menu of
+   various things.  Some of the more interesting: choice E will find the
+   lowest eigenvalue and corresponding eigenvector.  Useful at a saddle
+   point.  After E, use choice S to move along eigenvector direction to minimum
+   energy.  Choice P finds the number of eigenvalues above and below
+   a value.
+
+   The command "saddle" will seek lowest energy along the lowest eigenvalue's
+   eigenvector, without the need to go into hessian_menu.
+
+   Conjugate gradient now does the Polak-Ribiere variety of the algorithm as
+   the default.  Seems to work much better than the previous Fletcher-Reeves
+   variety, especially in automatically restarting itself when it gets in
+   trouble.
+
+   Users can send geomview commands through Evolver.  Syntax:
+   geomview "command"
+   Example:
+   geomview "(transform mound mound Camera rotate 1 0 0)"
+   Useful in scripts to have geomview save frames for a movie.
+
+   The gravity-setting 'G' command now takes a numerical argument instead of 
+   a repetition count.  So "G 5" sets gravity to 5 instead of producing 5
+   gravity prompts.
+
+   The name of the current datafile can be referred to in commands as
+   `datafilename' wherever a string can be used.  See next item.
+
+   sprintf, printf now accept string arguments, but a string pointer is pushed
+   as 8 bytes on the calling stack to C's sprintf, so %s in format string should 
+   be followed by %0.0s to dispose of the second half.  Example:  
+   printf "This is %s%0.0s with total energy %f\n",datafilename,total_energy
+
+   The print command also accepts strings. Example: print datafilename
+
+   'Extra' attributes now inherited for same type element.  That is, edges
+   formed from subdividing an edge will inherit its extra attributes.
+
+   Added 'jiggle' toggle command, and jiggle_temperature internal variable.
+
+   Added total_time internal variable. Settable also.
+
+
+End of newsletter 9.
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

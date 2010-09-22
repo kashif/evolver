@@ -1,0 +1,55 @@
+// quadm.fe
+
+// quadrilateral boundary wire 
+// test of metric 
+
+INTEGRAL_ORDER 7
+
+METRIC
+/*
+1+4*x1^2  4*x1*x2  2*x1
+4*x1*x2  1+4*x2^2  2*x2
+2*x1      2*x2      1
+*/
+1 0 0
+0 1 0
+0 0 1
+
+constraint 1 
+formula: x1 = 0
+
+constraint 2
+formula: x1 = 1
+
+constraint 3
+formula: x2 = 0
+
+constraint 4
+formula: x2 = 1
+
+constraint 5
+formula: x1^2 + x2^2 + x3 = 0
+
+
+vertices
+1   0  0  0 fixed
+2   1  0 -1 fixed
+3   1  1 -2 fixed
+4   0  1 -1 fixed
+
+edges
+1   1  2 fixed  constraints 3,5
+2   2  3 fixed  constraints 2,5
+3   3  4 fixed  constraints 4,5
+4   4  1 fixed  constraints 1,5
+5   2  4
+
+faces
+1   1 5 4 
+2   2 3 -5
+
+
+read
+
+// Typical evolution
+gogo := {  r; g 12; U; r; g 12; r; g 12; r; g 20; }

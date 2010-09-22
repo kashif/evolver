@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 8</title></head>
+
+<BODY>
+<a name="newsletter 8"></a>
+<h1>Surface Evolver Newsletter no. 8</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+                      Surface Evolver Newsletter Number 8
+                              June 23, 1994
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+
+X-geomview
+Version 1.95 
+Bibliography
+
+X-geomview:
+
+The Geometry Center has created an X-windows version of geomview, which
+Evolver has long used as its display program on Silicon Graphics systems.
+Beware, though, that X-geomview has to emulate all 3D graphics in software,
+as X-windows is a 2D system.  Hence X-geomview is slower, and does not use
+any built-in 3D graphics hardware a machine may have.  It is also still
+under development, and may have a few bugs and porting problems.
+X-geomview is available by anonymous ftp from geom.umn.edu in 
+/pub/software/geomview.  There are precompiled binaries in 
+geomview-next.tar and geomview-sun.x11-beta.tar.Z, and source in
+geomview-src.x11-beta.tar.Z for other systems.
+
+Version 1.95 is now available for ftp.  Still haven't been able to get
+the Macintosh version updated since last summer.  Any desperate mac
+users should let me know if I should spend time trying to do that.
+
+Version 1.95 features:
+
+The Tutorial chapter of the manual has two new examples: a toroidal
+liquid ring on a spinning rod, and a column of liquid solder between
+two offset pads.  The datafiles are ringblob.fe and column.fe.
+
+Conjugate gradient option: A toggle command "ribiere" has been added
+that makes the conjugate gradient method use the Polak-Ribiere version
+instead of Fletcher-Reeves. (The toggle doesn't turn on conjugate gradient.)
+Polak-Ribiere seems to recover much better from stalling.  If you have
+to stop and restart conjugate gradient often, try "ribiere".  It handles
+the catenoid example in the manual very well.  Pending further experience,
+I will make Polak-Ribiere the default in future versions.  Let me know if
+you have any problems with it.
+
+Conjugate gradient blowups: Sometimes conjugate gradient wants to move
+so far and fast that it loses contact with volume constraints.  Before,
+Evolver did only one or two Newton method projections back to volume
+constraints each iteration; now it will do up to 10.  Ordinary iteration
+does only one projection still, but you can get the extra projections
+with the "post_project" toggle.  If convergence fails after 10 iterations,
+you will get a warning message, repeated iterations will stop, and the
+variable "iteration_counter" will be negative.
+
+Extra attributes: It is now possible to dynamically define extra attributes 
+for elements, which may be single values or vectors.  The definition syntax is
+ DEFINE elementtype ATTRIBUTE name REAL|INTEGER [dim]
+where  elementtype is  vertex, edge, facet, or body,  name is an identifier 
+of your choice, and  dim is an optional expression
+for the vector dimension.  There is no practical distinction between real
+and integer types at the moment, since everything is stored internally
+as reals.  But there may be more datatypes added in the future. Examples:
+  define edge attribute charlie real 
+  define vertex attribute oldx real[3] 
+The same definition syntax works in the top section of the datafile as
+well as from the command prompt.  Use in the same way as built-in 
+attributes like color.  The named quantity method hooke2_energy uses
+an extra attribute hooke_size as the equilibrium length for each
+individual edge.
+
+General quantities: Named quantities for basic geometric integrals
+are now available that work in both the linear and quadratic model,
+and in the hessian command for optimization.  The basic methods are:
+vertex_scalar_integral: Function value at a vertex.
+edge_tension or edge_length: Length of edge.
+edge_scalar_integral: Integral of a scalar function over arclength.
+edge_vector_integral: Integral of a vectorfield over an edge.
+edge_general_integral: Integral of a scalar function of position and 
+    tangent over an edge.
+facet_tension or facet_area: Area of facet.
+facet_scalar_integral: Integral of a scalar function over facet area.
+facet_vector_integral: Integral of a vectorfield over a facet.
+facet_general_integral: Integral of a scalar function of position and 
+    normal vector over  a facet.
+See the manual for a full list, and further details.
+
+Quadratic model: More has been added for the quadratic model, in particular
+various named quantity methods (see above).  Also the midv attribute for
+an edge gets the midpoint of an edge in the quadratic model.  Beware that
+some old-fashioned things don't work in quadratic model, since they will
+be replaced eventually with the named quantity methods internally.
+Prominent among these are string length (use edge_length quantity) and
+volume in the torus model (use facet_volume quantity).   Further, the
+edge midpoints are recorded in dump files as the third vertex for an
+edge, so quadratic models can be reloaded.
+
+PostScript labels: PostScript output now has an option to print element
+numbers, for easy cross-referencing with datafiles.  Edge orientation is
+indicated by the labels being slightly displaced toward the edge head,
+and face labels are signed according to which side you are seeing.
+By responding with 'i' or 'o' at the labels prompt, you can get either
+current id numbers or original id numbers.
+
+Square mean curvature: Some extreme shapes caused problems for effective_area
+and normal_curvature versions of square mean curvature, in detecting a
+coherent local orientation for a surface.  There is now an "assume_oriented"
+toggle which lets Evolver assume facets are defined with consistent local
+orientation, so it doesn't have to figure it out itself.
+
+The size of PostScript output box has been corrected to 8x8 inches,
+as was claimed in the PS file header.  Had been 7.6x7.6 inches.
+
+Minneview removed:  Minneview, the precursor of geomview, has been
+removed. The Makefile doesn't need -DNO_MV anymore.
+
+The "quietgo" toggle will suppress normal output from the 'g' command.
+
+New math functions: tanh, asinh, acosh, atanh.
+
+New read-only variable: "iteration_counter" is the index of the 
+current iteration loop (printed in the first column of 'g' output).
+
+Named quantity methods for squared curvature: sq_mean_curvature,
+  eff_area_sq_mean_curvature, normal_sq_mean_curvature.
+  All work with prescribed curvature h_zero.
+
+Under-relaxation: Optimizing scale iteration finds the energy minimum
+in the direction of motion.  You can set the variable "scale_scale",
+which multiplies the optimum scale factor to get the actual motion,
+to explore the effects of under- or over-relaxation.  Under-relaxation
+might be good for reducing short wavelength oscillations.
+
+
+Bibliography.
+
+S.J. Townsend and C.S. Nichols, "The Geometry of Grain Disappearance in Thin
+Polycrystalline Films" to appear in volume 343 of the Materials Research
+Society Symposium Proceedings Series, 1994.
+
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

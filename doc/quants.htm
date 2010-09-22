@@ -1,0 +1,2975 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation: named quantities
+</title></head>
+
+<BODY>
+<!--NewPage-->
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<a name="quantity top"></a>
+<a name="quantity"></a>
+<H2> Named quantities and methods </H2>
+This is the systematic scheme of calculating global quantities 
+such as area, volume, and surface integrals that replaces the 
+original ad hoc scheme in the Evolver.  Briefly,
+<a href="#named methods">methods</a> are built-in
+functions, and 
+<a href="#named quantities">named quantities</a>
+are combinations of 
+<a href="#method instances">instances of methods</a>.
+See the <a href="ringblob.htm">ringblob datafile</a>
+for an example.
+The original ad hoc calculations are still the default
+where they exist, but all new quantities are being added
+in the named quantity scheme.  Some new features will work
+only with named quantities.  To convert everything to named
+quantities, start Evolver with the <a href="general.htm#options">-q</a>
+option or use the <a href="toggle.htm#convert_to_quantities">
+convert_to_quantities</a> command.
+This has not been made the default since named quantities can be
+slower than the originals.
+<p>
+The sample datafiles <tt>qcube.fe</tt>, <tt>qmound.fe</tt>, and 
+<tt>ringblob.fe</tt>
+contains some examples of named quantities and instances.  The first two
+are quantity versions of <tt>cube.fe</tt> and <tt>mound.fe</tt>.  These 
+illustrate the most general and useful methods, namely
+facet_vector_integral, facet_scalar_integral, and edge_vector_integral,
+rather than the faster but more specialized methods such as facet_area.
+My advice is that the user stick to the old implicit methods for 
+area, volume, and gravitational energy, and use named quantities only
+for specialized circumstances.
+
+<hr>
+<h3>Chapter contents:</h3>
+<ul>
+<li> <a href="#named methods">Named methods</a>
+<li> <a href="#method instances">Method instances</a>
+<li> <a href="#named quantities">Named quantities</a>
+<li> <a href="#methods">Implemented methods</a>
+</ul>
+
+<hr>
+<a name="method"></a>
+<H2><a name="named methods">Named methods</a></H2>
+A "method" is a way of calculating a scalar
+value from some particular type of element (vertex, edge, facet, body).
+Each method is implemented internally as a set of functions for
+calculating the value and its gradient as a function of vertex
+positions.  The most common methods also have Hessian functions.
+Methods are referred to by their names.  
+<p> See <a href="#methods">
+Implemented methods</a> for a list of available methods.
+Adding a new method involves writing C routines to calculate the value
+and the gradient (and maybe the Hessian)
+as functions of vertex coordinates, adding the function declarations
+to <tt>quantity.h</tt>, and adding a
+structure to the method declaration array in <tt>quantity.c</tt>. All the
+other syntax for invoking it from the datafile is already in place.
+
+<hr>
+<h2><a name="method instances">Method instances</a></h2>
+A "method instance" is the sum of a particular method applied
+to a particular set of geometric elements.
+Some methods (like facet_area)
+are completely self-contained. Others (like facet_vector_integral)
+require the user to specify some further information.  For these,
+each instance has a specification of this further information.
+Method instances are defined in the datafile, and may either be
+unnamed parts of <a href="datafile.htm#named quantity decl">named quantity
+definitions</a> or separate <a href="datafile.htm#method instance decl">
+named method instances</a> for inclusion in named quantities.   
+The separate named version is useful if you want to inspect 
+instance values for the whole surface or individual elements.
+
+An instance total value can be printed with the <a href="single.htm#A">A</a>
+ commands, or may be 
+referred to as "instancename.value" in commands.  The instance name
+itself may be used as an element attribute.  For example, supposing there
+is an instance named <tt>moment</tt>, which applies to facets.  
+Then typical commands would be
+<pre>  print moment.value
+  print facet[3].moment
+  list facet where moment &gt; 0.1
+</pre>
+
+<b>Modulus.</b>
+<a name="instance modulus"></a>Every method
+instance has a "modulus", which is multiplied times the basic
+method value to give the instance value.  A modulus of 0
+causes the entire instance calculation to be omitted whenever quantities
+are calculated.  The modulus may be set in the 
+<a href="datafile.htm#method instance decl">datafile</a> or with the 
+<a href="single.htm#A">A</a> command or by assignment.  Example commands:
+<pre>  print moment.modulus
+  moment.modulus := 1.3
+</pre>
+
+<a name="element_modulus"></a>A method instance may be declared to use
+a different modulus for each element by specifying an element extra
+attribute to use for that purpose.  The extra attribute has to have already
+been declared. Example:
+<pre>
+define facet attribute mymod real
+quantity myquant energy method facet_area global element_modulus mymod
+</pre>
+Of course, it is up to the user to properly initialize the values of the
+extra attribute.
+
+<p> <a name="element orientation"></a>
+<b>Orientation.</b> Some methods, those that logically depend on the orientation
+of the element, can be applied with a relative orientation.
+When applied to individual elements in the datafile, a negative
+orientation is indicated by a '-' after the instance name.
+When applied at runtime with the <tt>set</tt> command, 
+the orientation will be negative if the element is generated
+with negative orientation, 
+i.e. <tt>set body[1].facet method_instance qqq</tt>.  
+The methods currently implementing this feature are:
+edge_vector_integral, string_gravity, facet_vector_integral,
+facet_2form_integral, facet_volume, facet_torus_volume,
+simplex_vector_integral, simplex_k_vector_integral,
+edge_k_vector_integral, gravity_method, and full_gravity_method.
+
+
+
+<hr>
+<a name="conserved"></a>
+<h2><a name="named quantities">Named quantities</a></h2>
+
+
+A "named quantity" is the sum total of various
+<a href="#method instances">method instances</a>,
+although usually just one instance is involved.
+The instances need not apply to the same type of element;
+for example, both facet and edge integrals may be needed to
+define a volume quantity.
+<a name="energy quantity"></a><a name="info_only quantity"></a>
+<a name="fixed quantity"></a>  
+<a name="conserved quantity"></a>  
+Each named quantity is one of four types: 
+<ul><li> "energy"  quantities which are added to the total energy of the surface; 
+<li> "fixed" quantities that are constrained to a
+fixed target value (by Newton steps at each iteration); and
+<li> "conserved" quantities  are like fixed,  but the value is irrelevant. The
+quantity gradient is used to eliminate a degree of freedom in motion.  
+Rarely used, but useful to eliminate rotational degree of freedom, for example.
+  Will not work with optimizing parameters, since
+they do gradients by differences.
+<li> "info_only" quantities whose values are merely reported to the user.
+</ul>
+This type is initially set in a quantity's 
+<a href="datafile.htm#named quantity decl">
+datafile declaration</a>.  A quantity can be toggled between fixed and
+info_only with the "<tt>fix</tt> <i>quantityname</i>" and 
+"<tt>unfix</tt> <i>quantityname</i>" commands.
+<p>
+<a name="quantity value"></a>
+<a name="value"></a>
+The value of a quantity may be displayed with the 
+<a href="single.htm#A">A</a> or <a href="single.htm#v">v</a> commands,
+or as an expression "quantityname.value".  Furthermore, using the
+quantity name as an element attribute evaluates to the sum of all
+the applicable component instance values on that element.  For example,
+supposing there is a quantity named <tt>vol</tt>, one could do
+<pre>  print vol.value
+  print facet[2].vol
+  histogram(facet,vol)
+</pre>
+<p>
+<b>Modulus.</b>
+<a name="quantity modulus"></a>
+Each quantity has a "modulus", which is just a scalar multiplier for
+the sum of all instance values. A modulus of 0 will turn off calculation
+of all the instances.  The modulus can be set in the 
+<a href="datafile.htm#named quantity decl">datafile declaration</a>, with the
+<a href="single.htm#A">A</a> command, or by assignment:
+<pre> quantityname.modulus := 1.2 </pre>
+<p>
+<b>Target value.</b>
+<a name="quantity target"></a>
+Each fixed quantity has a target value, to which the Evolver attempts to
+constraint the quantity value.  Each time an iteration is done
+( <a href="single.htm#g">g</a> command or the various 
+<a href="commands.htm#hessian command">Hessian</a> commands), Newton's Method
+is used to project the surface to the constrained values.  The target
+value can be displayed with the <a href="single.htm#A">A</a> or 
+<a href="single.htm#v">v</a> commands, or as "quantityname.target".  
+It can be changed with the <a href="single.htm#A">A</a> command or 
+by assignment.  Example:
+<pre>  print qname.target
+  qname.target := 3.12
+</pre>
+<p>
+<b>Volconst.</b>
+<a name="quantity volconst"></a>
+A quantity can have a constant value added to it, similar to the
+body attribute <a href="elements.htm#body volconst">volconst</a>.
+This quantity attribute is also called <tt>volconst</tt>.  It is
+useful for adding in known values of say integrals that are omitted
+from the actual calculation.  It can be set in the quantity's
+datafile <a href="datafile.htm#named quantity decl">definition</a>, or
+by an <a href="commands.htm">assignment</a> command.
+<p>
+<b>Pressure.</b>
+<a name="quantity pressure"></a><a name="quantity Lagrange multiplier"></a>
+Each fixed quantity has a Lagrange multiplier associated to it.
+The Lagrange multiplier of a constraint is the rate of energy change
+with respect to the constraint target value.  For a volume constraint,
+the Lagrange multiplier is just the pressure.  Lagrange multipliers are
+calculated whenever an iteration step is done.  They may be displayed
+with the <a href="single.htm#v">v</a> command in the "<tt>pressure</tt>"
+column, or as an expression "quantityname.pressure".
+<p>
+<a name="quantity tolerance"></a>
+<b>Tolerance.</b> A fixed quantity can have a tolerance attribute, which
+ is used to judge convergence.
+A surface is deemed converged when the sum of all ratios of quantity
+discrepancies to tolerances is less than 1.  This sum also includes
+bodies of fixed volume.  If the tolerance is not set or is negative, 
+the value of
+the variable target_tolerance is used, which has a default value of 0.0001.
+<p>
+<b>Function quantities.</b> Instead of being a simple sum of methods,
+a named quantity can be an arbitrary function of named method values.
+The datafile syntax has "function expression" instead of a method list.
+For example:
+<pre>
+  method_instance qwerty method facet_scalar_integral
+     scalar_integrand: x^2
+   quantity foobar energy function qwerty.value^3
+</pre>
+Note the method name is used with a "value" suffix.  Also
+note that the method values used are global values, not element-wise.
+Quantity functions can do Hessian operations, if the component methods
+have Hessians.  Such hessians can become quite memory consuming in 
+default dense matrix form;  there is a toggle command <tt>
+function_quantity_sparse</tt> that will cause sparse matrices to be used.
+<p>
+<b> Example.</b> The sample datafile <a href="column.htm">column.fe</a>
+ contains some examples of named quantities and instances.
+
+<p>
+<b>Future.</b> It is planned that eventually all
+energies and global constraints will be converted to named quantity system.
+However, existing syntax will remain valid wherever possible.
+Starting Evolver with the -q option will do this conversion now.
+
+<hr>
+<h2><a name="methods">Implemented methods</a></h2>
+The currently implemented methods are listed here, grouped
+somewhat by nature.  
+<h4> 0-dimensional </h4>
+<ul>
+<li><a href="#vertex_scalar_integral">vertex_scalar_integral</a>
+</ul>
+
+<h4> 1-dimensional </h4>
+<ul>
+<li><a href="#circular_arc_length">circular_arc_length</a>
+<li><a href="#circular_arc_area">circular_arc_area</a>
+<li><a href="#density_edge_length">density_edge_length</a>
+<li><a href="#dihedral_hooke">dihedral_hooke</a>
+<li><a href="#edge_area">edge_area</a>
+<li><a href="#edge_general_integral">edge_general_integral</a>
+<li><a href="#edge_length">edge_length</a>,
+<a href="#edge_tension">edge_tension</a>
+<li><a href="#edge_scalar_integral">edge_scalar_integral</a>
+<li><a href="#edge_torus_area">edge_torus_area</a>
+<li><a href="#edge_vector_integral">edge_vector_integral</a>
+<li><a href="#hooke_energy">hooke_energy</a>
+<li><a href="#hooke2_energy">hooke2_energy</a>
+<li><a href="#hooke3_energy">hooke3_energy</a>
+<li><a href="#klein_length">klein_length</a>
+<li><a href="#laplacian_mean_curvature">laplacian_mean_curvature</a>
+<li><a href="#local_hooke_energy">local_hooke_energy</a>
+<li><a href="#metric_edge_length">metric_edge_length</a>
+<li><a href="#neo_hookean">neo_hookean</a>
+<li><a href="#null_length">null_length</a>
+<li><a href="#spherical_arc_length">spherical_arc_length</a>
+<li><a href="#spherical_arc_area_n">spherical_arc_area_n</a>
+<li><a href="#spherical_arc_area_s">spherical_arc_area_s</a>
+<li><a href="#sqcurve_string">sqcurve_string</a>
+<li><a href="#sqcurve2_string">sqcurve2_string</a>
+<li><a href="#sqcurve3_string">sqcurve3_string</a>
+<li><a href="#sqcurve_string_marked">sqcurve_string_marked</a>
+<li><a href="#sq_gaussian_curv_cyl">sq_gaussian_curv_cyl</a>
+<li><a href="#sq_mean_curv_cyl">sq_mean_curv_cyl</a>
+<li><a href="#string_gravity">string_gravity</a>
+</ul>
+
+<h4> 2-dimensional </h4>
+<ul>
+<li><a href="#circle_willmore">circle_willmore</a>
+<li><a href="#dirichlet_area">dirichlet_area</a>
+<li><a href="#density_facet_area">density_facet_area</a>
+<li><a href="#density_facet_area_u">density_facet_area_u</a>
+<li><a href="#facet_2form_integral">facet_2form_integral</a>
+<li><a href="#facet_2form_integral">facet_2form_sq_integral</a>
+<li><a href="#facet_area">facet_area</a>,
+    <a href="#facet_tension">facet_tension</a>
+<li><a href="#facet_area_u">facet_area_u</a>
+<li><a href="#facet_general_integral">facet_general_integral</a>
+<li><a href="#facet_scalar_integral">facet_scalar_integral</a>
+<li><a href="#facet_torus_volume">facet_torus_volume</a>
+<li><a href="#facet_vector_integral">facet_vector_integral</a>
+<li><a href="#facet_volume">facet_volume</a>
+<li><a href="#full_gravity_method">full_gravity_method</a>
+<li><a href="#gap_energy">gap_energy</a>
+<li><a href="#gravity_method">gravity_method</a>
+<li><a href="#klein_area">klein_area</a>
+<li><a href="#laplacian_mean_curvature">laplacian_mean_curvature</a>
+<li><a href="#metric_facet_area">metric_facet_area</a>
+<li><a href="#null_area">null_area</a>
+<li><a href="#pos_area_hess">pos_area_hess</a>
+<li><a href="#sobolev_area">sobolev_area</a>
+<li><a href="#spherical_area">spherical_area</a>
+<li><a href="#stokes2d">stokes2d</a>
+<li><a href="#stokes2d_laplacian">stokes2d_laplacian</a>
+</ul>
+
+<h4> 2-D Curvatures </h4>
+<ul>
+<li><a href="#mean_curvature_integral">mean_curvature_integral</a>
+<li><a href="#mean_curvature_integral_a">mean_curvature_integral_a</a>
+<li><a href="#sq_mean_curvature">sq_mean_curvature</a>
+<li><a href="#eff_area_sq_mean_curvature">eff_area_sq_mean_curvature</a>
+<li><a href="#normal_sq_mean_curvature">normal_sq_mean_curvature</a>
+<li><a href="#star_sq_mean_curvature">star_sq_mean_curvature</a>
+<li><a href="#star_eff_area_sq_mean_curvature">star_eff_area_sq_mean_curvature</a>
+<li><a href="#star_normal_sq_mean_curvature">star_normal_sq_mean_curvature</a>
+<li><a href="#star_perp_sq_mean_curvature">star_perp_sq_mean_curvature</a>
+<li><a href="#gauss_curvature_integral">gauss_curvature_integral</a>
+<li><a href="#star_gauss_curvature">star_gauss_curvature</a>
+<li><a href="#sq_gauss_curvature">sq_gauss_curvature</a>
+</ul>
+
+<h4> General dimensions </h4>
+<ul>
+<li><a href="#simplex_vector_integral">simplex_vector_integral</a>
+<li><a href="#simplex_k_vector_integral">simplex_k_vector_integral</a>
+<li><a href="#edge_k_vector_integral">edge_k_vector_integral</a>
+</ul>
+
+<h4> Knot energies </h4>
+<ul>
+<li><a href="#knot_energy">knot_energy</a>
+<li><a href="#uniform_knot_energy">uniform_knot_energy</a>
+<li><a href="#uniform_knot_energy_normalizer">uniform_knot_energy_normalizer</a>
+<li><a href="#uniform_knot_normalizer1">uniform_knot_normalizer1</a>
+<li><a href="#uniform_knot_normalizer2">uniform_knot_normalizer2</a>
+<li><a href="#edge_edge_knot_energy">edge_edge_knot_energy</a>,
+<a href="#edge_knot_energy">edge_knot_energy</a>
+<li><a href="#edge_knot_energy_normalizer">edge_knot_energy_normalizer</a>
+<li><a href="#simon_knot_energy_normalizer">simon_knot_energy_normalizer</a>
+<li><a href="#facet_knot_energy">facet_knot_energy</a>
+<li><a href="#facet_knot_energy_fix">facet_knot_energy_fix</a>
+<li><a href="#buck_knot_energy">buck_knot_energy</a>
+<li><a href="#proj_knot_energy">proj_knot_energy</a>
+<li><a href="#circle_knot_energy">circle_knot_energy</a>
+<li><a href="#sphere_knot_energy">sphere_knot_energy</a>
+<li><a href="#sin_knot_energy">sin_knot_energy</a>
+<li><a href="#curvature_binormal">curvature_binormal</a>
+<li><a href="#ddd_gamma_sq">ddd_gamma_sq</a>
+<li><a href="#edge_min_knot_energy">edge_min_knot_energy</a>
+<li><a href="#true_average_crossings">true_average_crossings</a>
+<li><a href="#true_writhe">true_writhe</a>
+<li><a href="#twist">twist</a>
+<li><a href="#writhe">writhe</a>
+<li><a href="#curvature_function">curvature_function</a>
+<li><a href="#knot_thickness">knot_thickness</a>
+<li><a href="#knot_thickness_0">knot_thickness_0</a>
+<li><a href="#knot_thickness_p">knot_thickness_p</a>
+<li><a href="#knot_thickness_p2">knot_thickness_p2</a>
+<li><a href="#knot_thickness2">knot_thickness2</a>
+<li><a href="#knot_local_thickness">knot_local_thickness</a>
+
+</ul>
+
+<h4> Elastic stretching energies </h4>
+<ul>
+<li><a href="#dirichlet_elastic">dirichlet_elastic</a>
+<li><a href="#linear_elastic">linear_elastic</a>
+<li><a href="#general_linear_elastic">general_linear_elastic</a>
+<li><a href="#linear_elastic_B">linear_elastic_B</a>
+<li><a href="#relaxed_elastic_A">relaxed_elastic_A</a>
+<li><a href="#relaxed_elastic1_A">relaxed_elastic1_A</a>
+<li><a href="#relaxed_elastic2_A">relaxed_elastic2_A</a>
+<li><a href="#relaxed_elastic">relaxed_elastic</a>
+<li><a href="#relaxed_elastic1">relaxed_elastic1</a>
+<li><a href="#relaxed_elastic2">relaxed_elastic2</a>
+<li><a href="#SVK_elastic">SVK_elastic</a>
+</ul>
+
+<h4> Weird and miscellaneous </h4>
+<ul>
+<li><a href="#wulff_energy">wulff_energy</a>
+<li><a href="#area_square">area_square</a>
+<li><a href="#stress_integral">stress_integral</a>
+<li><a href="#carter_energy">carter_energy</a>
+<li><a href="#charge_gradient">charge_gradient</a>
+<li><a href="#johndust">johndust</a>
+<li><a href="#ackerman">ackerman</a>
+</ul>
+<hr>
+<h2><a name="method list">Method descriptions</a></h2>
+
+The descriptions below of the individual methods give a 
+mathematical definition of the method, what type of element
+it applies to, definition parameters,
+ which types of models it applies to, any 
+restrictions on the dimension of ambient space, and whether
+the method has a Hessian implemented.  Unless specifically noted,
+a method has the gradient implemented, and hence may be used for
+an energy or a constraint. The definition parameters are usually
+scalar or vector integrands (see the 
+<a href="datafile.htm#method_instance"> datafile declaration</a>
+for full syntax). Some methods also depend on global
+variables as noted.  The sample datafile declarations given
+are for simple cases; 
+<a href="datafile.htm#named quantity decl">full syntax</a> is given elsewhere.
+Remember in the samples that for quantities not declared global,
+the quantity has to be individually applied to the desired elements.
+<hr>
+
+<h2>0-dimensional </h2>
+
+<hr><h3> <a name="vertex_scalar_integral">vertex_scalar_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Function value at a vertex.  This actually produces a sum
+over vertices, but as a mathematician, I think of a sum over vertices
+as a point-weighted integral.
+Element: vertex. 
+Parameters: scalar_integrand. 
+Models: linear, quadratic, Lagrange, simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity point_value energy method vertex_scalar_integral
+scalar_integrand: x^2 + y^2 - 2x + 3
+</pre>
+
+<hr>
+<h2>1-dimensional</h2>
+
+<a name="edge_length">
+<hr><h3> <a name="edge_tension"> </a>
+   edge_tension or edge_length </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Length of edge. 
+Quadratic model uses Gaussian quadrature of order integral_order_1D.
+Element: edge.
+Parameters: none.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity len energy method edge_length global
+</pre>
+
+<hr><h3> <a name="density_edge_length">density_edge_length </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Length of edge, multiplied by the edge density.  
+Quadratic model uses Gaussian quadrature of order integral_order_1D.
+Element: edge.
+Parameters: none.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity len energy method density_edge_length global
+</pre>
+
+<hr><h3> <a name="edge_scalar_integral">edge_scalar_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of a scalar function over arclength.
+Uses Gaussian quadrature of order integral_order_1D.
+Element: 
+Parameters:
+Models: linear, quadratic, Lagrange.
+Ambient dimension: any. 
+Hessian: yes.
+Type: edge. Parameters: scalar_integrand. 
+Example datafile declaration:
+<pre>
+quantity edge_sint energy method edge_scalar_integral
+scalar_integrand: x^2 - 3*y + 4
+</pre>
+
+<hr><h3> <a name="edge_vector_integral">edge_vector_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of a vectorfield over an oriented edge.
+Uses Gaussian quadrature of order integral_order_1D.
+Element: edge.
+Parameters: vector_integrand.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: any. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration:
+<pre>
+quantity edge_vint energy method edge_vector_integral
+vector_integrand:
+q1: 0
+q2: 0
+q3: z^2/2
+</pre>
+
+<hr><h3> <a name="edge_general_integral">edge_general_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of a scalar function of 
+  position and tangent over an edge.  The components of the tangent vector
+are represented by continuing the coordinate indices.  That is, in 3D the
+position coordinates are x1,x2,x3 and the tangent components are x4,x5,x6.
+For proper behavior, the integrand should be homogeneous of degree 1
+in the tangent components.  
+Uses Gaussian quadrature of order integral_order_1D.
+Element: edge.
+Parameters: scalar_integrand.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration: 
+the edge length in 3D could be calculated with this quantity:
+<pre>
+quantity arclength energy method edge_general_integral
+scalar_integrand: sqrt(x4^2 + x5^2 + x6^2)
+</pre>
+
+<hr><h3> <a name="edge_area">edge_area </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  For calculating the area of a body in the string model.  
+Implemented as the exact integral of -y dx over the
+ edge. Valid for torus model, but not general symmetry groups.
+ You may have to set the quantity volconst attribute in the 
+ torus model, since the area calculation is ambiguous up
+ to one torus area.
+Element: edge.
+Parameters: none.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: 2. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity cell1_area fixed = 1.3 method edge_area
+</pre>
+
+<hr><h3> <a name="edge_torus_area">edge_torus_area</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: For 2D torus string model body area calculations.
+Contains adjustments for torus wraps.
+ You may have to set the quantity volconst attribute in the 
+ torus model, since the area calculation is ambiguous up
+ to one torus area.
+Element: edge.
+Parameters: none.
+Models: torus; string; linear,quadratic,Lagrange.
+Ambient dimension: 2. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity cell_area fixed = 1.3 method edge_torus_area
+</pre>
+
+<hr><h3> <a name="string_gravity">string_gravity</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  To calculate the gravitational potential energy
+of a body in the string model.  Uses differences in body 
+densities.  Does not use gravitational constant G as modulus
+(unless invoked as internal quantity by convert_to_quantities).
+Element: edge.
+Parameters: none.
+Models: string linear, quadratic, lagrange.
+Ambient dimension: 2. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration:
+<pre>
+quantity cell_grav energy modulus 980*8.5 method string_gravity
+</pre>
+
+<a name="hooke_length"></a>
+<hr><h3> <a name="hooke_energy">hooke_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+One would often like to require edges to have fixed length.
+The total length of some set of edges may be constrained by
+defining a fixed quantity.  This is used to fix the total
+length of an evolving knot, for example.  But to have one
+constraint for each edge would be impractical, since projecting
+to n constraints requires inverting an n x n matrix.
+Instead there is a Hooke's Law energy available to encourage
+edges to have equal length. Its form per edge is
+<pre>
+   E =  | L - L_0| ^p 
+</pre>
+where L is the edge length,
+L_0 is the equilibrium length, embodied as an adjustable
+parameter `hooke_length', and  the power p is an adjustable
+parameter `hooke_power'.  The default power is p = 2, and
+the default equilibrium length is the average edge length
+in the initial datafile.  You will want to adjust this,
+especially if you have a total length constaint.
+A high modulus will decrease the hooke component of the total
+energy, since the restoring force is linear in displacement and the 
+energy is quadratic (when p=2).  As an extra added bonus, 
+a `hooke_power' of 0 will give
+<pre> E = -\log|L-L_0|.</pre>
+See <a href="#hooke2_energy">hooke2_energy</a> for individual edge
+equilibrium lengths.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+
+Example datafile declaration:
+<pre>
+parameter hooke_length 0.3   // will apply to all edges
+parameter hooke_power  2     // the default
+quantity slinky energy method hooke_energy global
+</pre>
+
+<a name="hooke2_power"></a>
+<a name="hooke_size"></a>
+<hr><h3> <a name="hooke2_energy">hooke2_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Same as <a href="#hooke_energy">hooke_energy</a>,
+but each edge has an equilibrium length
+<a href="elements.htm#extra attributes">extra attribute</a> `hooke_size'
+(which the user need not declare).
+If the user does not set hooke_size by the time the method is 
+first called, the value will default to the current length.
+Hooke_size is not automatically adjusted by refining.
+It is the responsibility of the
+user to reset hooke_size after refining; you could re-define the 'r' command
+<pre>
+   r :::= { 'r'; set vertex hooke_size hooke_size/2 }
+</pre>
+to take care of it automatically.
+The power of displacement used is given by the internal
+read-write variable hooke2_power, which has default value 2.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+parameter hooke2_power  2     // the default
+define edge attribute hooke_size real
+quantity slinky energy method hooke2_energy global
+...
+read
+r;r;set edge hooke_size length
+</pre>
+
+<a name="frickenhaus_flag"></a>
+<a name="hooke3_power"></a>
+<hr><h3> <a name="hooke3_energy">hooke3_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Same as <a href="#hooke2_energy">hooke2_energy</a>,
+but uses an elastic model instead of a spring. The energy is
+<pre>energy = 0.5*(length-hooke_size)^2/hooke_size.</pre>
+The exponent can be altered from 2 by setting the parameter hooke3_power.
+If the internal variable frickenhaus_flag is nonzero, then the energy
+is taken to be 0 if the length is less than the equilibrium length.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+parameter hooke3_power  2     // the default
+quantity slinky energy method hooke3_energy global
+...
+read
+r;r;set edge hooke_size length
+</pre>
+
+<hr><h3> <a name="local_hooke_energy">local_hooke_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+ Energy of edges as springs with
+ equilibrium length being average of lengths of neighbor edges.
+ Actually, the energy is calculated per vertex,
+ <pre> E = ({L_1 - L_2 \over L_1 + L_2})^2 
+ </pre>
+ where L_1 and L_2 are the lengths of the edges adjacent
+ to the vertex. Meant for loops of string. (by John Sullivan)
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity slinky energy method local_hooke_energy global
+</pre>
+
+<hr><h3> <a name="dihedral_hooke">dihedral_hooke </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+ Energy of an edge is edge length times square of angle between 
+ normals of adjacent facets.  Actually, e = (1 - cos(angle))*length.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity bender energy method dihedral_hooke global
+</pre>
+
+<a name="curvature_power"></a>
+<hr><h3> <a name="sqcurve_string">sqcurve_string </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of squared curvature in
+string model.  Assumes two edges per vertex, so it just uses the first 
+two edges it finds at a vertex;
+ see <a href="#sqcurve_string_marked">sqcurve_string_marked</a> for
+more complicated topologies.  
+Value zero at endpoint of curve. Value is calculated as if
+the exterior angle at the vertex is evenly spread over the adjacent
+half-edges.  More precisely, if s1 and s2 are the adjacent edge lengths
+and t is the exterior angle, value = 4*(1 - cos(t))/(s1+s2). 
+Other powers of the curvature can be specified by using the
+parameter parameter_1 in the instance definition.  If parameter_1
+is not present, then the internal read-write variable curvature_power is
+used, which defaults to 2.
+Also see <a href="#sqcurve2_string">sqcurve2_string</a> for a version
+with intrinsic curvature, and <a href="#sqcurve3_string">sqcurve3_string</a>
+for a version that uses a slightly different formula to encourage
+equal length edges.
+Element: vertex.
+Parameters: parameter_1.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity sq energy method sqcurve_string global
+parameter_1 3
+</pre>
+
+<hr><h3> <a name="sqcurve2_string">sqcurve2_string </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of squared curvature in
+string model, but with an intrinsic curvature.
+The value zero at endpoint of curve. The value is calculated as if
+the exterior angle at the vertex is evenly spread over the adjacent
+half-edges.  More precisely, if s1 and s2 are the adjacent edge lengths,
+h0 is the intrinsic curvature, 
+and t is the exterior angle, then value = (sin(t)/((s1+s2)/2)-h0)<sup>2</sup>.
+The intrinsic curvature h0 may be specified
+either with a global variable h_zero or a real-valued vertex extra
+attribute h_zero.  
+Element: vertex.
+Models: linear.
+Ambient dimension:  2
+Hessian: no.
+Example datafile declaration:
+<pre>
+define vertex attribute intrinsic_curvature real
+quantity sq2 energy method sqcurve2_string global
+</pre>
+
+
+<hr><h3> <a name="sqcurve3_string">sqcurve3_string </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Same as <a href="#sqcurve_string">sqcurve_string</a>,
+but uses a slightly different formula to encourage equal length edges
+The value zero at endpoint of curve. The value is calculated as if
+the exterior angle at the vertex is evenly spread over the adjacent
+half-edges.  More precisely, if s1 and s2 are the adjacent edge lengths,
+h0 is the intrinsic curvature, 
+and t is the exterior angle, value = 2*(1 - cos(t))*(1/s1+1/s2). 
+Element: vertex.
+Models: linear.
+Ambient dimension:  any
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity sq3 energy method sqcurve3_string global
+</pre>
+
+
+<a name="sqcurve_string_mark"></a>
+<hr><h3> <a name="sqcurve_string_marked">sqcurve_string_marked </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of squared curvature in
+string model.  Same as <a href="#sqcurve_string">sqcurve_string</a>, but
+ only "marked" edges are used, so the topology of edges
+can be more complicated than a loop or curve.
+The marking is done by declaring an integer-valued edge attribute
+named <tt>sqcurve_string_mark</tt> and setting it to some nonzero
+value for those edges you want to be involved, usually two at each
+vertex to which this method is applied.
+  Value zero at vertex with only one marked edge. Value is calculated as if
+the exterior angle at the vertex is evenly spread over the adjacent
+half-edges.  More precisely, if s1 and s2 are the adjacent edge lengths
+and t is the exterior angle, value = 4*(1 - cos(t))/(s1+s2). 
+Other powers of the curvature can be specified by using the
+parameter parameter_1 in the instance definition. 
+Element: vertex.
+Parameters: parameter_1.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+define edge attribute sqcurve_string_mark integer
+quantity sqmark energy method sqcurve_string_marked
+</pre>
+
+
+<hr><h3> <a name="sq_gaussian_curv_cyl">sq_gaussian_curv_cyl </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of the squared gaussian curvature of a 
+surface of revolution.  The generating curve is set up in 
+the <a href="model.htm">string model</a>, and this method
+applied to its edges.  The axis of rotation is the x-axis.
+Element: edge.
+Models: linear string.
+Ambient dimension:  2
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity sqgausscyl energy method sq_gaussian_curv_cyl global
+</pre>
+
+<hr><h3> <a name="sq_mean_curv_cyl">sq_mean_curv_cyl </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of the squared mean curvature of a 
+surface of revolution.  The generating curve is set up in 
+the <a href="model.htm">string model</a>, and this method
+applied to its edges.  The axis of rotation is the x-axis.
+This method will do intrinsic curvature by means either
+of a global variable <tt>h_zero</tt> or a real-valued
+vertex attribute <tt>h_zero</tt>.
+Element: edge.
+Models: linear string.
+Ambient dimension:  2
+Hessian: yes.
+Example datafile declaration:
+<pre>
+define vertex attribute h_zero real
+quantity sqcyl energy method sq_mean_curv_cyl global
+</pre>
+
+<hr><h3> <a name="metric_edge_length">metric_edge_length</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: In the string model with a 
+<a href="model.htm#metric">Riemannian metric</a>, this is the
+length of an edge.
+Element: edge.
+Parameters: none.
+Models: linear,quadratic,simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+string
+space_dimension 2
+metric
+1+x^2 y
+y   1+y^2
+quantity mel energy method metric_edge_length global
+</pre>
+
+<hr><h3> <a name="klein_length">klein_length</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Edge length in Klein hyperbolic plane model. Does not
+depend on <a href="datafile.htm#klein_metric">klein_metric</a>
+being declared.  Vertices should be inside unit sphere.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 2. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity kleinlen energy method klein_length global
+</pre>
+
+<hr><h3> <a name="circular_arc_length">circular_arc_length</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Edge length, modelling the edge as a circular
+arc through three points, hence useful only in the 
+<a href="model.htm#quadratic model">quadratic model</a>. 
+If not in the quadratic model, it evaluates as the 
+<a href="quants.htm#edge_length">edge_length</a> method.
+The presence of this quantity has the side effect of automatically
+toggling <a href="toggle.htm#circular_arc_draw">circular_arc_draw</a>, 
+causing edges to display as circular arcs in the quadratic model.
+Element: edge.
+Parameters: none.
+Models: quadratic.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity arclen energy method circular_arc_length global
+</pre>
+
+<hr><h3> <a name="circular_arc_area">circular_arc_area</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Area between an edge and the y axis, with the edge modelled
+as a circular arc through three points.  Useful in the 
+<a href="model.htm#quadratic model">quadratic model</a>;
+in other models it is the same as
+<a href="quants.htm#facet_area">edge_area</a>.
+Element: edge.
+Parameters: none.
+Models: quadratic.
+Ambient dimension: 2. 
+Orientable: yes.
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity arcarea energy method circular_arc_area global
+</pre>
+
+
+<hr><h3> <a name="spherical_arc_length">spherical_arc_length</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Edge length, modelling the edge as a spherical
+great circle arc between its two endpoints,  which are assumed to 
+lie on an arbitrary radius sphere centered at the origin.
+This method is meant for modelling string networks on spheres, and
+is suitable for use with the <a href="datafile.htm#length_method_name">
+length_method_name</a> feature for substituting the default edge length
+calculation method.  Note that this method is an exact spherical calculation
+in the linear model,
+so there is no need to refine edges or use higher order models for accuracy.
+Edges are graphed as spherical arcs (actually, lots of segments).
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+parameter rad = 2
+constraint 1
+formula: x^2 + y^2 + z^2 = rad^2
+length_method_name "spherical_arc_length"
+</pre>
+
+<hr> <a name="spherical_arc_area_n"> </a>
+ <a name="spherical_arc_area_s"> </a>
+<h3>spherical_arc_area_n, spherical_arc_area_s</h3>
+<a href="#quantity top">Named method.</a>
+Description: Area on a sphere between an edge (considered as a great circle 
+arc) and the north (or south) pole.    This is an exact calculation in
+the linear model.  Meant for calculating the areas of facets in the 
+string model with the string network confined to a sphere of arbitrary
+radius centered at the origin.  There are two versions of this method,
+since calculation of facet areas by means of edges necessarily has
+a singularity somewhere on the sphere. Spherical_arc_area_n has its 
+singularity at the south pole, and spherical_arc_area_s has its
+singularity at the north pole.  Thus spherical_arc_area_s will work 
+accurately for facets not including the north pole in there interiors;
+a facet including the north pole will have its area calculated as the
+negative complement of its true area, so a body defined using it could
+get the correct area by using a volconst of a whole sphere area.  If
+the singular pole falls on an edge or vertex, then results are
+unpredictable.   With these caveats, these methods are suitable for
+use with the <a href="datafile.htm#area_method_name">
+area_method_name</a> feature for substituting the default edge area
+method.  If you do a facet as an explicit quantity, you are responsible
+for applying or unapplying the quantity after topology changes!!
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Orientable: yes.
+Hessian: yes.
+Example datafile declaration:
+<pre>
+parameter rad = 2
+constraint 1
+formula: x^2 + y^2 + z^2 = rad^2
+area_method_name "spherical_arc_area_s"
+</pre>
+
+
+
+
+<hr>
+<h2>2-dimensional</h2>
+
+<hr> <a name="facet_tension"> </a>
+<a name="facet_area">  <h3>facet_tension, facet_area </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Area of facet. Does not multiply by facet density;
+<a href="#density_facet_area">density_facet_area</a> does that.
+Quadratic model uses Gaussian cubature of order integral_order_2D.
+Beware that this is an approximation to the area, and if the facets
+in the quadratic or Lagrange model
+get too distorted, it can be a bad approximation.  Furthermore,
+facets can distort themselves in seeking the lowest numerical area.
+By default, changing the model to 
+quadratic or Lagrange will set an appropriate integral_order_2D.
+Element: facet.
+Parameters: none.
+Models: linear, quadratic, Lagrange, simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity farea energy method facet_area global
+</pre>
+
+<hr><h3> <a name="density_facet_area">density_facet_area </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Area of facet, multiplied by its density. 
+Otherwise same as <a href="#facet_area">facet_area</a>.
+Element: 
+Parameters:
+Models: linear, quadratic, Lagrange, simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity farea energy method density_facet_area global
+</pre>
+
+<hr><h3> <a name="facet_volume">facet_volume </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of z dx dy over an oriented facet. Valid
+in the torus domain. Not valid for other symmetry groups.
+ You may have to set the quantity volconst attribute in the 
+ torus model, since the volume calculation is ambiguous up
+ to one torus volume.
+Element: facet. 
+Parameters: none.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: 3. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration:
+<pre>
+quantity vol fixed = 1.3 method facet_volume
+</pre>
+
+<hr><h3> <a name="facet_scalar_integral">facet_scalar_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Integral of a scalar function over facet area. 
+Uses Gaussian cubature of order integral_order_2D.
+Element: facet.
+Parameters: scalar_integrand.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity fint energy method facet_scalar_integral global
+scalar_integrand: x^2+y^2
+</pre>
+
+<hr><h3> <a name="facet_vector_integral">facet_vector_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+ Integral of a vectorfield inner product with the surface normal over a facet.
+ The normal is the right-hand rule normal of the facet as defined in the
+ datafile.
+Uses Gaussian cubature of order integral_order_2D.
+Element: facet.
+Parameters: vector_integrand. 
+Models: linear, quadratic, Lagrange, simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration, for volume equivalent:
+<pre>
+quantity fvint energy method facet_vector_integrand
+vector_integrand:
+q1: 0
+q2: 0
+q3: z
+</pre>
+
+<hr><h3> <a name="facet_2form_integral">facet_2form_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+ Integral of a 2-form over 
+a facet.  Meant for ambient dimensions higher than 3.
+Uses Gaussian cubature of order integral_order_2D.
+Element: facet. Parameters: form_integrand (components in lexicographic order). 
+Models: linear,  Lagrange, simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration in 4D:
+<pre>
+quantity formex energy method facet_2form_integral
+form_integrand:
+q1: x2     // 12 component
+q2: 0      // 13 component
+q3: x4     // 14 component
+q4: 0      // 23 component
+q5: 0      // 24 component
+q6: x3*x2  // 34 component
+</pre>
+
+
+<hr><h3> <a name="facet_2form_sq_integral">facet_2form_sq_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+ Integral of the square of a 2-form over 
+a facet.  Meant for ambient dimensions higher than 3.
+Uses Gaussian cubature of order integral_order_2D.
+Element: facet. Parameters: form_integrand (components in lexicographic order). 
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Orientable: no.
+Example datafile declaration in 4D:
+<pre>
+space_dimension 4
+// symplectic area
+// Correspondence: z1 = (x1,x2)  z2 = (x3,x4)
+#define DENOM ((x1^2+x2^2+x3^2+x4^2)^2)
+quantity symplectic_sq energy method facet_2form_sq_integral global
+form_integrand:
+q1: -2*(x3^2 + x4^2)/DENOM    // dx1 wedge dx2 term
+q2:  2*(x2*x3-x1*x4)/DENOM    // dx1 wedge dx3 term
+q3:  2*(x1*x3+x2*x4)/DENOM    // dx1 wedge dx4 term
+q4: -2*(x1*x3+x2*x4)/DENOM    // dx2 wedge dx3 term
+q5:  2*(x2*x3-x1*x4)/DENOM    // dx2 wedge dx4 term
+q6: -2*(x1^2 + x2^2)/DENOM    // dx3 wedge dx4 term
+
+</pre>
+
+<hr><h3> <a name="facet_general_integral">facet_general_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of a scalar function 
+of position and normal vector over a facet. 
+Uses Gaussian cubature of order integral_order_2D.  The components of the normal vector
+are represented by continuing the coordinate indices.  That is, in 3D the
+position coordinates are x1,x2,x3 and the normal components are x4,x5,x6.
+For proper behavior, the integrand should be homogeneous of degree 1
+in the normal components.
+Element: facet.
+Parameters: scalar_integrand.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: any. 
+Hessian: yes.
+Example: The facet area could be calculated with this quantity:
+<pre>
+quantity surfacearea energy method facet_general_integral
+scalar_integrand: sqrt(x4^2 + x5^2 + x6^2)
+</pre>
+
+<hr><h3> <a name="facet_torus_volume">facet_torus_volume</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  For 3D soapfilm model, calculates body volume integral
+for a facet, with corrections for edge wraps.
+ You may have to set the quantity volconst attribute in the 
+ torus model, since the volume calculation is ambiguous up
+ to one torus volume.
+Element: facet.
+Parameters: none.
+Models: linear,quadratic,lagrange.
+Ambient dimension: 3. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration:
+<pre>
+quantity body_vol energy method facet_torus_volume
+</pre>
+
+<hr>
+<a name="full_gravity_method"></a>
+<h3><a name="gravity_method">gravity_method, full_gravity_method </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Gravitational energy, integral of
+  p z^2/2 dxdy over a facet, where p is difference in adjacent body densities.
+Note: this method uses the gravitational constant as the modulus
+if invoked as full_gravity_method.
+Just gravity_method does not automatically use the
+gravitational constant.
+Element: facet.
+Parameters: none.
+Models: linear, quadratic, Lagrange.
+Ambient dimension: 3. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration:
+<pre>
+quantity grav energy modulus 980*8.5 method gravity_method 
+</pre>
+
+<hr><h3> 
+<a name="density_facet_area_u"></a>
+<a name="facet_area_u">facet_area_u, density_facet_area_u </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Area of facet. In quadratic model, it is
+an upper bound of area, by the Schwarz Inequality.  For the paranoid.  
+Same as facet_area in linear model.
+Sets integral_order_2D to 6, since it doesn't work well with less. 
+Using the density_facet_area_u name automatically
+incorporates the facet tension, but facet_area_u doesn't.
+Element: facet.  
+Parameters: none.
+Models: linear, quadratic.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity area_u energy method facet_area_u global
+</pre>
+
+<hr><h3> <a name="gap_energy">gap_energy</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Implementation of <a href="energies.htm#gap energy">gap energy</a>, which is designed to keep edges from short-cutting curved
+constraint surfaces.  This method serves the same purpose as 
+declaring a constraint <a href="constrnt.htm#convex constraint">convex</a>.
+Automatically incorporates the
+<a href="datafile.htm#gap_constant">gap_constant</a> set in the datafile
+or by the <a href="single.htm#k">k</a> command.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity gappy energy method gap_energy global
+</pre>
+
+<hr><h3> <a name="metric_facet_area">metric_facet_area</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: For a 
+<a href="model.htm#metric">Riemannian metric</a>, this is the
+area of a facet.
+Element: edge.
+Parameters: none.
+Models: linear,quadratic,simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+metric
+1+x^2 0 z
+0 1+y^2 0
+z 0 1+z^2
+quantity mfa energy method metric_facet_area global
+</pre>
+
+<hr><h3> <a name="klein_area">klein_area</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Facet area in Klein hyperbolic 3D space model.
+Does not
+depend on <a href="datafile.htm#klein_metric">klein_metric</a>
+being declared in the datafile.
+Vertices should be inside the unit sphere.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity kleinarea energy method klein_area global
+</pre>
+
+<hr><h3> <a name="circle_willmore">circle_willmore</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+ Alexander Bobenko's circle-based discrete Willmore energy,
+ which is conformally invariant.
+ At each vertex, energy is (sum of the angles between facet
+ circumcircles) - 2*pi.  More simply done as edge quantity, since
+ angles at each end are the same.
+ For edge e, if adjacent facet edge loops are a,e,d and b,c,-e, then
+ circle angle beta for edge has
+<pre>
+ cos(beta) = (&lt;a,c&gt;&lt;b,c&gt;-&lt;a,b&gt;&lt;c,d&gt;-&lt;b,c&gt;&lt;d,a&gt;)/|a|/|b|/|c|/|d|
+</pre>
+ For now, assumes all vertices are faceted, and fully starred.
+  Severe numerical difficulties: Not smooth when angle beta is zero,
+ which is all too common.  Set of zero angles should be codimension 2,
+ which means generally avoided, but still crops up.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity bobenko energy method circle_willmore global
+</pre>
+
+
+
+<hr><h3> <a name="dirichlet_area">dirichlet_area</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Same as the <a href="#facet_tension">facet_tension</a>
+method, but the Hessian is modified to be guaranteed positive definite,
+after the scheme of Polthier and Pinkall
+<a href="biblio.htm#ref[PP]">[PP]</a>.  The energy is taken to be the
+Dirichlet integral of the perturbation from the current surface, which
+is exactly quadratic and positive definite.  Hence the hessian command
+always works, but final convergence may be slow (no faster than regular
+iteration) since it is only an approximate Hessian.  Also see
+the <a href="commands.htm#dirichlet">dirichlet</a> command.
+
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity dirarea energy method dirichlet_area global
+</pre>
+
+<hr><h3> <a name="sobolev_area">sobolev_area</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Same as the <a href="#facet_tension">facet_tension</a>
+method, but the Hessian is modified to be guaranteed positive definite,
+after the scheme of Renka and Neuberger.
+<a href="biblio.htm#ref[RN]">[RN]</a>.  Hence the hessian command
+always works, but final convergence may be slow (no faster than regular
+iteration) since it is only an approximate Hessian.  Also see
+the <a href="commands.htm#sobolev">sobolev</a> command.
+
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity sobarea energy method sobolev_area global
+</pre>
+
+
+<a name="fgagfa_coeff"></a>
+<a name="gfa_2_coeff"></a>
+<a name="gfaafg_coeff"></a>
+<a name="gfagfa_coeff"></a>
+<a name="gga_coeff"></a>
+<hr><h3> <a name="pos_area_hess">pos_area_hess</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Same as the <a href="quants.htm#facet_area">facet_area</a>
+method, but the Hessian can be adjusted various ways by setting
+the variables fgagfa_coeff, gfa_2_coeff, gfagfa_coeff, and gfaafg_coeff.
+This will make sense if you look at the Dirichlet section of the
+Technical Reference chapter of the printed manual.  The default
+values of the coefficients are -1, 1, -1, and 0 respectively.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity parea energy method pos_area_hess global
+</pre>
+
+<hr><h3> <a name="spherical_area">spherical_area</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Area of the facet projected to unit sphere.  The vertices of
+the facet are assumed to be on the unit sphere.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+constraint 1  formula: x^2 + y^2 + z^2 = 1
+quantity spharea energy method spherical_area global
+</pre>
+
+<a name="stokes_type"></a>
+<a name="stokes_velocity"></a>
+<hr><h3> <a name="stokes2d">stokes2d</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Square of the Laplacian of z viewed as a function of (x,y).
+Meant for the calculation of two-dimensional Stokes flow of a fluid (i.e.
+slow steady-state flow where inertia is not significant) by having the
+Evolver surface be the graph of the velocity potential and minimizing
+the viscous dissipation, which is the square of the Laplacian of z.
+Boundary conditions are handled by declaring a vertex attribute "stokes_type"
+of type integer, and assigning each boundary vertex one of these values:
+<ul>
+<li> 0 - vertex is not on a wall; treat as if on a mirror symmetry plane.
+<li> 1 - vertex is on a slip wall.
+<li> 2 = vertex is on a nonslip wall; normal derivative of potential is zero.
+</ul>
+Boundary values of z should be set to constants between 0 and 1 on
+various sections of boundary that represent walls.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity dissip energy method stokes2d global
+</pre>
+
+Note: Evolver creates a vertex attribute stokes_velocity for internal use.
+
+<hr><h3> <a name="stokes2d_laplacian">stokes2d_laplacian</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: The Laplacian of z viewed as a function of (x,y).  This is
+auxiliary to the <a href="#stokes2d">stokes2d</a> method.  It is the
+same Laplacian, unsquared, with the same boundary rules.  Meant for
+calculating pressures and such after stokes2d energy has been minimized.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity laplac info_only method stokes2d_laplacian global
+</pre>
+
+
+
+<hr>
+<H2>Surface curvature functions</h2>
+<a name="mean_curvature_integral_a"></a>
+<hr><h3> <a name="mean_curvature_integral">mean_curvature_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of signed scalar mean curvature of a 2D surface.  
+ The computation is exact, in the sense that
+for a polyhedral surface the mean curvature is concentrated
+on edges and singular there, but the total mean curvature for
+an edge is the edge length times its dihedral angle.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity mci energy method mean_curvature_integral
+</pre>
+The method <tt>mean_curvature_integral_a</tt> does the same thing,
+but uses a numerical formulation which may be better behaved.
+<p>
+There is an obsolete use of mean_curvature_integral in the top of the
+datafile to indicate the integral of the mean curvature should be
+included as an energy, with syntax
+<pre>
+  mean_curvature_integral: modulus
+</pre>
+where modulus is the multiplier for the energy.  The modulus winds up
+as the internal read-write variable mean_curvature_modulus.
+<hr>
+<a name="ignore_constraints"></a>
+<a name="ignore_fixed"></a>
+<h3> <a name="sq_mean_curvature">sq_mean_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+
+Description:  Integral of squared mean curvature of a surface.
+There are several methods implemented for calculating the integral
+of the squared mean curvature of a surface.  The older methods
+<a href="#sq_mean_curvature">sq_mean_curvature</a>,
+<a href="#eff_area_sq_mean_curvature">eff_area_sq_mean_curvature</a>, and
+<a href="#normal_sq_mean_curvature">normal_sq_mean_curvature</a>, are now
+deprecated, since they don't have Hessians and the newer methods
+<a href="#star_sq_mean_curvature">star_sq_mean_curvature</a>,
+<a href="#star_eff_area_sq_mean_curvature">star_eff_area_sq_mean_curvature</a>, 
+<a href="#star_normal_sq_mean_curvature">star_normal_sq_mean_curvature</a>, and 
+my current favorite
+ <a href="#star_perp_sq_mean_curvature">star_perp_sq_mean_curvature</a>, do
+have Hessians and can now handle incomplete facet stars around vertices. 
+But read the following for general remarks on squared curvature also.
+<p>
+The integral of squared mean curvature in the soapfilm model
+ is calculated for this method as follows:
+Each vertex v has a star of facets around it of area A.
+The force F due to surface tension on the vertex is the gradient of area,
+Since each facet has 3 vertices, the area associated with v is
+A/3. Hence the average mean curvature at v is
+<blockquote><tt>   h = (1/2)(F/(A/3)), </tt></blockquote>
+where the 1/2 factor comes from the "mean" part of "mean curvature".
+This vertex's contribution to the total integral is then
+<blockquote><tt>  E = h<sup>2</sup>A/3 = (3/4)F<sup>2</sup>/A.</tt> </blockquote>
+Philosophical note:  The squared mean curvature on a triangulated
+surface is technically infinite, so some kind of approximation scheme
+is needed.  The alternative to locating curvature at vertices is to
+locate it on the edges, where it really is, and average it over the
+neighboring facets.  But this has the problem that a least area
+triangulated surface would have nonzero squared curvature, whereas
+in the vertex formulation it would have zero squared curvature.
+<p>
+Practical note: The above definition of squared mean curvature
+seems in practice to be subject to instablities. One is that
+sharp corners grow sharper rather than smoothing out.  Another is
+that some facets want to get very large at the expense of their
+neighbors. Hence a couple of alternate definitions have been added.<br>
+
+Curvature at boundary: If the edge of the surface is a free boundary
+on a constraint, then the above calculation gives the proper curvature
+under the assumption the surface is continued by reflection across
+the constraint.  This permits symmetric surfaces to be represented
+by one fundamental region.  If the edge of the surface is a fixed edge
+or on a 1-dimensional boundary, then there is no way to calculate the
+curvature on a boundary vertex from knowledge of neighboring facets.
+For example, the rings of facets around the bases  of  a catenoid and
+a spherical cap may be identical.  Therefore curvature is calculated
+only at interior vertices, and when the surface integral is done,
+area along the boundary is assigned to the nearest interior vertex.
+However, including IGNORE_FIXED or IGNORE_CONSTRAINTS in the method declaration
+will force the calculation of energy even at fixed points or 
+ignoring constraints respectively.<br> 
+
+If the parameter or vertex attribute <tt>h_zero</tt> is defined, 
+then the value per vertex
+is the same as for the following method, 
+<a href="#eff_area_sq_mean_curvature">eff_area_sq_mean_curvature</a>.
+<br>
+
+Element: vertex.  
+Parameters: IGNORE_CONSTRAINTS, IGNORE_FIXED.  
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity sqc energy method sq_mean_curvature global
+</pre>
+
+
+<hr><h3> <a name="eff_area_sq_mean_curvature">eff_area_sq_mean_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Integral of squared mean curvature of a surface, with
+a slightly different definition from <a href="#sq_mean_curvature">
+sq_mean_curvature</a> or <a href="#normal_sq_mean_curvature">
+normal_sq_mean_curvature</a>.
+The area around a vertex is taken to
+be the magnitude of the gradient of the volume.  This is less than the 
+true area, so makes a larger curvature.  This also eliminates the
+spike instability, since a spike has more area gradient but the
+same volume gradient.  Letting N be the volume gradient at vertex v,
+<blockquote><tt>   h = (1/2)(F/N)), </tt></blockquote>
+and
+<blockquote><tt>  E = h<sup>2</sup> A/3 =  (3/4)(F&middot;F/N&middot;N)A. </tt>
+</blockquote>
+The facets of the surface must be consistently oriented for this 
+to work, since the evolver needs an `inside' and `outside' of the
+surface to calculate the volume gradient.   There are still possible
+instabilities where some facets grow at the expense of others.
+<br>
+If the parameter or vertex attribute
+ <tt>h_zero</tt> is defined, then the value per vertex
+is
+<blockquote><tt>  E = (h-h<sub>0</sub>)<sup>2</sup> A/3 = (3/4)(F&middot;N/N&middot;N-2h<sub>0</sub>)<sup>2</sup>A. </tt></blockquote> 
+  This does not reduce to the non-<tt>h_zero</tt> formula when <tt>h_zero</tt>
+  has the value zero, but is actually a pretty good formula in its own
+  right (see <a href="#star_perp_sq_mean_curvature">star_perp_sq_mean_curvature
+</a>.
+<br>
+If the vertex is on one or several constraints, the F and N are
+projected to the constraints, essentially making the constraints act as
+mirror symmetry planes.
+<br>
+WARNING: For some extreme shapes, 
+Evolver may have problems detecting consistent local surface orientation.
+The assume_oriented toggle lets Evolver assume that the facets
+have been defined with consistent local orientation.
+<br>
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity effsq energy method eff_area_sq_mean_curvature global
+</pre>
+
+<hr><h3> <a name="normal_sq_mean_curvature">normal_sq_mean_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of squared mean curvature of a surface, with
+a slightly different definition from <a href="#sq_mean_curvature">
+sq_mean_curvature</a> or <a href="#eff_area_sq_mean_curvature">
+eff_area_sq_mean_curvature</a>.
+ To alleviate the instability of eff_area_sq_mean_curvature,
+normal_sq_mean_curvature considers the area around the
+vertex to be the component of the volume gradient parallel to the
+mean curvature vector, rather than the magnitude of the volume gradient.
+Thus
+<blockquote><tt>  h = (1/2)(F&middot;F/N&middot;F) <br>
+
+  E = h<sup>2</sup>A/3 = (3/4)(F&middot;F/N&middot;F)<sup>2</sup> A. </tt></blockquote>
+This is still not perfect, but is a lot better.
+WARNING: For some extreme shapes, 
+Evolver may have problems detecting consistent local surface orientation.
+The assume_oriented toggle lets Evolver assume that the facets
+have been defined with consistent local orientation.
+<br>
+If the parameter or vertex attribute <tt>h_zero</tt> is defined, 
+then the value per vertex is
+<blockquote><tt>  E = (h-h<sub>0</sub>)<sup>2</sup> A/3 = (3/4)(F&middot;F/N&middot;F - 2h<sub>0</sub>)<sup>2</sup>A </tt></blockquote>
+
+  If the vertex is on one or several constraints, the F and N are
+  projected to the constraints, essentially making the constraints act as
+  mirror symmetry planes.
+<br>
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity nsq energy method normal_sq_mean_curvature global
+</pre>
+
+<hr><h3> <a name="star_sq_mean_curvature">star_sq_mean_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Integral of squared mean curvature over a surface.
+This is a different implementation of <a href="#sq_mean_curvature">
+sq_mean_curvature</a>, and it has a Hessian.  
+This method no longer requires a complete circle of vertices around a vertex;
+boundary edges are treated as if they are on mirror symmetry planes, which
+is usually true.
+  The positive orientation of the surface is 
+  determined by the positive orientation of the first facet of the vertex's
+  internal facet list. 
+This method does not do prescribed mean curvature with
+the <tt>h_zero</tt> parameter.
+<br>
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity starsq energy method star_sq_mean_curvature global
+</pre>
+
+<hr><h3> <a name="star_eff_area_sq_mean_curvature">star_eff_area_sq_mean_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Integral of squared mean curvature over a surface.
+This is a different implementation of <a href="#eff_area_sq_mean_curvature">
+eff_area_sq_mean_curvature</a>, and it has a Hessian. 
+This method no longer requires a complete circle of vertices around a vertex;
+boundary edges are treated as if they are on mirror symmetry planes, which
+is usually true.
+  The positive orientation of the surface is 
+  determined by the positive orientation of the first facet of the vertex's
+  internal facet list. 
+This method does not use the <tt>h_zero</tt> parameter.
+<br>
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity seffsq energy method star_eff_area_sq_mean_curvature global
+</pre>
+
+<hr><h3> <a name="star_normal_sq_mean_curvature">star_normal_sq_mean_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Integral of squared mean curvature over a surface.
+This is a different implementation of <a href="#normal_sq_mean_curvature">
+normal_sq_mean_curvature</a> which is more suitable for parallel
+calculation and has a Hessian. 
+This method no longer requires a complete circle of vertices around a vertex;
+boundary edges are treated as if they are on mirror symmetry planes, which
+is usually true.
+  The positive orientation of the surface is 
+  determined by the positive orientation of the first facet of the vertex's
+  internal facet list. 
+This method can use the <tt>h_zero</tt> parameter or vertex attribute
+for prescribed mean curvature.
+<br>
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity stnsq energy method star_normal_sq_mean_curvature global
+</pre>
+
+
+<hr><h3> <a name="star_perp_sq_mean_curvature">star_perp_sq_mean_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Integral of squared mean curvature over a surface.
+This is my current favorite implementation of squared mean curvature.
+It is an implementation specifically
+designed to agree with the mean curvature computed as the gradient of
+area when normal motion is on (either the <a href="toggle.htm#normal_motion">
+normal_motion</a> toggle for 'g' iteration, or Hessian with 
+<a href="toggle.htm#hessian_normal">hessian_normal</a>).  Thus if you
+get zero squared mean curvature with this method, then switch to area energy,
+the hessian will report exact convergence.  Likewise if you do prescribed 
+curvature and  then convert to area minimization with a volume constraint.
+This method has a Hessian. 
+This method does not require a complete circle of vertices around a vertex;
+boundary edges are treated as if they are on mirror symmetry planes, which
+is usually true.  
+This method can use the <tt>h_zero</tt> parameter or vertex attribute
+ for prescribed mean
+curvature.  The actual formula for the energy at a vertex is
+<blockquote><tt>  h = (1/2)(F&middot;N/N&middot;N) <br>
+  E = (h-h<sub>0</sub>)<sup>2</sup> A/3 = (3/4)(F&middot;N/N&middot;N - 2h<sub>0</sub>)<sup>2</sup>A </tt></blockquote>
+where F is the area gradient at the vertex, N is the volume gradient,
+and A is the area of the adjacent facets.
+  If the vertex is on one or several constraints, the F and N are
+  projected to the constraints, essentially making the constraints act as
+  mirror symmetry planes.  
+  The positive orientation of the surface is 
+  determined by the positive orientation of the first facet of the vertex's
+  internal facet list. 
+<br>
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity stnsq energy method star_perp_sq_mean_curvature global
+</pre>
+
+<hr>
+<a name="gauss_bdry_v"></a>
+<a name="gauss_bdry_e"></a>
+<h3> <a name="gauss_curvature_integral">gauss_curvature_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+This computes the total Gaussian curvature of a surface with
+boundary.  The Gaussian curvature of a polyhedral surface may
+be defined at an interior vertex as the angle deficit of the
+adjacent angles.  But as is well-known, total Gaussian curvature
+can be computed simply in terms of the boundary vertices, which
+is what is done here. 
+The total Gaussian curvature is implemented as the total geodesic
+curvature around the boundary of the surface.  
+The contribution of a boundary vertex is
+<pre>E =  (\sum_i \theta_i) - pi.</pre>
+For reasons due to the Evolver's internal architecture, the sum is actually
+broken up as a sum over facets, adding the vertex angle for each facet 
+vertex on the boundary and subtracting pi for each boundary edge.
+The total over all boundary vertices is
+exactly equal to the total angle deficit
+of all interior vertices plus 2*pi*chi, where chi is the 
+Euler characteristic of the surface.
+Boundary vertices are deemed to be those that are fixed or on a 
+parametric boundary.  Alternately, one may define a vertex extra attribute
+<tt>gauss_bdry_v</tt> and an edge extra attribute <tt>gauss_bdry_e</tt>
+ and set them nonzero on the relevant vertices and edges; this overrides
+the fixed/boundary criterion.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity gint energy method gauss_curvature_integral global
+</pre>
+
+<hr><h3> <a name="star_gauss_curvature">star_gauss_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+Computes the angle deficit around vertices to which this method is applied.
+The angle deficit is 2*pi minus the sum of all the adjacent angles of facets.
+No compensation is made for vertices on the boundary of a surface; you just
+get big deficits there.  Deficits are counted as positive, following the
+convention for gaussian curvature.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any.
+Hessian: no.
+Example datafile declaration:
+<pre> quantity total_deficit energy method star_gauss_curvature global
+</pre>
+
+<hr><h3> <a name="sq_gauss_curvature">sq_gauss_curvature </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+Computes the integral of the squared Gaussian curvature.  At each
+vertex, the Gaussian curvature is calculated as the angle defect
+divided by one third of the total area of the adjacent facets. This is
+then squared and weighted with one third of the area of the adjacent
+facets.  This method works only on closed surfaces with no singularities
+due to the way it calculates the angle defect.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any.
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity sqg energy method sq_gauss_curvature global
+</pre>
+
+<hr>
+<H2>Simplex model methods</h2>
+
+<hr><h3> <a name="simplex_vector_integral">simplex_vector_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Integral of a vectorfield over a (n-1)-dimensional
+ simplicial facet in n-space. Vectorfield is dotted with normal of
+ facet; actually the side vectors of the simplex and the integrand
+ vector are formed into a determinant.
+Element: facet.
+Parameters: vector_integrand.
+Models: simplex.
+Ambient dimension: any. 
+Hessian: no.
+Orientable: yes.
+Example datafile declaration, for 4-volume under a 3D surface in 4D:
+<pre>
+quantity xvint energy method simplex_vector_integral
+vector_integrand:
+q1: 0
+q2: 0
+q3: 0
+q4: x4
+</pre>
+
+
+
+<hr>
+<a name="k_vector_order"></a>
+<h3> <a name="simplex_k_vector_integral">simplex_k_vector_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Integral of a simple (n-k)-vector over an oriented k-dimensional
+simplicial facet in  n-space.
+  The vector integrand lists the components of each of the k vectors
+sequentially.  Evaluation is done by forming a determinant whose
+first k rows are k vectors spanning the facet, and last (n-k) rows are vectors
+of the integrand.
+Element: facet.
+Parameters: k_vector_order, vector_integrand.
+Models: simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration, for 3D surface in 5D:
+<pre>
+quantity kvec energy method simplex_k_vector_integral
+k_vector_order 3
+vector_integrand:
+q1: 0   // first vector
+q2: 0
+q3: 0
+q4: 0
+q5: x4
+q6: 0   // second vector
+q7: 0
+q8: 0
+q9: x3
+q10: 0
+</pre>
+
+<hr><h3> <a name="edge_k_vector_integral">edge_k_vector_integral </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Integral of a simple (n-k)-vector over an oriented
+ k-dimensional simplicial edge in  n-space.
+The vector integrand lists the components of each of the k vectors
+sequentially.  Evaluation is done by forming a determinant whose
+first k rows are k vectors spanning the edge, and last (n-k) rows are vectors
+of the integrand.
+Element: edge.
+Parameters: k_vector_order, vector_integrand.
+Models: linear, quadratic, simplex.
+Ambient dimension: any. 
+Hessian: yes.
+Orientable: yes.
+Example datafile declaration, for 3D edges of a 4D surface in 5D:
+<pre>
+quantity kvec energy method edge_k_vector_integral
+k_vector_order 3
+vector_integrand:
+q1: 0   // first vector
+q2: 0
+q3: 0
+q4: 0
+q5: x4
+q6: 0   // second vector
+q7: 0
+q8: 0
+q9: x3
+q10: 0
+</pre>
+
+
+<hr><h3>
+<a name="node_charge"></a>
+<a name="knot_energy">knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+ An ``electrostatic'' energy in which vertices
+are endowed with equal charges.  Inverse power law of potential is adjustable
+via the global parameter `knot_power', default value 2 (which is
+not electrostatic, but the knot theorists like it).  If the 
+<a href="elements.htm#extra attributes">extra attribute</a>
+`node_charge' is defined for vertices, then that value is used for 
+the vertex charge.  Use of this energy is not restricted to knots;
+it has been used to embed complicated network graphs in space.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knotten energy method knot_energy global
+</pre>
+
+<hr><h3> <a name="uniform_knot_energy">
+uniform_knot_energy or edge_knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: A knot energy where vertex charge
+is proportional to neighboring edge length. This simulates an
+electrostatic charge uniformly distributed along a wire.
+Inverse power law of potential is adjustable via the 
+global parameter `knot_power' (default 2).
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knotten energy method uniform_knot_energy global
+</pre>
+
+<hr><h3> <a name="uniform_knot_energy_normalizer">uniform_knot_energy_normalizer </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Supposed to approximate
+the part of <a href="#uniform_knot_energy">uniform_knot_energy</a>
+ that is singular in the continuous limit.
+Element: vertex.
+Parameters:
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knottenorm energy method uniform_knot_energy global
+			   method uniform_knot_energy_normalizer global
+</pre>
+
+<hr><h3> <a name="uniform_knot_normalizer1">uniform_knot_normalizer1</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Calculates internal knot energy to normalize
+           singular divergence of integral of 
+<a href="quants.htm#uniform_knot_energy">uniform_knot_energy</a>.
+Actually a synonym for 
+<a href="quants.htm#uniform_knot_energy_normalizer">uniform_knot_energy_normalizer</a>.
+No gradient.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knottenorm energy method uniform_knot_energy global
+			   method uniform_knot_energy_normalizer1 global
+</pre>
+
+<hr><h3> <a name="uniform_knot_normalizer2">uniform_knot_normalizer2</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Calculates internal knot energy to normalize
+           singular divergence of integral of 
+<a href="quants.htm#uniform_knot_energy">uniform_knot_energy</a>
+a different way from <a href="quants.htm#uniform_knot_energy_normalizer">uniform_knot_energy_normalizer</a>.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knottenorm energy method uniform_knot_energy global
+			   method uniform_knot_energy_normalizer2 global
+</pre>
+
+<hr><h3>
+<a name="edge_knot_energy"></a>
+ <a name="edge_edge_knot_energy">edge_edge_knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+Between pairs of edges, energy is inverse square power of distance
+between midpoints of edges. Can also be called just
+edge_knot_energy.  See also 
+<a href="#edge_knot_energy_normalizer">edge_knot_energy_normalizer</a>.
+  (by John Sullivan) 
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity knotten energy method edge_edge_knot_energy global
+</pre>
+
+<hr><h3> <a name="edge_knot_energy_normalizer">edge_knot_energy_normalizer</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Calculates internal knot energy to normalize
+           singular divergence of integral of
+<a href="#edge_edge_knot_energy">edge_edge_knot_energy</a>.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity knotten energy method edge_edge_knot_energy global
+                        method edge_knot_energy_normalizer global
+</pre>
+
+<hr><h3> <a name="simon_knot_energy_normalizer">simon_knot_energy_normalizer</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Another normalization of edge_knot_energy, which I
+don't feel like deciphering right now.
+Element: edge.
+Parameters: none.
+Models: string linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity kenergy energy method edge_knotenergy global
+                   method simon_knot_energy_normalizer global
+</pre>
+
+
+<hr><h3> <a name="facet_knot_energy">facet_knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Charge on vertex is proportional to area of neighboring facets. 
+Meant for knotted surfaces in 4D. Power law of potential is adjustable
+via the global parameter `knot_power'.  See also
+<a href="#facet_knot_energy_fix">facet_knot_energy_fix</a>.
+Element: vertex. 
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knotten energy method facet_knot_energy global
+</pre>
+
+<hr><h3> <a name="facet_knot_energy_fix">facet_knot_energy_fix</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Provides adjacent vertex correction to 
+<a href="#facet_knot_energy_fix">facet_knot_energy</a>.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knotten energy method facet_knot_energy global
+                        method facet_knot_energy_fix global
+</pre>
+
+<hr><h3> <a name="buck_knot_energy">buck_knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Energy between pair of edges
+given by formula suggested by Greg Buck.
+ Power law of potential is adjustable
+via the global parameter `knot_power'.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knotten energy method buck_knot_energy global
+</pre>
+
+<hr><h3> <a name="proj_knot_energy">proj_knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+This energy is due to Gregory Buck.  It tries to 
+eliminate the need for a normalization term by projecting
+the energy to the normal to the curve.  Its form is
+<pre>
+   E_{e_1e_2} = {L_1L_2 \cos^p\theta\over |x_1 - x_2|^p}
+</pre>
+where x_1,x_2 are the midpoints of the edges and \theta
+is the angle between the normal plane of edge e_1 and
+the vector x_1 - x_2. The default power is 2.
+ Power law of potential is adjustable
+via the global parameter `knot_power'.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knotten energy method proj_knot_energy global
+</pre>
+
+<hr><h3> <a name="circle_knot_energy">circle_knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: This energy is due to Peter Doyle, who says it is equivalent
+in the continuous case to the insulating wire with power 2.
+Its form is 
+<pre>
+  E_{e_1e_2} = {L_1L_2 (1 - \cos\alpha)^2 \over |x_1 - x_2|^2},
+</pre>
+where x_1,x_2 are the midpoints of the edges and \alpha
+is the angle between edge 1 and the circle through  x_1
+ tangent to edge 2 at x_2. Only power 2 is implemented.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity knotten energy method circle_knot_energy global
+</pre>
+
+<a name="surface_cos_power"></a>
+<hr><h3> <a name="sphere_knot_energy">sphere_knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+This is the 2D surface version of the circle energy.
+Its most general form is 
+<pre>
+  E_{f_1f_2} = { A_1A_2(1 - \cos\alpha)^p \over |x_1 - x_2|^q},
+</pre>
+where A_1,A_2 are the facet areas, x_1,x_2 are the barycenters
+of the facets, and \alpha is the angle between f_1 and the sphere
+through x_1 tangent to f2 at x_2.  The energy is conformally
+invariant for p = 1 and q = 4.  For p=0 and q=1, one gets
+electrostatic energy for a uniform charge density.  Note that
+facet self-energies are not included.  For electrostatic energy,
+this is approximately 2.8A^{3/2} per facet.
+
+The powers p and q are Evolver variables surface_knot_power and
+surface_cos_power respectively.
+The defaults are p=1 and q=4.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter surface_knot_power  1     // the default
+parameter surface_cos_power  4     // the default
+quantity knotten energy method sphere_knot_energy global
+</pre>
+
+<hr><h3> <a name="sin_knot_energy">sin_knot_energy </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Another weird way to 
+calculate a nonsingular energy between midpoints of pairs of edges.
+(by John Sullivan)
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity knotten energy method sin_knot_energy global
+</pre>
+
+<hr><h3> <a name="curvature_binormal">curvature_binormal</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: For string model.  The energy evaluates to zero, but the force
+calculated is the mean curvature vector rotated to the binormal direction.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity curbi energy method curvature_binormal global
+</pre>
+
+
+<hr><h3> <a name="ddd_gamma_sq">ddd_gamma_sq</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Third derivative of curve position as 
+function of arclength, squared.
+Element: vertex.
+Parameters: none.
+Models: string, linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity ddd energy method ddd_gamma_sq global
+</pre>
+
+
+<hr><h3> <a name="edge_min_knot_energy">edge_min_knot_energy</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:
+ Between pairs of edges, energy is inverse square power of distance
+between closest points of edges.
+<pre>    Energy = 1/d^2 * |e1||e2|
+</pre>
+This should be roughly the same as edge_edge_knot_energy, but distances
+are calculated from edge midpoints there.
+  This is not a smooth function,
+so we don't try to compute a gradient.  DO NOT use as an energy;
+use just for info_only quantities.
+
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity eminknot info_only method edge_min_knot_energy global
+</pre>
+
+<hr><h3> <a name="true_average_crossings">true_average_crossings</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Calculates the average crossing number of an edge with
+respect to all other edges, averaged over all projections. Knot stuff.
+No gradient, so use just in info_only quantities.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity true_cross info_only method true_average_crossings global
+</pre>
+
+<hr><h3> <a name="true_writhe">true_writhe</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: For calculating the writhe of a link or knot.
+No gradient, so use just in info_only quantities.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity twrithe info_only method true_average_crossings global
+</pre>
+
+<hr><h3> <a name="twist">twist</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Another average crossing number calculation.
+No gradient, so use just in info_only quantities.
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity twister info_only method twist global
+</pre>
+
+<hr><h3> <a name="writhe">writhe</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  An average crossing number calculation.  This one does
+have a gradient. Suggested by Hermann Gluck.
+Programmed by John Sullivan.
+Between pairs of edges, energy is inverse cube power of distance
+between midpoints of edges, times triple product of edge vectors
+and distance vector.
+<pre>     E = 1/d^3 * (e1,e2,d)
+</pre>
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity writhy energy method writhe global
+</pre>
+
+<hr><h3> <a name="curvature_function">curvature_function </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Calculates forces as function of
+mean and Gaussian curvatures at vertices.  Function may be
+changed by user by altering teix.c.  No energy, just forces.
+Element: vertex. 
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity curfun energy method curvature_function global
+</pre>
+
+<hr><h3> <a name="average_crossings">average_crossings </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  To calculate the average
+crossing number in all projections of a knot. (by John Sullivan)
+Element: edge.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity across energy method average_crossings global
+</pre>
+
+
+<hr><h3> <a name="knot_thickness">knot_thickness </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:   Calculates global radius of curvature at one vertex v,
+     as the minimum radius of circle containing the vertex and
+  the endpoints of any non-adjacent edge.
+ Because of "min", this has no gradient, so should be used
+in info_only quantities.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Gradient: no.
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity kthick info_only method knot_thickness global
+</pre>
+
+<hr><h3> <a name="knot_thickness_0">knot_thickness_0 </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Calculates global radius of curvature at one vertex,
+  as Lp integral of radius of curvature of circle containing the 
+  vertex and the endpoints of edges not adjacent to the vertex.
+   Integrand raised to -p power.  The power p is taken from
+  the global variable knot_power. No factor of length in integral.
+  This method has a gradient.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity kthick info_only method knot_thickness_0 global
+</pre>
+
+<hr><h3> <a name="knot_thickness_p">knot_thickness_p </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: purpose: calculates global radius of curvature at one vertex v,
+    as Lp integral of radius of curvature of v and endpoints of
+    nonadjacent edges.  Includes factors of length at v and w.
+    This method has a gradient.
+ The power p is taken from the global variable knot_power.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity kthick info_only method knot_thickness_p global
+</pre>
+
+<hr><h3> <a name="knot_thickness_p2">knot_thickness_p2 </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Calculates the global radius of curvature at one vertex v,
+   as Lp integral of  r(v,w1,w2) over all vertices w.
+   Here w1 and w2 are the two neighbors of vertex w.
+  Includes factors of length at v and w.
+   This has not been extended to allow open arcs (valence 1 vertices).
+ This method does have a gradient.
+ The power p is taken from the global variable knot_power.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity kthick info_only method knot_thickness_p2 global
+</pre>
+
+<hr><h3> <a name="knot_thickness2">knot_thickness2 </a></h3>
+<a href="#quantity top">Named method.</a>
+Description:   calculates global radius of curvature at one vertex v,
+     as the minimum radius of circle containing the vertex and
+  the neighbor vertices of any non-adjacent vertex.
+ Because of "min", this has no gradient, so should be used
+in info_only quantities.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Gradient: no.
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity kthick info_only method knot_thickness2 global
+</pre>
+
+
+<hr><h3> <a name="knot_local_thickness">knot_local_thickness </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Calculates the radius of curvature at a vertex of
+the circle containing the
+ vertex and its two neighbor vertices.   Meant to investigate
+the radius at individual vertices.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Gradient: no.
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity klocalthick info_only method knot_local_thickness global
+</pre>
+
+
+
+<hr>
+<h2> Weird and miscellaneous </h2>
+
+<hr><h3> <a name="wulff_energy">wulff_energy</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Method version of <a href="datafile.htm#wulff">wulff</a>
+energy.  If Wulff filename is not given in top section of datafile,
+then the user will be prompted for it.  
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+wulff "crystal.wlf"
+quantity wolf energy method wulff_energy global
+</pre>
+
+<hr><h3> <a name="linear_elastic">linear_elastic</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  To calculate the isotropic linear elastic strain 
+energy for facets based on the Cauchy-Green strain matrix.
+ Let S be Gram matrix of unstrained facet (dots of sides).
+Let Q be the inverse of S.
+    Let F be Gram matrix of strained facet.
+	Let C = (FQ-I)/2, the Cauchy-Green strain tensor.
+	    Let v be Poisson ratio.
+	Then energy density is
+<blockquote><tt> (1/2/(1+v))(Tr(C^2) + v*(Tr C)^2/(1-(dim-1)*v))
+</tt></blockquote>
+  Each facet has extra attribute poisson_ratio and
+   extra attribute array form_factors[3] = {s11,s12,s22}, which 
+   are the entries in S.  That is, s11 = dot(v2-v1,v2-v1), 
+   s12 = dot(v2-v1,v3-v1), and s22 = dot(v3-v1,v3-v1).
+   If form_factor is not defined by the user, it will be created by Evolver,
+   and the initial facet shape will be assumed to be unstrained.
+For a version of this method that gives compression zero energy, see
+<a href="#relaxed_elastic_A">relaxed_elastic_A</a>.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity lastic energy method linear_elastic global
+</pre>
+
+
+<a name="elastic_basis"></a> <a name="elastic_coeff"></a>
+<hr><h3> <a name="general_linear_elastic">general_linear_elastic</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  To calculate the nonisotropic linear elastic strain
+energy for facets.
+Let A be the linear transformation from the unstrained shape
+to the strained shape.  Then the Cauchy-Green strain tensor
+is C = (A<sup>T</sup>A - I)/2.  Let S<sub>1</sub> and S<sub>2</sub> be the
+sides of the unstrained facet. Let W<sub>1</sub> and W<sub>2</sub> be the 
+transformed facet sides. Let F be the  Gram matrix of strained facet.
+Define
+<blockquote>    S = [ S<sub>1</sub> S<sub>2</sub> ],  Q = S<sup>-1</sup>
+<br>
+    W = [ W<sub>1</sub> W<sub>2</sub> ] = AS
+<br>
+    F = W<sup>T</sup>W = S<sup>T</sup>A<sup>T</sup>AS
+</blockquote>
+Then
+<blockquote>
+    A<sup>T</sup>A = Q<sup>T</sup>FQ
+<br>
+    C = (Q<sup>T</sup>FQ - I)/2
+</blockquote>
+    The energy density is
+<blockquote><tt>    (1/2)C<sub>ij</sub> K<sub>ijkl</sub> C<sub>kl</sub>
+</tt></blockquote>
+ where K<sub>ijkl</sub> is the full tensor of elastic constants.
+  By using symmetries, this can be reduced to
+  <blockquote>
+  <table> <tr><td> (1/2) [ C<sub>11</sub> C<sub>22</sub> C<sub>12</sub> ] </td>
+    <td> [ E<sub>1</sub> E<sub>3</sub> E<sub>4</sub> ] [ C<sub>11</sub> ]
+    </td></tr>
+    <tr><td></td><td> 
+            [ E<sub>3</sub> E<sub>2</sub> E<sub>5</sub> ] [ C<sub>22</sub> ] 
+    </td></tr>
+ <tr><td></td><td>
+            [ E<sub>4</sub> E<sub>5</sub> E<sub>6</sub> ] [ C<sub>12</sub> ]
+   </td></tr>
+   </table>
+  </blockquote>
+  
+  Each facet has extra attribute elastic_coeff of size 6
+ containing  { E<sub>1</sub>, E<sub>2</sub>, E<sub>3</sub>, 
+  E<sub>4</sub>, E<sub>5</sub>, E<sub>6</sub> }, and
+   extra attribute array elastic_basis of size 2x2
+  containing { {s11,s12},{s21,s22}}, which
+      are the two sides of the unstrained facet.
+  Note that the E<sub>i</sub> are defined with respect to the original
+   sides as defined by the form factors, so it is up to you to
+   make sure everything works out right.  Test carefully!!!
+   The elastic_coeff attribute must be created and initialized by the
+   user.
+
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+define facet attribute elastic_basis real[2][2]
+define facet attribute elastic_coeff real[6]
+quantity genlastic energy method general_linear_elastic global
+</pre>
+
+<hr><h3> <a name="linear_elastic_B">linear_elastic_B</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  A variation of the
+<a href="#linear_elastic">linear_elastic</a> method.
+To calculate the linear elastic strain
+energy for facets based on the Cauchy-Green strain matrix.
+ Let S be Gram matrix of unstrained facet (dots of sides).
+Let Q be the inverse of S.
+    Let F be Gram matrix of strained facet.
+	Let C = (FQ-I)/2, the Cauchy-Green strain tensor.
+	    Let v be Poisson ratio.
+	Then energy density is
+<pre> (1/2/(1+v))(Tr(C^2) + v*(Tr C)^2/(1-(dim-1)*v))
+</pre>
+  Each facet has extra attribute poisson_ratio and
+  each vertex has two extra coordinates, the coordinates of
+  the unstrained surface in a plane.  Hence the surface must
+  be set up as five dimensional.
+There can also be a
+real-valued facet extra attribute LEBweight, which can be used to give
+a per-facet weighting of the energy.  
+For a version of this method that gives compression zero energy, see
+<a href="#relaxed_elastic">relaxed_elastic</a>.
+
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 5. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+space_dimension 5
+quantity lastic energy method linear_elastic_B global
+</pre> 
+
+ <a name="relaxed_elastic_A">relaxed_elastic_A</a>,
+<hr><h3><a name="relaxed_elastic1_A"></a>
+<a name="relaxed_elastic2_A"></a>
+ relaxed_elastic1_A, relaxed_elastic2_A</h3>
+<a href="#quantity top">Named method.</a>
+Description:  Calculates the linear elastic strain
+energy for facets based on the Cauchy-Green strain matrix,
+with compression counting for zero energy, simulating, say, plastic film.
+The effect is to permit wrinkling.
+ Let S be the Gram matrix of unstrained facet (dots of sides).
+Let Q be the inverse of S.
+    Let F be Gram matrix of strained facet.
+	Let C = (FQ-I)/2, the Cauchy-Green strain tensor.
+	    Let v be Poisson ratio.
+	Then the energy is
+<pre> (1/2/(1+v))(Tr(C^2) + v*(Tr C)^2/(1-(dim-1)*v))
+</pre>
+  Each facet has extra attribute poisson_ratio and
+   extra attribute array form_factors[3] = {s11,s12,s22}, which 
+   are the entries in S.  That is, s11 = dot(v2-v1,v2-v1), 
+   s12 = dot(v2-v1,v3-v1), and s22 = dot(v3-v1,v3-v1).
+   If form_factor is not defined by the user, it will be created by Evolver,
+   and the initial facet shape will be assumed to be unstrained.
+The compression is detected by doing an eigenvalue analysis of the strain
+tensor, and discarding any negative eigenvalues.  
+Facets which are stressed in one or two dimensions  can
+be separately counted by the relaxed_elastic1_A (one stress direction, and one
+wrinkle direction) and
+relaxed_elastic2_A (two stressed directions) methods, which are meant to be
+used in <a href="datafile.htm#info_only">info_only</a> mode.
+There can also be a
+real-valued facet extra attribute LEBweight, which can be used to give
+a per-facet weighting of the energy.  
+For a sample datafile, see mylarcube.fe.
+For a version of this method that gives compression positive energy, see
+<a href="#linear_elastic">linear_elastic</a>.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity lastic energy method relaxed_elastic_A global
+</pre>
+
+<hr><h3><a name="relaxed_elastic1"></a><a name="relaxed_elastic2"></a>
+ <a name="relaxed_elastic">relaxed_elastic</a>,
+relaxed_elastic1, relaxed_elastic2</h3>
+<a href="#quantity top">Named method.</a>
+Description:  A variation of the
+<a href="#linear_elastic">linear_elastic</a> method.
+Calculates the linear elastic strain 
+energy for facets based on the Cauchy-Green strain matrix,
+with compression counting for zero energy, simulating, say, plastic film.
+The effect is to permit wrinkling.
+ Let S be Gram matrix of unstrained facet (dots of sides).
+Let Q be the inverse of S.
+    Let F be Gram matrix of strained facet.
+	Let C = (FQ-I)/2, the Cauchy-Green strain tensor.
+	    Let v be Poisson ratio.
+	Then energy density is
+<pre> (1/2/(1+v))(Tr(C^2) + v*(Tr C)^2/(1-(dim-1)*v))
+</pre>
+  Each facet has extra attribute poisson_ratio and
+  each vertex has two extra coordinates, the coordinates of
+  the unstrained surface in a plane.  Hence the surface must
+  be set up as five dimensional.
+The compression is detected by doing an eigenvalue analysis of the strain
+tensor, and discarding any negative eigenvalues.  The eigenvalues may
+be separately accessed by the relaxed_elastic1_A (lower eigenvalue) and
+relaxed_elastic2_A (higher eigenvalue) methods, which are meant to be
+used in <a href="datafile.htm#info_only">info_only</a> mode.
+There can also be a real-valued facet extra attribute LEBweight, which
+can be used to give a per-facet weighting of the energy.
+For a sample datafile, see mylarcube.fe.
+For a version of this method that gives compression zero energy, see
+<a href="#linear_elastic_B">linear_elastic_B</a>.
+
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 5. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+space_dimension 5
+quantity lastic energy method relaxed_elastic global
+</pre> 
+
+
+
+<hr><h3> <a name="dirichlet_elastic">dirichlet_elastic</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Calculate the Dirichlet elastic strain
+energy for facets, minimization of which gives conformal mapping.
+ Let S be Gram matrix of unstrained facet (dots of sides).
+Let Q be the inverse of S.
+    Let F be Gram matrix of strained facet.
+	Let C = FQ, the linear deformation matrix.
+	Then energy density is
+<blockquote><tt>  Tr(CC<sup>T</sup>)
+</tt></blockquote>
+  Each facet has an extra attribute array form_factors[3] = {s11,s12,s22}, 
+   which  are the entries in S.  That is, s11 = dot(v2-v1,v2-v1), 
+   s12 = dot(v2-v1,v3-v1), and s22 = dot(v3-v1,v3-v1).
+   If form_factor is not defined by the user, it will be created by Evolver,
+   and the initial facet shape will be assumed to be unstrained.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity dirich energy method dirichlet_elastic global
+</pre>
+
+<a name="SVK_mu">
+</a><a name="SVK_lambda">
+</a><a name="SVK_theta"></a>
+<a name="SVK_alpha"></a>
+<hr><h3> <a name="SVK_elastic">SVK_elastic</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:      SVK (Saint-Venant - Kirchhoff) potential.
+The facet energy is
+<blockquote>
+    lambda/2*(tr(E))^2+mu*(E:E) - (3 lambda + 2 mu) * alpha*theta*tr(E)
+</blockquote>
+
+    where E=(C-I)/2 is the Green-Lagrange Strain tensor,
+    theta = T-T0 is the temperature deviation, and
+    alpha is the thermal dilation coefficient. 
+
+Needs real-valued facet attributes SVK_alpha, SVK_mu, SVK_lambda, and
+ SVK_theta. Also needs the facet attribute form_factors, 
+decribed in <a href="#linear_elastic">linear_elastic</a>.
+   Written by  Dr. Rabah Bouzidi. 
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+define facet attribute SVK_alpha real
+define facet attribute SVK_lambda real
+define facet attribute SVK_mu real
+define facet attribute SVK_theta real
+define facet attribute form_factors real[3]
+quantity svk energy method SVK_elastic  global
+</pre>
+
+
+<a name="neo_mu"></a><a name="neo_lambda"></a>
+<hr><h3> <a name="neo_hookean">neo_hookean </a></h3>
+<a href="#quantity top">Named method.</a>
+Contributed by Prof. Rabah Bouzidi.
+I don't seem to have the compact formula for this one.
+Needs neo_lambda, neo_mu, and form_factors.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: yes.
+Example datafile declaration:
+<pre>
+quantity bender energy method neo_hookean global
+</pre>
+
+<a name="null_length"></a>
+<hr><h3> <a name="null_length">null_length </a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Simply returns 0 for any edge.  Useful
+in the string model with length_method_name when you don't want edge
+energy, but you still want to assign edges tension.
+Element: edge. Parameters: none. Models: any.
+Ambient dimension: any. Hessian: yes. Example datafile declaration:
+<pre>
+  length_method_name "null_length"
+</pre>
+
+<a name="null_area"></a>
+<hr><h3> <a name="null_area">null_area </a></h3>
+<a href="#quantity top">Named method.</a>
+Named method. Description: Simply returns 0 for any facet.  Useful
+with area_method_name when you don't want area as energy, but you still
+want to assign edges tension.
+Element: edge. Parameters: none. Models: any.
+Ambient dimension: any. Hessian: yes. Example datafile declaration:
+<pre>
+  area_method_name "null_area"
+</pre>
+
+<hr><h3> <a name="area_square">area_square</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  Energy of a facet is the square of the facet area.
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity asquare energy method area_square global
+</pre>
+
+
+
+
+<a name="carter_power"></a>
+<hr><h3> <a name="carter_energy">carter_energy</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: 
+Craig Carter's energy.
+<pre>
+Given bodies $B_1$ and $B_2$ in $R^3$, define the energy
+    E = \int_{B_1}\int_{B_2} {1 \over |z_1 - z_2|^{p} } d^3 z_2 d^3 z_1
+This reduces to
+E = {1\over (3-p)(2-p)}\sum_{F_2\in\partial B_2}\sum_{F_1\in\partial B_1}
+    N_1 \cdot N_2 \int_{F_2}\int_{F_1}{1\over |z_1 - z_2|^{p-2}}
+    d^2 z_1 d^2 z_2.
+And if we crudely approximate with centroids $\bar z_1$ and $\bar z_2$,
+E = {1\over (3-p)(2-p)}\sum_{F_2\in\partial B_2}\sum_{F_1\in\partial B_1}
+        {A_1 \cdot A_2 \over |\bar z_1 - \bar z_2|^{p-2}},
+where $A_1$ and $A_2$ are unnormalized area vectors for the facets.
+The power p is set by the variable carter_power (default 6).
+</pre>
+Element: facet.
+Parameters: none.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter carter_power  6     // the default
+quantity craig energy method carter_energy global
+</pre>
+
+<hr><h3> <a name="charge_gradient">charge_gradient</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: This energy is the gradient^2 of the
+<a href="#knot_energy">knot_energy</a> method,
+ assuming the points are constrained to the unit sphere. 
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+parameter knot_power  2     // the default
+quantity knotten energy method knot_energy global
+</pre>
+
+<hr><h3> <a name="johndust">johndust</a></h3>
+<a href="#quantity top">Named method.</a>
+Description:  For all point pairs (meant to be on a sphere),
+<pre>       E = (pi - asin(d/2))/d, 
+</pre>
+where d is chord distance.  For point
+packing problems on the sphere.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+constraint 1 formula: x^2+y^2+z^2 = 1
+quantity jms energy method johndust global
+</pre>
+
+
+
+<hr><h3> <a name="stress_integral">stress_integral</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Hmm.  Looks like this one calculates integrals of
+ components of a stress tensor.  The scalar_integrand value
+is set as an integer standing for which component to do (a kludge).
+See the function stress_integral in method3.c for details.
+Does not have a gradient, so should be used for just info_only quantities.
+Element: facet.
+Parameters: scalar_integrand.
+Models: linear.
+Ambient dimension: 3. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity stressy info_only method stress_integral global
+scalar_integrand: 3
+</pre>
+
+<hr><h3> <a name="ackerman">ackerman</a></h3>
+<a href="#quantity top">Named method.</a>
+Description: Not actually an energy, but a 
+kludge to put inertia on vertices.  
+Uses extra velocity coordinates to represent vertex in phase space.
+Invocation actually transfers computed forces from space coordinates
+to velocity coordinates, so forces become acceleration instead of
+velocity.
+Element: vertex.
+Parameters: none.
+Models: linear.
+Ambient dimension: any. 
+Hessian: no.
+Example datafile declaration:
+<pre>
+quantity jeremy energy method ackerman global
+</pre>
+
+
+<a name="lmc_mobility"></a>
+<a name="lmc_mean_curvature"</a>
+<hr><h3> <a name="laplacian_mean_curvature">laplacian_mean_curvature</a></h3>
+<a href="#quantity top">Named method.</a>
+
+Description: Calculates the velocity of a vertex as the
+Laplacian of the mean curvature of the surface, meant to model the
+surface diffusion of atoms in sintering. The mean curvature at each vertex is
+calculated as a scalar, in the same way as for area_normalized area gradient,
+i.e. area gradient dotted with volume gradient, divided by the area of the
+surrounding facets.  Then finite differences are used to calculate the
+Laplacian of the mean curvature.  This calculates velocity only;
+the energy is always 0.  This method should only be used with fixed
+scale in the 'g' command.
+<p>
+
+The relative speed of vertices can be controlled by the vertex
+attribute lmc_mobility, which the user should declare if wanted.
+If the user wants to access the values of mean curvature the method
+finds, the user should define the vertex scalar attribute lmc_mean_curvature.
+This method conserves volume ideally, but you might want to put on volume
+constraints anyway due to numerical inaccuracies.
+<p>
+Warning: This method should only be used with a fixed 'g' scale factor.
+And for stability, the factor should be proportional to the fourth power of
+the shortest edge, since Laplacian of mean curvature is a fourth-derivative
+operator, something like 0.001*length^4.  This can make for very slow
+evolution for highly refined surfaces.
+<p>
+
+Element: vertex. Parameters: none. Models: linear string and linear
+soapfilm. Ambient dimension: any.
+Hessian: no. Example datafile declaration:
+<pre>
+  area_method_name "null_area"
+  define facet attribute lmc_mobility real
+  define facet attribute lmc_mean_curvature real
+  quantity lmc energy method laplacian_mean_curvature global
+</pre>
+
+
+
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>
+

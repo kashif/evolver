@@ -1,0 +1,3017 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Surface Evolver Documentation: commands
+</title></head>
+
+<BODY>
+
+<!--NewPage-->
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<a name="command language"></a><h1>Surface Evolver command language</h1>
+
+The Surface Evolver has an interactive command language. It has
+variables, expressions, subroutines, conditionals,iteration constructs,
+subroutines and functions with arguments, local variables, and arrays.
+But not structures or objects or pointers.
+Variables are either floating point, string, or subroutine names.
+The Evolver command language continues to grow by accretion, and it
+looks like it's headed towards a full programming language.  
+<table><tr valign=top><td>
+<ul>
+<li><a href="#input">Command input</a>
+<li><a href="#command separator">Command separator</a>
+<li><a href="#compound commands">Compound commands</a>
+<li><a href="#command repetition">Command repetition</a>
+<li><a href="#command definition">User-defined commands</a>
+<li><a href="#procedure definition">User-defined procedures</a>
+<li><a href="#function definition">User-defined functions</a>
+<li><a href="#assignment">Assignment commands</a>
+<li><a href="#permanent assignment">Permanent assignment commands</a>
+</ul></td><td><ul>
+<li><a href="#local">Local scope</a>
+<li><a href="#piping">Redirecting and piping output</a>
+<li><a href="#control structures">Control structures</a>
+<li><a href="#generators">Element generators</a>
+<li><a href="single.htm">Single letter commands</a>
+<li><a href="toggle.htm">Toggle commands</a>
+<li><a href="#command verbs">General commands</a>
+</ul></td></tr></table>
+<hr>
+<a name="input"></a><h2>Command input</h2>
+The Surface Evolver command interpreter reads from an input
+stream, which may be from the end of the 
+<a href="datafile.htm#read section">datafile</a>, from a
+file given on the system <a href="general.htm#options">command line</a>,
+ from stdin (the
+	terminal), or from a file given in a <a href="#read"><tt>READ</tt></a>
+ command.
+<p>
+       The interactive command prompt is "<tt>Enter command: </tt>". 
+<p>
+   Commands are read one at a time, parsed, and executed.
+By  default, a line is expected to contain a complete command,
+so no special end-of-command token is needed.
+<p>
+   Multi-line commands may be entered by enclosing them in braces 
+<tt>{...}</tt>.
+   If a line ends while nested in braces or parenthesis, Evolver
+   will ask for more input with the prompt "<tt>more&gt;</tt> ".
+     It will also ask for more if the
+   line ends with certain tokens (such as `+') that cannot legally
+   end a command.  Unclosed quotes will also ask for more, and
+   embedded newlines will be omitted from the final string.
+   Explicit continuation to the next line may
+   be indicated by ending a line with a backslash 
+ (<a href="syntax.htm#line splicing">linesplicing</a>).
+   You may want to use the 
+<a href="#read"><tt>read</tt></a> command to read long commands
+   from a file, since there is no command line editing.
+<p>
+   <a name="history list"></a>
+   Successfully parsed commands are saved in a history list, up to
+   100 commands.
+   They may be accessed with  <tt>!!</tt> for the last command or 
+   <tt>!</tt><em>string</em> for the latest command with matching initial string.
+   <tt>!</tt><em>n</em> will repeat a command by history list number.
+   The command will be echoed.  The saved history list may be printed
+   with the <a href="#history"><tt>history</tt></a> command.
+<p>
+   Some 
+<a href="single.htm">single-letter commands</a>
+ require interactive input.  For those,
+   there are equivalent commands that take input
+   information as part of the command.  This is so commands may be
+   read from a script without having to put input data on additional
+   lines after the command, although that can still be done for the
+   single-letter versions.
+<p>
+             General note: Some commands will prompt you
+             for a value.  A null response (just <tt>RETURN</tt>)
+             will leave the old value unchanged and return you
+             to the command prompt.  On
+             options where a zero value is significant, the
+             zero must be explicitly entered. Commands that need
+	     a real value will accept an arbitrary expression.
+<p>
+             Many commands that change the surface or
+             change the model
+              will cause energies and volumes to be recalculated.
+	      If you suspect a command has not done this, the
+     <a href="#recalc"><tt>recalc</tt></a> command will recalculate everything.
+	      It will also update any automatic display.
+<p>
+   In the command syntax descriptions,
+   keywords are shown in upper case, although case is irrelevant in
+   actual commands, except for single-letter commands. 
+<hr>
+<a name="command separator"></a><h2>Command separator</h2>
+
+      Several commands on the same line or within a 
+<a href="#compound commands">compound
+      command</a> must be separated by a semicolon.
+      A semicolon is not needed after the last command,
+      but won't hurt.
+       Do not use a semicolon after the first command
+      in an <tt>IF THEN ELSE</tt> command. Do use a semicolon to separate
+a compound command from the next. Example:
+<pre>
+      g 10; r; g 10; u  
+      myc := { print 5;
+               g 10;
+               if qwer &lt; foo then print 3 else { print 2; print 4; };
+               aa := 23
+             }
+</pre>
+<hr>
+<a name="compound commands"></a><h2>Compound commands</h2>
+ 
+      Curly braces group a list of commands into one command.  The 
+      commands are separated by semicolons.  A semicolon is needed
+      after a compound command within a compound command to separate
+      it from following commands (note this is different from the C language).  
+      Do not use a semicolon after the first command
+	    in an IF THEN ELSE command.   An empty compound command <tt>{}</tt>
+		   is legal.
+Examples:
+<pre>
+  if ( foo &gt; 4 ) then { g;g;u; } else print 4;
+  while ( xx &lt; 2 ) do { g; xx := xx + 1 }
+  aa := { g 5; 
+          foreach vertex vv do {
+              printf "id: %g  coord: %f %f %f\n",id,x,y,z;
+              count := count + 1;
+              };  // note semicolon here!
+          printf "done.\n"
+        }
+</pre>
+
+<hr>
+<a name="command repetition"></a><h2>Command repetition</h2>
+
+      Certain types of commands can be repeated a number of times by following
+      the command with an integer.  Be sure
+      to leave a space between a single-letter command and the expression
+      lest your command be interpreted as one identifier.
+      To avoid several types of confusion, only certain types
+      of commands are repeatable:
+<ul>
+    <li> 
+<a href="single.htm">Single letter commands</a>
+ that don't have optional arguments
+		(<tt>K,k,l,t,j,m,n,p,w,y,P,M,G</tt> have optional arguments),
+<li> <a href="#compound commands">Compound commands</a> in braces,
+<li> <a href="#command definition">User-defined command</a> names.
+<li> <a href="single.htm#redefinition">Redefined single-letter commands</a>.
+</ul>
+Examples:
+<pre>   g 10
+   U 2
+   { g 20; u; V; u } 20
+   myc := { g 20; V }; myc 10
+</pre>
+
+<hr>
+<a name="assignment"></a><h2>Assignment commands</h2>
+
+The assignment operator <tt>:=</tt> can be used to assign values
+to various entities.
+Note that '<tt>:=</tt>' is used for assignment, not '<tt>=</tt>'.
+The C-style arithmetic assignments <tt>+=</tt>, <tt>-=</tt>, <tt>*=</tt>, and
+<tt>/=</tt> work.  For example, <tt>val += 2</tt> is equivalent to
+<tt>val := val + 2</tt>.  These also work in other assignment situations where I
+thought they made sense, such as attribute assignment.  Possible assignments:
+
+<ul>
+<li> <a href="#command definition">User-defined commands</a>, Ex: <tt> gogo := {g 100; r; g 100}</tt> 
+<li> <a href="#variable assignment">User-defined variables</a>, Ex: <tt> foo := 2.3</tt>
+<li> Writable <a href="syntax.htm#internal variables">internal variables</a>, Ex: <tt>scale := 0.1</tt>
+<li> <a href="quants.htm#named quantities">Named quantity</a> 
+<a href="quants.htm#quantity modulus">modulus</a>, 
+<a href="quants.htm#quantity target">target</a>, and 
+<a href="quants.htm#quantity volconst">volconst</a>. Syntax:
+<pre>   <em>quantityname</em>.modulus := <em>expr</em>
+   <em>quantityname</em>.target := <em>expr</em>
+   <em>quantityname</em>.volconst := <em>expr</em> </pre>
+<li> <a href="quants.htm#method instances">Method instance</a> modulus.
+Syntax:
+<pre>   <em>instancename</em>.modulus := <em>expr</em>
+</pre>
+</ul>
+
+<hr>
+<a name="permanent assignment"></a><h2>Permanent assignment commands</h2>
+The permanent assignment operator <tt>::=</tt> can be used to make assignments
+to variables and commands that are not forgotten when a new datafile is
+loaded.  Such a command may only make reference to permanent variables,
+permanent commands, and internal variables.  See 
+<a href="#permload">permload</a> command for an example of use.
+
+<hr>
+<a name="command definition"></a><h2>User-defined commands</h2>
+Users may define their own commands with the syntax
+<pre>
+   <a href="syntax.htm#identifiers"><em>identifier</em></a> <tt>:=</tt> <em>command</em>
+</pre>
+The shortest complete command on the right side is used.
+      Thus "<tt>gg := g 10; u</tt>" would give <tt>gg</tt> the same
+      value as "<tt>gg := g 10</tt>".  
+It is wise and strongly advised to use braces to 
+      enclose the command on the right side so the parser can tell 
+      it's a command and not an expression. Also multiline commands 
+      then don't need linesplicing. 
+Do not try to redefine single-letter
+commands this way; use  <a href="single.htm#redefinition"><tt>:::=</tt></a>.
+Example:
+<pre>
+   gg := {g 10; u}
+</pre>
+
+<hr>
+<a name="procedure definition"></a><h2>User-defined procedures</h2>
+Users may define their own procedures with arguments 
+with the syntax
+<pre>
+   procedure <a href="syntax.htm#identifiers"><em>identifier</em></a> ( <em>type arg1</em>, <em>type arg2</em>, ... )
+   { <em>commands</em> }
+</pre>
+Right now the implemented types for arguments are 
+<tt>real</tt> and <tt>integer</tt>.  The argument list can be empty.
+ Example:
+<pre>
+   procedure proc1 ( real ht, real wd )
+   { 
+     prod := ht*wd;   // this would make prod a global variable
+     return; 
+   }
+</pre>
+Note that the procedure arguments act as <a href="#local">local</a>
+ variables, i.e. their scope
+is the procedure body, and they have stack storage so procedures may be
+recursive.
+Procedure prototypes may be used to declare procedures before their bodies
+are defined with the same syntax, just replacing the body of the procedure
+with a semicolon. Prototype syntax:
+<pre>
+   procedure <a href="syntax.htm#identifiers"><em>identifier</em></a> ( <em>type arg1</em>, <em>type arg2</em>, ... );
+</pre>
+Note that a procedure is used as a command, and a function is used in
+a numerical expression.
+
+<hr>
+<a name="function definition"></a><h2>User-defined functions</h2>
+Users may define their own functions that have arguments and
+return values with the syntax
+<pre>
+   function <em>type</em> <a href="syntax.htm#identifiers"><em>identifier</em></a> ( <em>type arg1</em>, <em>type arg2</em>, ... )
+   { <em>commands</em> }
+</pre>
+Right now the implemented types for return value and arguments are 
+<tt>real</tt> and <tt>integer</tt>.  The argument list can be empty.
+The return value is given in a
+<tt>return</tt> <em>expr</em> statement.  Example:
+<pre>
+   function real func1 ( real ht, real wd )
+   { local prod;
+     prod := ht*wd;
+     return prod;
+   }
+</pre>
+Note that the function arguments act as <a href="#local">local</a>
+ variables, i.e. their scope
+is the function body, and they have stack storage so functions may be
+recursive.
+Function prototypes may be used to declare functions before their bodies
+are defined with the same syntax, just replacing the body of the function
+with a semicolon. Prototype syntax:
+<pre>
+   function <em>type</em> <a href="syntax.htm#identifiers"><em>identifier</em></a> ( <em>type arg1</em>, <em>type arg2</em>, ... );
+</pre>
+Note that a procedure is used as a command, and a function is used in
+a numerical expression.
+
+<hr>
+<a name="variable assignment"></a><h2>Variable assignment</h2>
+Values can be assigned to variables.  Values can be numeric or string.
+The variable names must be
+two or more letters, in order they not be confused with single-letter
+commands.  
+Syntax:
+<pre>
+   <a href="syntax.htm#identifiers"><em>identifier</em></a> <tt>:=</tt> <a href="syntax.htm#expressions"><em>expr</em></a>
+   <a href="syntax.htm#identifiers"><em>identifier</em></a> <tt>:=</tt> <a href="syntax.htm#stringexpr"><em>stringexpr</em></a>
+</pre>
+ If the variable does not exist, it will be created.  These are
+      the same class of variables as the adjustable parameters in
+      the datafile, hence are all of global scope and may also be
+      inspected and changed with the '<a href="single.htm#A"><tt>A</tt></a>'
+ command.
+      Examples:
+<pre>
+   maxlen := max(edge,length)
+   newname := sprintf "file%03g",counter 
+</pre>
+
+<hr>
+<a name="local"></a><h2>Local scope</h2>
+
+The scope of a variable name may be restricted to a compound command block
+by declaring the name to be local.  Example:
+<pre>
+   do_stuff := { 
+     local inx;
+     for ( inx := 1 ; inx &lt; 5 ; inx += 1 )
+     { local jnx;
+       jnx := inx*2;
+       print jnx;
+     };
+   }
+</pre>
+Using local variables is good for avoiding pollution of global namespace
+and for writing recursive functions (storage space for locals is allocated
+on the runtime stack).
+Note that the local declaration is a scope declaration, not a type
+declaration.  Also, it cannot be combined with initialization of the
+variable (yet), and there is one name per declaration.
+Function arguments also act as local variables.
+<hr>
+<a name="redirection"></a>
+<a name="piping"></a><h2>Redirecting and piping command output</h2>
+
+The output of a command can be redirected to a file with the
+unix-style append symbol '&gt;&gt;'.  This appends output to
+the file; it does not erase any existing file. Syntax:
+<pre>
+   <em>command</em> &gt;&gt; <a href="syntax.htm#stringexpr"><em>stringexpr</em></a>
+</pre>
+
+The output of a command can be redirected to a file with the
+ symbol '&gt;&gt;&gt;'.  This overwrites an existing file. 
+Syntax:
+<pre>
+   <em>command</em> &gt;&gt;&gt; <a href="syntax.htm#stringexpr"><em>stringexpr</em></a>
+</pre>
+ Redirection with `<tt>&gt;</tt>' is not available due to
+     the use of `<tt>&gt;</tt>' as an comparison operator.  
+
+The output of a command can be piped to a system  command using
+the unix-style pipe symbol `<tt>|</tt>'. Syntax:
+<pre>
+   <em>command</em> | <a href="syntax.htm#stringexpr"><em>stringexpr</em></a>
+</pre>
+  The <em>stringexpr</em> is interpreted as a system command.
+  <p>
+
+      Examples:
+<pre>
+   list facets | "more"
+   list vertices | "tee vlist" ; g 10 | "tee g.out"
+   { {g 10; u } 20 } &gt;&gt; "logfile"
+   {foreach facet do print area} | "cat &gt; areafile"
+</pre>
+<hr>
+<a name="control structures"></a><h2>Control structures</h2>
+The following control structures are available in the Evolver commmand
+language:
+<ul>
+<li><a href="#if then else">if ... then ... else</a>
+<li><a href="#do">do ... while ....</a>
+<li><a href="#while">while .... do ...</a>
+<li><a href="#for">for</a>
+<li><a href="#foreach">foreach</a>
+<li><a href="#break">break</a>
+<li><a href="#continue">continue</a>
+<li><a href="#return">return</a>
+</ul>
+<hr>
+<a name="if"></a><a name="then"></a><a name="else"></a>
+<a name="if then else"></a><h2>IF ... THEN ... ELSE</h2>
+Commands may be conditionally executed by the syntax
+<pre>
+   IF <em>expr</em> THEN <em>command</em> 
+
+   IF <em>expr</em> THEN <em>command</em> ELSE <em>command</em>
+</pre>
+   <a href="syntax.htm#expressions"><em>expr</em></a>
+ is true if nonzero.  Parentheses around <em>expr</em>
+   are not needed, but do not hurt.
+      Do not use a semicolon to end the first command.
+      Example:
+<pre>
+   if max(edges,length) &gt; 0.02 then {r; g 100} else g 4 
+</pre>
+
+<hr>
+<a name="while"></a><h2>WHILE ... DO ... </h2>
+Command syntax for pretest iteration loop. Syntax:
+<pre>
+  WHILE <em>expr</em> DO <em>command</em>
+</pre>
+   <a href="syntax.htm#expressions"><em>expr</em></a>
+   is true if nonzero.  Parentheses around <em>expr</em>
+   are not needed, but do not hurt.
+    Example:
+<pre>
+   count := 0
+   while count &lt; 10 do { g 10; u; print total_energy; count := count + 1 }
+</pre>
+
+<hr>
+<a name="do"></a><h2>DO ... WHILE ...</h2>
+Command syntax for posttest iteration loop. Syntax:
+<pre>
+   DO <em>command</em> WHILE <em>expr</em>
+</pre>
+   <a href="syntax.htm#expressions"><em>expr</em></a>
+   is true if nonzero.  Parentheses around <em>expr</em>
+   are not needed, but do not hurt.
+    Example:
+<pre>
+   do { oldenergy := total_energy; g 10 } 
+   while (oldenergy-total_energy &lt; 1e-6)
+</pre>
+
+
+<hr>
+<a name="for"></a><h2>FOR</h2>
+This is the Evolver's version of the C language "for" construct. Syntax:
+<pre>
+  FOR ( <em>command1</em> ; <em>expr</em> ; <em>commmand2</em> ) <em>command3</em>
+</pre>
+The first
+command is the initialization command; note that it is a single command,
+rather than an expression as in C.  If you want multiple commands in the
+initialization, use a compound command enclosed in curly braces. The
+middle expression is evaluated at the start of each loop iteration; if its
+value is true (i.e. nonzero) then the loop is executed; otherwise the
+flow of control passes to the command after command3. The command2 is
+executed at the end of each loop iteration; again, it is a single command.
+The body of the loop is the single command command3, often a compound]
+command.  Note: Command3 should end with a semicolon, unless it is
+the if clause of an if-then statement. Examples:
+<pre>
+   for ( inx := 1 ; inx &lt; 3 ; inx += 1 )
+      print facet[inx].area;
+   for ( {inx := 1; factorial := 1; } ; inx &lt; 7 ; inx += 1 )
+   { factorial *= inx;
+     printf "factorial %d is %d\n",inx,factorial;
+   };
+</pre>
+
+
+<hr>
+<a name="foreach"></a><h2>FOREACH</h2>
+
+Repeat a command for each element produced by an element generator.
+Syntax:
+<pre>FOREACH <a href="commands.htm#generators"><em>generator</em></a> DO <em>command</em>  
+</pre>Examples:
+<pre>
+ foreach vertex do print x^2 + y^2 + z^2
+
+ foreach edge ee where ee.dihedral &gt; .4 do {
+   printf "id %g\n",id; 
+   foreach ee.vertex do printf " %g %g %g\n",x,y,z; 
+ }
+</pre>
+<hr>
+<a name="break"></a><h2>BREAK</h2>
+Command syntax for exiting loops. 
+Syntax:
+<pre>
+   BREAK
+
+   BREAK <em>n</em>
+</pre>
+The first form exits the innermost current loop.  The second form
+exits <em>n</em> loops.  Note: Commands with
+repetition counts do not qualify as loops.
+Example:
+<pre>
+   foreach vertex do { print x; if y &lt; 0 then break; print z }
+</pre>
+
+<hr>
+<a name="continue"></a><h2>CONTINUE</h2>
+
+Command syntax for skipping the rest of the body of the current loop, 
+    and going to the next iteration of the loop.
+<pre>
+   CONTINUE
+
+   CONTINUE <em>n</em>
+</pre> 
+    The second form exits the innermost <em>n</em>-1 loops, 
+    and skips to the loop control of the <em>n</em>th innermost loop.
+    Note: Commands with
+    repetition counts do not qualify as loops.
+Example:
+<pre>
+   foreach vertex vv do {
+       foreach vv.edge do {
+         print length; if length &lt; .4 then continue 2; 
+       }
+   }
+ </pre>
+<hr>
+<a name="return"></a><h2>RETURN</h2>
+Command syntax for exiting the current command.  This is essentially
+a return from a subroutine.  If the current command is a user-defined
+command called  by another command, the parent command continues.
+Example:
+<pre>  if ( acc &lt; 1.e-10 ) then return;
+</pre>
+
+<hr>
+<a name="where"></a>
+<a name="indexed elements"></a>
+<a name="generators"></a><h2>Element generators</h2>
+
+One feature different from ordinary C is the presence of generators
+of sets of geometric elements.  These occur wherever an element type
+(vertices, edges, facets, bodies, singular or plural) appears in a
+command.  Attributes of the iteration element may be used later in the
+command.  The general form of a generator is 
+<pre>
+  <em>elementgen name where expr</em>
+</pre>
+<em>elementgen</em> may be
+<ul><li> a multiple element generator, which can be
+<ul><li> an element type, <tt>vertex, edge, facet, or body</tt>,
+which generates all elements of that type in the surface.  But new
+elements created during a loop will not be generated, so
+"<tt>refine edges</tt>" will refine all existing edges just once.
+<li> a single element subelement. The implemented subelements are:
+<ul> <li> of a vertex: edge, facet (in no particular order)
+<li> of an edge: vertex (in tail, head order), facet (in geometric order)
+<li> of a facet: vertex, edge, body (all in order around the facet)
+<li> of a body: facet (in no particular order)
+</ul> </ul>
+<li> a single element, which can be
+<ul>
+<li> an element name of an active generator
+<li> an indexed element type, <tt>vertex, edge, facet, or body</tt>.
+Indexing starts at 1.
+The index may be negative, in which case the generated element has
+negative orientation. 
+<li> an indexed subelement of an element (error if no element of
+that index). Indexing starts at 1.  The indexing is the same as the
+order produced by the <a href="#foreach">foreach</a> generator.  Indexed
+subelements of an edge or facet follow the orientation of the edge or facet.
+</ul>
+</ul>
+<em>name</em> is an optional <a href="syntax.htm#identifiers">identifier</a>
+which can be used in the body of a loop to refer to the generated element.
+<a href="syntax.htm#expressions"><em>expr</em></a> is interpreted as
+a boolean expression, 0 for false, nonzero for true. Only elements
+for which <em>expr</em> is true are generated.  The <em>where expr</em>
+clause is optional.  The innermost generator generates a default element,
+which can have its 
+<a href="elements.htm#attributes">attributes</a> 
+referred to just by attribute name.
+But be sure to remember that
+in a nested iteration, an unqualified element type generates all elements
+of that type, not just those associated with the parent element. 
+Examples:
+<pre>
+   list facet where color == red
+
+   foreach edge ee where ee.length &lt; .3 do list ee.vertex
+
+   print facet[2].edge[1].vertex[2].id
+
+   foreach facet ff do { printf "facet %g:\n"; list ff.edge }
+
+   print max(edge where on_constraint 1, length)
+</pre>
+
+
+<hr>
+<a name="command verbs"></a>         <h2>General commands</h2>
+Many commands in the Evolver <a href="#command language">command language</a>
+have a sentence-like structure and start with a verb.  
+<table border>
+<tr valign=top><td><ul>
+<li><a href="#abort">ABORT</a>
+<li><a href="#addload">ADDLOAD</a>
+<li><a href="#areaweed">AREAWEED</a>
+<li><a href="#binary_off_file">BINARY_OFF_FILE</a>
+<li><a href="#binary_printf">BINARY_PRINTF</a>
+<li><a href="#body_metis">BODY_METIS</a>
+<li><a href="#breakpoint">BREAKPOINT</a>
+<li><a href="#chdir">CHDIR</a>
+<li><a href="#close_show">CLOSE_SHOW</a>
+<li><a href="#define">DEFINE</a>
+<li><a href="#delete">DELETE</a>
+<li><a href="#delete_text">DELETE_TEXT</a>
+<li><a href="#dirichlet">DIRICHLET</a>
+<li><a href="#dirichlet_seek">DIRICHLET_SEEK</a>
+<li><a href="#display_text">DISPLAY_TEXT</a>
+<li><a href="#dissolve">DISSOLVE</a>
+<li><a href="#dump">DUMP</a>
+<li><a href="#dump_memlist">DUMP_MEMLIST</a>
+<li><a href="#edge_merge">EDGE_MERGE</a>
+<li><a href="#edgeswap">EDGESWAP</a>
+<li><a href="#edgeweed">EDGEWEED</a>
+<li><a href="#equiangulate">EQUIANGULATE</a>
+<li><a href="#eigenprobe">EIGENPROBE</a>
+<li><a href="#errprintf">ERRPRINTF</a>
+<li><a href="#exec">EXEC</a>
+<li><a href="#exprint">EXPRINT</a>
+<li><a href="#facet_merge">FACET_MERGE</a>
+<li><a href="#fix">FIX</a>
+<li><a href="#flush_counts">FLUSH_COUNTS</a>
+<li><a href="#free_discards">FREE_DISCARDS</a>
+<li><a href="#geompipe">GEOMPIPE</a>
+<li><a href="#geomview command">GEOMVIEW</a>
+<li><a href="#help">HELP</a>
+<li><a href="#hessian command">HESSIAN</a>
+<li><a href="#hessian_menu">HESSIAN_MENU</a>
+<li><a href="#hessian_seek">HESSIAN_SEEK</a>
+<li><a href="#histogram">HISTOGRAM</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#kmetis">KMETIS</a>
+<li><a href="#lagrange">LAGRANGE</a>
+<li><a href="#lanczos">LANCZOS</a>
+</ul></td><td><ul>
+<li><a href="#linear">LINEAR</a>
+<li><a href="#list">LIST</a>
+<li><a href="#list attributes">LIST ATTRIBUTES</a>
+<li><a href="#list bottominfo">LIST BOTTOMINFO</a>
+<li><a href="#list procedures">LIST PROCEDURES</a>
+<li><a href="#list topinfo">LIST TOPINFO</a>
+<li><a href="#load">LOAD</a>
+<li><a href="#longj">LONGJ</a>
+<li><a href="#matrix_inverse">MATRIX_INVERSE</a>
+<li><a href="#matrix_multiply">MATRIX_MULTIPLY</a>
+<li><a href="#metis">METIS</a>
+<li><a href="#move">MOVE</a>
+<li><a href="#new_vertex">NEW_VERTEX</a>
+<li><a href="#new_edge">NEW_EDGE</a>
+<li><a href="#new_facet">NEW_FACET</a>
+<li><a href="#new_body">NEW_BODY</a>
+<li><a href="#notch">NOTCH</a>
+<li><a href="#ometis">OMETIS</a>
+<li><a href="#ooglfile">OOGLFILE</a>
+<li><a href="#optimize">OPTIMIZE</a>
+<li><a href="#pause">PAUSE</a>
+<li><a href="#permload">PERMLOAD</a>
+<li><a href="#pop">POP</a>
+<li><a href="#pop_edge_to_tri">POP_EDGE_TO_TRI</a>
+<li><a href="#pop_quad_to_quad">POP_QUAD_TO_QUAD</a>
+<li><a href="#pop_tri_to_edge">POP_TRI_TO_EDGE</a>
+<li><a href="#postscript command">POSTSCRIPT</a>
+<li><a href="#print">PRINT</a>
+<li><a href="#printf">PRINTF</a>
+<li><a href="#quadratic">QUADRATIC </a>
+</ul></td><td><ul>
+<li><a href="#quit">QUIT</a>
+<li><a href="#rawestv">RAWESTV</a>
+<li><a href="#rawest_vertex_average">RAWEST_VERTEX_AVERAGE</a>
+<li><a href="#rawv">RAWV</a>
+<li><a href="#raw_vertex_average">RAW_VERTEX_AVERAGE</a>
+<li><a href="#read">READ</a>
+<li><a href="#rebody">REBODY</a>
+<li><a href="#recalc">RECALC</a>
+<li><a href="#refine">REFINE</a>
+<li><a href="#reset_counts">RESET_COUNTS</a>
+<li><a href="#reverse_orientation">REVERSE_ORIENTATION</a>
+<li><a href="#ritz">RITZ</a>
+<li><a href="#renumber_all">RENUMBER_ALL</a>
+<li><a href="#reorder_storage">REORDER_STORAGE</a>
+<li><a href="#saddle">SADDLE</a>
+<li><a href="#set">SET</a>
+<li><a href="#shell">SHELL</a>
+<li><a href="#show">SHOW</a>
+<li><a href="#show_expr">SHOW_EXPR</a>
+<li><a href="#showq">SHOWQ</a>
+<li><a href="#simplex_to_fe">SIMPLEX_TO_FE</a>
+<li><a href="#sobolev">SOBOLEV</a>
+<li><a href="#sprintf">SPRINTF</a>
+<li><a href="#subcommand">SUBCOMMAND</a>
+<li><a href="#system">SYSTEM</a>
+<li><a href="#t1_edgeswap">T1_EDGESWAP</a>
+<li><a href="#unfix">UNFIX</a>
+<li><a href="#unset">UNSET</a>
+<li><a href="#vertex_average">VERTEX_AVERAGE</a>
+<li><a href="#vertex_merge">VERTEX_MERGE</a>
+<li><a href="#whereami">WHEREAMI</a>
+<li><a href="#wrap_vertex">WRAP_VERTEX</a>
+<li><a href="#zoom">ZOOM</a>
+</ul></td></tr></table>
+
+<hr>
+<a name="abort"></a><h2>ABORT</h2>
+<a href="#command language">Main prompt command</a>.
+Causes immediate termination of the executing command
+and returns to the command prompt.  Meant for stopping
+execution of a command when an error condition is found.
+There will be an error message output, giving the file
+and line number where the abort occurred, but
+it is still wise to have a script or procedure or function
+ print an error message using 
+<a href="commands.htm#errprintf"><tt>errprintf</tt>
+before doing the <tt>abort</tt> command, so the 
+user knows why.
+
+
+<hr>
+<a name="addload"></a><h2>ADDLOAD</h2>
+<a href="#command language">Main prompt command</a>.
+
+Loads a new datafile without deleting the current surface,
+permitting the simultaneous loading of multiple copies of the
+same datafile or different datafiles.  Syntax:
+<pre>
+   ADDLOAD <em>string</em>
+</pre>
+where <em>string</em> is either a sting literal in double quotes,
+or a string variable name such as 
+<a href="syntax.htm#datafilename"><tt>datafilename</tt></a>.
+Elements in the new datafile are re-numbered to not conflict with
+existing elements.  This is actually the same as the default
+behavior of Evolver when loading a single datafile.  Thus the
+<a href="general.htm#options"> -i 
+command line option</a> or the 
+<a href="datafile.htm#keep_originals"><tt>keep_originals</tt></a> keyword is
+ not obeyed for the new datafile.  The 
+<a href="datafile.htm#read section"><tt>read</tt></a> section of the new
+datafile is not executed; this permits a datafile to use the <tt>addload</tt>
+commnand in its <tt>read</tt> section to load more copies of itself.
+The loading script is responsible for all  initialization that would
+ordinarily be done in the <tt>read</tt> section of the new datafile.
+Declarations in the top section of the new datafile will overwrite
+any existing declarations.  This is usually not a problem when
+loading multiple copies of the same datafile, but requires attention
+when loading different datafiles.  For example, numbered constraints
+are a bad idea; use named constraints instead.  See the sample
+datafile <a href="addload_example.fe">addload_example.fe</a> for
+an example of how to load and distinguish between multiple copies
+of the same surface.
+
+
+
+
+
+
+<hr>
+<a name="areaweed"></a><h2>AREAWEED</h2>
+<a href="#command language">Main prompt command</a>.
+
+For deleting facets with less than a given area. Syntax:
+<pre>   AREAWEED <em>expr</em></pre>
+ Same as '<a href="single.htm#w">w</a>' command, 
+  except does not need interactive response.
+ Also same as "<tt>delete facets where area &lt;  <em>expr</em></tt>".
+Examples:
+<pre>   areaweed 0.001
+   areaweed 2*min(facet,area)
+</pre>
+
+
+<hr>
+<a name="binary_off_file"></a><h2>BINARY_OFF_FILE</h2>
+<a href="#command language">Main prompt command</a>.
+Produces one frame file for my 
+<a href="http://www.susqu.edu/brakke/evmovie/evmovie-doc.html">evmovie</a>
+3D movie program. Syntax:
+<pre> BINARY_OFF_FILE <em>string</em>
+</pre>
+where <em>string</em> is the name of the output file, either a 
+double-quoted string, a string variable, or a string-generating
+expression (typically using <a href="#sprintf">sprintf</a>).
+
+
+<hr>
+<a name="binary_printf"></a><h2>BINARY_PRINTF</h2>
+<a href="#command language">Main prompt command</a>.
+For printing formatted binary output to files.  Syntax:
+<pre>BINARY_PRINTF <em>string,expr,expr,...</em>
+</pre>
+  Prints to standard output using a binary interpretation
+  of the standard C formats:  
+<ul>
+<li> %c one byte
+<li> %d two byte integer
+<li> %ld four byte integer
+<li> %f four byte float
+<li> %lf eight byte float
+<li> %s  string, without the trailing null
+<li> non-format characters are copied verbatim as single bytes.
+</ul>
+  The byte order for numbers can be set with the 
+  <a href="toggle.htm#big_endian">big_endian</a> or
+  <a href="toggle.htm#little_endian">little_endian</a> toggles. 
+  NOTE: Either big_endian or little_endian must be set for binary_printf
+   to work!
+  The format string can be a string variable or a quoted string.
+  There is a limit of 1000 characters on the format string, otherwise
+  there is no limit on the number of arguments.  Meant to be use
+  with redirection to a file. In Microsoft Windows, the output file type is 
+   temporarily changed from TEXT to BINARY
+ so newline bytes don't get converted.
+ Example:
+<pre>
+  binary_printf "%ld%ld%ld",vertex_count,edge_count,facet_count &gt;&gt;"out.bin"
+</pre>
+
+<hr>
+<a name="body_metis"></a>
+<h2>BODY_METIS</h2>
+<a href="#command language">Main prompt command</a>.
+Partitions the set of bodies into n parts using the 
+<a href="http://www.cs.umn.edu/~karypis/metis/metis/index.html">METIS</a>
+library of Karypis and Kumar, if this library has been compiled into
+the Evolver.  
+The partition number of each body is left in its extra attribute
+bpart (which will be created if it does not already exist).
+BODY_METIS works only in the soapfilm model; for the string model,
+partition facets using <a href="#metis">metis</a> or
+<a href="#kmetis">kmetis</a>.
+ BODY_METIS uses the PMETIS algorithm.  
+Meant for experiments in partitioning the surface for
+multiprocessors. 
+Syntax: <pre> <tt>BODY_METIS</tt> <i>n</i>
+</pre>
+Example: <pre>
+  body_metis 50;  // supposing we have thousands of bodies, say
+  for each body bb do set bb.facet frontcolor (bb.bpart imod 15)+1;
+</pre>
+
+<hr>
+<a name="breakpoint"></a><h2>BREAKPOINT</h2>
+<a href="#command language">Main prompt command</a>.
+The user may set a breakpoint in an already loaded script
+with the "set breakpoint" command.  The syntax is
+<pre>
+  BREAKPOINT <em>scriptname</em> <em>linenumber</em>
+</pre>
+where <em>scriptname</em> is the name of the function or
+procedure and <em>linenumber</em> is the line number in
+the file where the breakpoint is to be set. There must be
+executable code on the line, or you will get an error.
+<em>linenumber</em> may be an expression.
+<p>
+Breakpoints may be unset individually with
+<pre>
+  UNSET BREAKPOINT <em>scriptname</em> <em>linenumber</em>
+</pre>
+or as a group with
+<pre>
+  UNSET BREAKPOINTS
+</pre>
+When a breakpoint is reached, Evolver will enter into a subcommand prompt,
+at which the user may enter any Evolver commands (although some commands,
+such as <tt>load</tt> would be very unwise).
+To exit from the
+subcommand prompt, use <tt>q</tt> or <tt>exit</tt> or <tt>quit</tt>.
+
+<hr>
+<a name="chdir"></a><h2>CHDIR</h2>
+<a href="#command language">Main prompt command</a>.
+ Changes the current directory, used for searching for files
+ before EVOLVERPATH is used. Syntax:
+<pre>   CHDIR <em>stringexpr</em></pre>
+In MS-Windows, use a front slash '/'
+or a double backslash '\\' instead of a single backslash as
+the path character. 
+Example:
+<pre>  chdir "/usr/smith/project" 
+</pre>
+
+<hr>
+<a name="show_off"></a>
+<a name="close_show"></a><h2>CLOSE_SHOW</h2>
+
+<a href="#command language">Main prompt command</a>.
+   Closes the native graphics window started by the 
+   `<a href="single.htm#s">s</a>' or
+   <a href="commands.htm#show">SHOW</a> commands.  Does not affect geomview
+ version. Synonym: show_off.
+
+<hr>
+<a name="define"></a><h2>DEFINE</h2>
+<a href="#command language">Main prompt command</a>.
+For runtime defining of 
+<a href="syntax.htm#variables">variables</a>,
+<a href="syntax.htm#arrays">arrays</a>,
+<a href="constrnt.htm#level set constraints">level set constraints</a>,
+<a href="constrnt.htm#boundaries">boundaries</a>,
+<a href="quants.htm#named quantities">named quantities</a>,
+<a href="quants.htm#named methods">named method instances</a>, and
+<a href="elements.htm#extra attributes">extra attributes</a > of elements. 
+The syntax for defining single variables is 
+<pre>    DEFINE <em>variable</em> <em>type</em> </pre>
+where <em>type</em> is <tt>REAL</tt>, <tt>INTEGER</tt>, or <tt>STRING</tt>.  
+Note that this
+way of declaring a variable does not take an initial value; thus it is
+a way of making sure a variable is defined without overwriting an existing
+value of the variable.
+The syntax for defining
+<a href="syntax.htm#arrays">arrays</a>
+ and
+<a href="datafile.htm#extra decl">extra attributes</a>
+ is the same as in
+the top of the datafile;
+for
+<a href="datafile.htm#constraint decl">constraints</a>,
+<a href="datafile.htm#boundary decl">boundaries</a>,
+<a href="datafile.htm#named quantity decl">named quantities</a>, and
+<a href="datafile.htm#method instance decl">method instances</a>,
+it is the same as in the top of the datafile except
+the word "define" comes first.   Multi-line definitions should be
+enclosed in brackets and terminated with a semicolon.  Or they can
+be enclosed in quotes and fed to the <a href="commands.htm#exec">exec</a>
+command.  Of course, using exec means the parser doesn't know about the
+define until the exec is executed, so you cannot use the defined item
+in commands until then.  It is legal to re-define an existing array or
+array extra attribute with different dimensions (but the same number
+of dimensions); data will be preserved
+as best as possible in the resized array.
+An array may be given the dimension 0 to free its memory allocation.
+ Examples:
+<pre>
+  define fudge_factor real
+  define pqlist real[imax][jmax]
+  define edge attribute charlie real 
+  define vertex attribute oldx real[3] 
+  define facet attribute knots real[5][5][5] 
+  { define constraint frontcon formula z = 0
+    energy:
+    e1: -y/2
+    e2:  x/2
+    e3:  0; }
+  exec "define boundary newboundary parameters 1
+    x: sin(p1)
+    y: cos(p1)
+    z: 3"
+  exec "define quantity qarea info_only method facet_area global"
+</pre>
+
+
+<hr>
+<a name="delete"></a><h2>DELETE</h2>
+<a href="#command language">Main prompt command</a>.
+For collapsing edges or facets. Syntax:
+<pre>
+   DELETE  <em><a href="#generators">generator</a></em>
+</pre>
+   Deletes edges by shrinking the edge to zero length
+   (as in the tiny edge weed command t) and facets by eliminating
+   one edge of the facet.  Facet edges will be tried for elimination
+   in shortest to longest order.  Edges will not be deleted if both
+   endpoints are 
+<a href="elements.htm#fixed vertex">fixed</a>, 
+or both endpoints have different 
+<a href="constrnt.htm#level set constraints">constraints</a>
+   or <a href="constrnt.htm#parametric boundaries">boundaries</a>
+ from the edge.  DELETE will also fail if it would create two edges
+  with the same endpoints, unless the <a href="toggle.htm#force_deletion">
+  force_deletion</a> toggle is on; also see 
+ <a href="toggle.htm#star_finagling">star_finagling</a>. DELETE maintains the continuity and
+   connectedness of the surface, as opposed to <a href="#dissolve">
+   DISSOLVE</a>.
+
+  Example:
+<pre>
+      delete facets where area &lt; 0.0001
+</pre>
+
+<hr>
+<a name="delete_text"></a><h2>DELETE_TEXT</h2>
+Command to delete a text string from the graphics display.
+Syntax:
+<pre>
+   delete_text(<em>text_id</em>)
+</pre>
+where <em>text_id</em> is the value returned by the
+call to <a href="#display_text"><tt>display_text</tt>
+that created the string.
+
+
+
+<hr>
+<a name="dirichlet"></a><h2>DIRICHLET</h2>
+
+<a href="#command language">Main prompt command</a>.
+Does one iteration of minimizing the Dirichlet integral of the 
+surface.
+The current surface is the domain, and the Dirichlet integral is of 
+the map from the current surface to the next.  This is according to
+a scheme of Konrad Polthier and Ulrich Pinkall <a href="biblio.htm#ref[PP]">[PP]</a>.  
+At minimum Dirichlet
+integral, the area is minimized also.  Works only on area with fixed
+boundary; no volume constraints or anything else.  Seems to converge
+very slowly near minimum, so not a substitute for other iteration
+methods.  But if you have just a simple soap film far, far from
+the minimum, then this method can make a big first step.
+<a href="#dirichlet_seek">DIRICHLET_SEEK</a>
+  will do an energy-minimizing search in the
+direction.  
+
+<hr>
+<a name="dirichlet_seek"></a><h2>DIRICHLET_SEEK</h2>
+<a href="#command language">Main prompt command</a>.
+Calculates a motion as in the
+<a href="#dirichlet">DIRICHLET</a> command, but uses this as a direction
+of motion instead of as the motion itself.  DIRICHLET_SEEK then uses
+a line-search along this direction to find a minimum of energy.
+
+<hr>
+<a name="display_text"></a><h2>DISPLAY_TEXT</h2>
+<a href="#command language">Main prompt command</a>.
+Causes the display of simple text on the graphics display.
+Currently implemented for OpenGL and PostScript graphics.
+Syntax:
+<pre>
+  text_id := display_text(x,y,string)
+</pre>
+The x,y coordinates of the start of the string are in 
+window units, i.e. the window coordinates run from 
+(0,0) in the lower left to (1,1) in the upper right.
+The return value should be saved in a variable in case you
+want to delete the text later; even if you don't want to 
+<a href="#delete_text">delete</a> it, you must have something
+on the left of the assignment for syntax purposes.
+No font size control or font type or color implemented.
+Meant for captioning images, for example a timer in
+frames of a movie.
+
+
+<hr>
+<a name="dissolve"></a><h2>DISSOLVE</h2>
+<a href="#command language">Main prompt command</a>.
+   Removes elements from the surface without closing the gap left.
+   Syntax:
+<pre>
+  DISSOLVE  <em><a href="#generators">generator</a></em>
+</pre>   
+   The effect is the same as if the line for the element were
+   erased from a datafile.  Hence no element will be dissolved that
+   is used by a higher dimensional element. (There are three exceptions:
+   dissolving an edge on a facet in the string model, and 
+   dissolving a facet on one body or with both adjacent bodies the same
+ in the soapfilm model.)
+Thus "<tt>dissolve edges; dissolve vertices</tt>" is safe because
+only unused edges and vertices will be dissolved.  No error messages
+are generated by doing this.
+   Good for poking holes in a surface. Example:
+<pre>  dissolve facets where original == 2; 
+  dissolve edges; dissolve vertices
+</pre>
+Thus "<tt>dissolve edges; dissolve vertices</tt>" is safe because
+only unused edges and vertices will be dissolved.  No error messages
+are generated by doing this.
+
+<hr>
+<a name="dump"></a><h2>DUMP</h2>
+<a href="#command language">Main prompt command</a>.
+   Dumps current surface to named file in datafile format. Syntax:
+<pre>
+  DUMP <em>filename</em>
+</pre>
+   The filename is a <a href="syntax.htm#stringexpr">string</a>.
+   With no filename, dumps to the default dump file, which is 
+   the current datafile name with ".dmp" extension.  Same as the 
+'<a href="single.htm#d">d</a>' command,
+   except 'd' requires a response from the user for the filename.
+   Examples:
+<pre>   dump "foo.dmp"
+   dump sprintf "%s.%g.dmp",datafilename,counter
+</pre>
+
+<hr>
+<a name="dump_memlist"></a><h2>DUMP_MEMLIST</h2>
+<a href="#command language">Main prompt command</a>.
+Lists the currently allocated memory blocks.  For my own use
+in debugging memory problems.
+
+<hr>
+<a name="edge_merge"></a><h2>EDGE_MERGE</h2>
+<a href="#command language">Main prompt command</a>.
+Merges two edges into one in a side-by-side fashion. Meant for joining
+together surfaces that bump into each other.  Should not be used
+on edges already connected by a facet, but merging edges that
+already have a common endpoint(s) is fine. Syntax:
+<pre>
+  edge_merge(integer,integer)
+</pre>
+Note the arguments are signed integer ids for the elements, not
+element generators.
+The tails of the edges are merged, and so are the heads.  Orientation
+is important.
+Example:
+<pre>
+   edge_merge(3,-12)
+</pre>
+
+<hr>
+<a name="edgeswap"></a><h2>EDGESWAP</h2>
+<a href="#command language">Main prompt command</a>.
+For changing the endpoints of edges. Syntax:
+<pre>
+ EDGESWAP <em><a href="#generators">edgegenerator</a></em>
+</pre>
+   If any of the qualifying edges are diagonals of quadrilaterals,
+   they are flipped in the same way as in 
+   <a href="single.htm#u">equiangulation</a>, 
+   regardless of whether equiangularity is improved.
+   "edgeswap edge" will try to swap all edges, and is
+   not recommended, unless you like weird things.
+   Various conditions will prevent an edge from being swapped:
+   <ul>
+   <li> The edge is <a href="elements.htm#fixed edge">fixed</a>.
+   <li> There are not exactly two facets adjacent to the edge.
+   <li> The adjacent facets do not have equal 
+<a href="elements.htm#facet density">density</a>. 
+   <li> The adjacent facets are not on the same
+<a href="constrnt.htm#level set constraints">level set constraints</a>
+        as the edge.
+   <li> The adjacent facets are not on the same 
+<a href="constrnt.htm#parametric boundaries">parametric boundary</a> as 
+   the edge.
+   <li> Swapping would create an edge with both endpoints the same (a loop).
+   <li> Swapping would create two edges with the same endpoints (an "ear").
+   </ul>
+All but the first two reasons print messages.  This is a compromise
+between informing the user why edges were not switched and preventing
+a cascade of messages.  When edge swapping is  invoked through the 
+'<a href="single.htm#u">u</a>' command, none
+of these messages are printed.
+Examples:
+<pre>
+ edgeswap edge[22] 
+
+ edgeswap edge where color == red
+</pre>
+<hr>
+<a name="edgeweed"></a><h2>EDGEWEED</h2>
+<a href="#command language">Main prompt command</a>.
+ Deletes edges shorter than given value. Syntax:
+ <pre>
+ EDGEWEED <em>expr</em>
+ </pre>
+ Same as '<a href="single.htm#t">t</a>' command, except does not need interactive response.
+ Same as "<tt>delete edge where length &lt; <em>expr</em></tt>".
+
+<hr>
+<a name="eigenprobe"></a><h2>EIGENPROBE</h2>
+<a href="#command language">Main prompt command</a>.
+For finding the number of eigenvalues of the energy
+<a href="eigentut.htm">Hessian</a>
+that are less than, equal to, and greater than a given value.
+Syntax:
+<pre>
+EIGENPROBE <em>expr</em>
+EIGENPROBE(<em>expr</em>,<em>expr</em>)
+</pre>
+The first form prints the number of
+  eigenvalues of the energy Hessian that are less than, equal to, and
+   greater than <em><a href="syntax.htm#expr">expr</a></em>. 
+    It is OK to use an exact eigenvalue
+    (like 0, often) for the value, but not really recommended. 
+      Useful for probing stability.
+    Second form will further do inverse power iteration to find an
+    eigenvector.  The second argument is the limit on the number
+    of iterations.  The eigenvalue will be stored in the
+    <a href="syntax.htm#last_eigenvalue"><tt>last_eigenvalue</tt></a>
+internal variable, and the eigenvector can
+    be used by the <tt><a href="#move">move</a></tt> command.
+      The direction of the 
+    eigenvector is chosen to be downhill in energy, if the 
+    energy gradient is nonzero.
+
+<hr>
+<a name="equiangulate"></a><h2>EQUIANGULATE</h2>
+<a href="#command language">Main prompt command</a>.
+
+  This command tests the given edges to see if flipping them would improve
+equiangularity.  It is the <a href="single.htm">u</a>
+ command applied to a specified set of edges.
+It differs from the <a href="#edgeswap">edgeswap</a>
+ command in that only edges that pass
+the test are flipped.  Syntax:
+<pre>
+  EQUIANGULATE <em>edge_generator</em>
+</pre>
+Examples:
+<pre>
+  equiangulate edge[3];
+  equilangulate edge where color == red;
+</pre> 
+
+<hr>
+<a name="errprintf"></a><h2>ERRPRINTF</h2>
+<a href="#command language">Main prompt command</a>.
+Same as <a href="#printf">printf</a>, except it sends its output to
+stderr instead of stdout.  Useful in reporting error messages in 
+scripts that have their output redirected to a file.
+
+<hr>
+<a name="exec"></a><h2>EXEC</h2>
+<a href="#command language">Main prompt command</a>.
+Executes a command in string form.  Good for runtime generation of commands.
+Syntax: 
+<pre>
+   EXEC <em>stringexpr</em>
+</pre>
+Example:
+<pre>
+   exec sprintf "define vertex attribute prop%d real",propnumber
+</pre>
+
+<hr>
+<a name="exprint"></a><h2>EXPRINT</h2>
+<a href="#command language">Main prompt command</a>.
+Prints the original input string defining a user-defined command, including
+comments.
+Syntax: 
+<pre>
+   EXPRINT <em>commandname</em>
+</pre>
+Example:
+<pre>
+Enter command: aa := { print 5; /* this is a test */ }
+Enter command: exprint aa
+ { print 5; /* this is a test */ }
+</pre>
+
+<hr>
+<a name="facet_merge"></a><h2>FACET_MERGE</h2>
+<a href="#command language">Main prompt command</a>.
+Merges two soapfilm-model facets into one in a side-by-side fashion. 
+Meant for joining
+together surfaces that bump into each other.   The pairs of vertices
+to be merged are selected in a way to minimize the distance between
+merged pairs subject to the orientations given, so there are three
+choices the algorithm has to choose from.  It is legal to merge facets
+that already have some endpoints or edges merged.
+ Syntax:
+<pre>
+  facet_merge(integer,integer)
+</pre>
+Note the syntax is a function taking signed integer facet id
+ arguments, not element generators.
+IMPORTANT: The frontbody of the first facet should be equal to the
+backbody of the second (this includes having no body); this is the 
+body that will be squeezed out
+when the facets are merged. If this is not true, then facet_merge
+will try flipping the facets orientations until it finds a legal
+match.
+Example:
+<pre>
+   facet_merge(3,-12)
+</pre>
+
+
+<hr>
+<a name="fix"></a><h2>FIX</h2>
+<a href="#command language">Main prompt command</a>.
+For setting the <a href="elements.htm">FIXED</a> attribute of elements. Syntax:
+<pre>
+   FIX <em><a href="#generators">generator</a></em>
+</pre>
+ Example:
+<pre>
+   fix vertices where on_constraint 2
+</pre>
+Can also convert a parameter from 
+<a href="datafile.htm#optimizing_parameter">optimizing</a> to non-optimizing.
+Example:
+<pre>
+  fix radius
+</pre>
+Can also convert a 
+<a href="quants.htm">named quantity</a> from info_only to fixed.
+
+See also <a href="#unfix">unfix</a>.
+
+<hr>
+<a name="flush_counts"></a><h2>FLUSH_COUNTS</h2>
+<a href="#command language">Main prompt command</a>.
+Causes the printing of various internal counters that have become nonzero.
+The counters are: 
+equi_count,
+edge_delete_count,
+facet_delete_count,
+edge_refine_count,
+facet_refine_count,
+notch_count,
+vertex_dissolve_count,
+edge_dissolve_count,
+facet_dissolve_count,
+body_dissolve_count,
+vertex_pop_count,
+edge_pop_count,
+facet_pop_count,
+pop_tri_to_edge_count,
+pop_edge_to_tri_count,
+pop_quad_to_quad_count,
+where_count,
+edgeswap_count,
+fix_count,
+unfix_count,
+t1_edgeswap_count, and
+notch_count.
+Normally, these counts are accumulated during the execution of a command
+and printed at the end of the command.  Flush_counts can be used to 
+display them at some point within a command.  Flush_counts is usually
+followed by <a href="#reset_counts">reset_counts</a>, which resets all 
+these counters to 0.
+
+<hr>
+<a name="free_discards"></a><h2>FREE_DISCARDS</h2>
+<a href="#command language">Main prompt command</a>.
+Frees deleted elements in internal storage.  Ordinarily,
+deleting elements does not free their memory for re-use
+until the command completes, so that element iteration
+loops do not get disrupted.  If for some reason this
+behavior leads to excess memory usage or some other
+problem, the user may use the <tt>free_discards</tt>
+command to free element storage of deleted elements.
+Just be sure not to do this inside any element iteration
+loop that might be affected.
+
+
+
+
+<hr>
+<a name="geompipe"></a><h2>GEOMPIPE</h2>
+<a href="#command language">Main prompt command</a>.
+Redirects Evolver's geomview output to a command
+ in place of sending it to geomview.  Syntax:
+<pre>
+   geompipe <em>stringexpr</em>
+</pre>
+The redirection can be closed with the command
+"<a href="single.htm#P">P 9</a>".  <tt>geompipe</tt> is useful for debugging geomview data; but
+be sure to toggle <tt><a href="toggle.htm#gv_binary">gv_binary</a> OFF </tt>to
+get ascii data to look at.
+<hr>
+<a name="geomview command"></a><h2>GEOMVIEW</h2>
+<a href="#command language">Main prompt command</a>.
+The plain form "<tt>geomview</tt>" toggles the 
+<a href="graphics.htm#geomview">geomview</a> display on and off.
+The form 
+<pre>   geomview <a href="syntax.htm#stringexpr"><em>stringexpr</em></a>
+</pre> will send a command
+to an already started geomview. 
+ This string must be in the geomview command language, for which
+consult the geomview documentation.
+<hr>
+<a name="help"></a><h2>HELP</h2>
+<a href="#command language">Main prompt command</a>.
+Main prompt command.  Prints what Evolver knows about an identifier
+or keyword.  User-defined variables, named quantities, named methods,
+named constraints, and element attributes are identified as such.
+Information for syntax keywords comes from a file evhelp.txtt in
+the doc subdirectory of your Evolver installation, so that subdirectory
+should be on your EVOLVERPATH environment variable.
+Syntax:
+<pre>
+   help <em>keyword</em>
+</pre>
+The <em>keyword</em> need not be in quotes, unless there are
+embedded blanks.   After printing the help
+section exactly matching the keyword, a list of related terms
+is printed.  These are just the keywords containing your keyword
+as a substring.
+<p>
+The built-in browser is in no way a complete substitute for
+using a full-fledged browser such as Netscape or Mosaic.
+<hr>
+<a name="hessian"></a>
+<a name="hessian command"></a><h2>HESSIAN</h2>
+
+<a href="#command language">Main prompt command</a>.
+        Does one step using Newton's method
+	with the 
+<a href="eigentut.htm">Hessian matrix</a> of the energy.  If the Hessian is
+	not positive definite, a warning will be printed, but the move
+	will be made anyway.  If the <a href="toggle.htm#check_increase">
+	check_increase</a> toggle is on, then no move will be made if it
+	would increase energy.  <a href="#hessian_seek">Hessian_seek</a>
+ will use a variable
+	step size to seek minimum energy in the direction of motion.
+ The motion vector is stored, and may
+	be accessed with the <a href="#move">move</a> command.  Not all
+	energies and constraints have Hessian calculations yet.  See
+	the <a href="eigentut.htm">Hessian tutorial</a> for more.
+
+<hr>
+<a name="hessian_menu"></a><h2>HESSIAN_MENU</h2>
+
+<a href="#command language">Main prompt command</a>.
+	Brings up a menu of experimental stuff involving the energy
+<a href="eigentut.htm">Hessian
+	matrix</a>. Not all of it works well, and may disappear in future
+        versions.  A one-line prompt with options appears. Use option
+	'<tt>?</tt>' to get a fuller description of the choices.
+For those options that calculate an eigenvalue, the eigenvalue
+(or first, if several) is saved in the internal variable
+<a href="syntax.htm#last_eigenvalue">last_eigenvalue</a>.
+	A quick summary of the current options:
+<dl>
+<dt><tt> 1. Fill in hessian matrix.
+
+</tt></dt><dd>Allocation and calculation of Hessian matrix.</dd>
+
+<dt><tt> 2. Fill in right side. (Do 1 first)
+
+</tt></dt><dd>Calculates gradient and constraint values.</dd>
+
+<dt><tt> 3. Solve. (Do 2 first) 
+
+</tt></dt><dd>Solves system for a motion direction.</dd>
+
+<dt><tt> 4. Move. (Do 3, A, B, C, E, K, or L  first) 
+
+</tt></dt><dd>Having a motion direction, this will move some stepsize in that direction.
+Will prompt for stepsize.  The direction of motion is saved and is
+available in the <a href="#move">move</a> command.</dd>
+
+<dt><tt> 7. Restore original coordinates. 
+
+</tt></dt><dd>Will undo any moves.  So you can move without fear.</dd>
+
+<dt><tt> 9. Toggle debugging. (Don't do this!) 
+
+</tt></dt><dd>Prints Hessian matrix and right side as they are calculated in other
+options.  Produces copious output, and is meant for development only.
+Do NOT try this option.</dd>
+
+<dt><tt> B. Chebyshev (For Hessian solution ). 
+
+</tt></dt><dd>Chebyshev iteration to solve system.  This option takes care of its
+own initialization, so you don't have to do steps 1 and 2 first.
+Not too useful.</dd>
+
+<dt><tt> C. Chebyshev (For most negative eigenvalue eigenvector). 
+
+</tt></dt><dd>Chebyshev iteration to find most negative eigenvalue and eigenvector.
+Will ask for number of iterations, and will prompt for further
+iterations.  End by just saying 0 iterations.
+ Prints Rayleigh quotient every 50 iterations.  After finding an
+eigenpair, gives you the chance to find next lowest. Last eigenvector
+found becomes motion for step 4.  Self initializing.
+Not too useful.</dd>
+
+<dt><tt> E. Lowest eigenvalue. (By factoring. Do 1 first) 
+
+</tt></dt><dd>Uses factoring to probe the inertia of the shifted
+Hessian H-cI until it has
+the lowest eigenvalue located within .01.  Then uses inverse iteration
+to find eigenpair.</dd>
+<dt><tt> F. Lowest eigenvalue. (By conjugate gradient. Do 1 first) 
+
+</tt></dt><dd>Uses conjugate gradient to minimize the Rayleigh quotient.</dd>
+
+<dt><tt> L. Lanczos. (Finds eigenvalues near probe value. ) 
+
+</tt></dt><dd>Uses Lanczos method to solve for 15 eigenvalues near the probe value
+left over from menu choices 'P' or 'V'.  These are approximate
+eigenvalues, but the first one is usually very accurate. Do not
+trust apparent multiplicities.  From the main command prompt,
+you can use the <a href="#lanczos"><tt>lanczos</tt></a> command.</dd>
+
+<dt><tt> R. Lanczos with selective reorthogonalization. 
+
+</tt></dt><dd>Same as 'L', but a little more elaborate to cut down on spurious
+multiplicities by saving some vectors to reorthogonalize the
+Lanczos vectors.  Not quite the same as the official
+"selective reorthogonalization" found in textbooks.</dd>
+
+<dt><tt> Z. Ritz subspace iteration for eigenvalues. (Do 1 first)</tt>
+</dt><dd>
+Calculate a number of eigenpairs near a probe value.
+Will prompt for probe value and number of eigenpairs.
+Same as <a href="#ritz"><tt>ritz</tt></a> main command.  
+Can be interrupted gracefully by keyboard interrupt.
+Afterwards, one can use the X option to pick a particular
+eigenvector to look at.</dd>
+
+<dt><tt> X. Pick Ritz vector for motion. (Do Z first)
+
+</tt></dt><dd>Selects an eigenvector calculated by the Z option for use
+in motion (option 4).
+First eigenvalue listed is number 1, etc. 
+Particularly useful for discriminating among high multiplicity 
+eigenvalues, which the V option does not let you do.
+ You can enter
+the eigenvector by its number in the list from the  Z option.
+As a special bonus useful when there are multiple eigenvectors for an
+eigenvalue, you can enter the vector as a linear combination of
+eigenvectors, e.g. ``0.4 v1 + 1.3 v2 - 2.13 v3''.</dd>
+
+<dt><tt> P. Eigenvalue probe. (By factoring. Do 1 first) 
+
+</tt></dt><dd>Reports the inertia of the shifted Hessian H-cI
+ for user-supplied values of the shift c.
+The Hessian H includes the effects of constraints.  Will prompt
+repeatedly for c.  Null response exits.  From the main
+command prompt, you can use the <a href="#eigenprobe"><tt>eigenprobe</tt>
+</a> command.</dd>
+
+<dt><tt> V. Eigenvalue probe with eigenvector. (By factoring. Do 1 first) 
+
+</tt></dt><dd>Reports the inertia of the shifted Hessian H-cI
+ for user-supplied values of the shift c, and calculates the
+eigenvector for the eigenvalue nearest c by inverse power iteration.
+You will be prompted for c and for the maximum number of iterations
+to do.  From the main
+command prompt, you can use the <a href="#eigenprobe"><tt>eigenprobe</tt>
+</a> command.</dd>
+
+<dt><tt> S. Seek along direction. (Do 3, A, B, E, C, K, or L first) 
+
+</tt></dt><dd>Can do this instead of option 4 if you want Evolver to seek to
+lowest energy in an already found direction of motion.  Uses the
+same line search algorithm as the optimizing 
+`<a href="single.htm#g"><tt>g</tt></a>' command.</dd>
+
+<dt><tt> Y. Toggle YSMP/alternate minimal degree factoring.
+
+</tt></dt><dd>Default Hessian factoring is by Yale Sparse Matrix Package.
+The alternate is a minimal degree factoring routine of my
+own devising that is a little more aware of the surface structure,
+and maybe more efficient.  If YSMP gives problems, like running
+out of storage, try the alternate. This option is available
+at the main prompt as the <tt><a href="toggle.htm#ysmp">ysmp</a></tt> 
+ toggle.</dd>
+
+<dt><tt> U. Toggle Bunch-Kaufman version of min deg. 
+
+</tt></dt><dd>YSMP is designed for positive definite matrices, since it doesn't
+do any pivoting or anything.  The alternate minimal degree
+factoring method, though, has the option of handling negative
+diagonal elements in a special way.  This option is available
+at the main prompt as the 
+<a href="toggle.htm#bunch_kaufman"><tt>bunch_kaufman</tt></a> toggle.</dd>
+
+<dt><tt> M. Toggle projecting to global constraints in move.
+
+</tt></dt><dd>Toggles projecting to global constraints, such as volume constraints.
+Default is ON.  Don't mess with this.  Actually, I don't remember
+why I put it in.</dd>
+
+<dt><tt> G. Toggle minimizing square gradient in seek.
+
+</tt></dt><dd>For converging to unstable critical points.  When this is on,
+option '<tt>S</tt>' will minimize the square of the energy gradient
+rather than minimizing the energy.  Also the regular 
+<a href="#saddle"><tt>saddle</tt></a>
+and <a href="#hessian_seek"><tt>hessian_seek</tt></a>
+ commands will minimize square gradient
+instead of energy.</dd>
+
+<dt><tt> =. Subshell.
+
+</tt></dt><dd> Starts a command prompt while still in hessian_menu.
+You can do pretty much any command, but you should not do anything
+that changes the surface, thus invalidating the Hessian data.
+This is meant, for example, for creating a graphics file of
+an eigenvalue perturbation and then returning to the hessian_menu
+prompt.  You exit the subshell with the "q" command.</dd>
+
+<dt><tt> 0. Exit hessian.
+
+</tt></dt><dd>Exits the menu.  `<tt>q</tt>' also works.</dd>
+</dl>
+
+For example, to inspect what eigenvectors look like, one would do
+steps 1 and z, then repeatedly use x to pick an eigenvector, 4 to move, and
+7 to restore.
+<hr>
+<a name="hessian_seek"></a><h2>HESSIAN_SEEK</h2>
+
+<a href="#command language">Main prompt command</a>.
+        Seeks to minimize energy along the direction found by Newton's
+	method using the Hessian.  Otherwise same as the 
+	<a href="#hessian command">hessian</a> command.
+Syntax:
+<pre> 
+  HESSIAN_SEEK <em>maxscale</em>
+</pre>
+        where <em>maxscale</em> is an optional upper
+        bound for the distance to seek.  The default maxscale is 1,
+        which corresponds to a plain hessian step.  The seek will
+        look both ways along the direction, and will test down to
+        1e-6 of the maxscale before giving up and returning a scale of 0.
+        This command is meant to be used when the surface is far enough
+        away from equilibrium that the plain hessian command is unreliable,
+        as hessian_seek guarantees an energy decrease, if it moves at all.
+
+<hr>
+<a name="loghistogram"></a>
+<a name="histogram"></a><h2>HISTOGRAM, LOGHISTOGRAM</h2>
+<a href="#command language">Main prompt command</a>.
+For printing histograms in text form to standard output.
+Syntax:
+<pre>
+HISTOGRAM(<em><a href="#generators">generator</a></em>, <em><a href="syntax.htm#expr">expr</a></em>)
+LOGHISTOGRAM(<em>generator</em>, <em>expr</em>)
+</pre>
+
+Prints a histogram of the values of <em>expr</em> for the generated
+elements.  
+ It uses 20 bins evenly divided between minimum and maximum values.
+ It finds its own maximum and 
+minimum values, so the user does not have to specify binsize.
+The log version will lump all zero and negative values into one bin.
+Examples:
+<pre>
+ histogram(edge,dihedral*180/pi) 
+ loghistogram(facet where color == red, area)
+ histogram(vertex where on_constraint 1, sqrt(x^2+y^2+z^2))
+</pre>
+
+<hr>
+<a name="history"></a><h2>HISTORY</h2>
+ 
+<a href="#command language">Main prompt command</a>.
+	Print the saved <a href="#history list">history list</a> of commands.
+
+<hr>
+<a name="lagrange"></a>
+<a name="lagrange command"></a><h2>LAGRANGE</h2>
+ 
+<a href="#command language">Main prompt command</a>.
+   Changes to <a href="model.htm#Lagrange model">Lagrange model</a> from 
+   <a href="model.htm#quadratic model">quadratic</a> or 
+   <a href="model.htm#linear model">linear models</a>.  Syntax:
+<pre>LAGRANGE <em>n</em>
+</pre>
+   where <em>n</em> is the <a href="syntax.htm#lagrange_order">
+   lagrange_order</a>, which is between 1 and some built-in maximum
+   (currently 8).   This command can also convert between Lagrange
+   models of different orders.  
+  Note that <tt>lagrange 1</tt>
+gives the Lagrange model of order 1, which has a different internal
+representation than the linear model.  Likewise, <tt>lagrange 2</tt> does
+not give the quadratic model.
+
+<hr> 
+<a name="lanczos"></a><h2>LANCZOS</h2>
+<a href="#command language">Main prompt command</a>.
+For finding eigenvalues of the energy 
+<a href="eigentut.htm">Hessian</a> near a given value.
+Syntax:
+<pre>
+   LANCZOS <em><a href="syntax.htm#expr">expr</a></em>
+
+   LANCZOS (<em>expr</em>,<em>expr</em>)
+</pre>
+ Does a little Lanczos algorithm and reports
+ the nearest approximate eigenvalues to the given probe value.  
+ In the first form, <em>expr</em> is the probe value, and 15
+ eigenvalues are found.  In the second form, the first
+  argument is the probe value, the second is the number of
+  eigenvalues desired.  The output begins with the number
+  of eigenvalues less than, equal to, and greater than the
+  probe value.  Then come the eigenvalues in distance order
+  from the probe.  Not real polished yet.  Beware that
+  multiplicities reported can be inaccurate.  The eigenvalue
+  nearest the probe value is usually very accurate, but others
+  can be misleading due to incomplete convergence.  Since the
+  algorithm starts with a random vector, running it twice can
+  give an idea of its accuracy.
+ 
+<hr>
+<a name="linear"></a><h2>LINEAR</h2>
+ 
+<a href="#command language">Main prompt command</a>.
+   Changes to <a href="model.htm#linear model">linear model</a> from 
+   <a href="model.htm#quadratic model">quadratic</a> or 
+   <a href="model.htm#Lagrange model">Lagrange models</a>.
+
+<hr>
+<a name="list"></a><h2>LIST</h2>
+<a href="#command language">Main prompt command</a>.
+   List elements on the screen in the same format as in the datafile,
+   or lists individual
+   constraint, boundary, quantity, or method instance definitions.
+   Syntax:
+   <pre>
+   LIST  <em><a href="#generators">generator</a></em>
+   LIST <em>constraintname</em>
+   LIST CONSTRAINT <em>constraintnumber</em>
+   LIST <em>boundaryname</em>
+   LIST BOUNDARY <em>boundarynumber</em>
+   LIST <em>quantityname</em>
+   LIST <em>instancename</em>
+</pre>   
+On unix systems, piping to <tt>more</tt> can be used for long displays. Examples:
+<pre>
+   list edges where id &lt;= 12  
+   list vertices | "more"
+   list vertices where x &lt; 1 and y &gt; 2 and z &gt;= 3  | "tee vfile"
+   list facet[3]
+   list facet[3].edges where on_constraint 1
+   list facet[3].edge[2].vertex[1]
+   list constraint 1
+</pre>
+See also
+<a href="#list attributes">LIST ATTRIBUTES</a>,
+<a href="#list bottominfo">LIST BOTTOMINFO</a>,
+<a href="#list procedures">LIST PROCEDURES</a>, and
+<a href="#list topinfo">LIST TOPINFO</a>.
+
+<hr>
+<a name="list attributes"></a><h2>LIST ATTRIBUTES</h2>
+
+Prints a list of the "extra attributes" of each type of element.
+Besides user-defined extra attributes, this list also contains
+the predefined attributes that make use of the extra attribute
+mechanism (being of variable size),
+such as coordinates, parameters, forces, and velocities.
+It does not list permanent, fixed-size attributes such as color
+or fixedness, or possible attributes that are not used at all.
+
+<hr>
+<a name="bottominfo"></a>
+<a name="list bottominfo"></a><h2>LIST BOTTOMINFO</h2>
+
+<a href="#command language">Main prompt command</a>.
+  Prints what would  be dumped in the 
+ "<a href="datafile.htm#read section"><tt>read</tt></a>" section at the
+  end of a dumpfile:  command definitions and various toggle states.
+
+<hr>
+<a name="procedures"></a>
+<a name="procedure"></a>
+<a name="list procedures"></a><h2>LIST PROCEDURES</h2>
+
+<a href="#command language">Main prompt command</a>.
+Prints names of all current user-defined commands.
+
+<hr>
+<a name="topinfo"></a>
+<a name="list topinfo"></a><h2>LIST TOPINFO</h2>
+
+<a href="#command language">Main prompt command</a>.
+  Prints the <a href="datafile.htm#datafile header">first section</a>
+ of the datafile on the screen. This is 
+  everything before the vertices section.
+<hr>
+<a name="load"></a><h2>LOAD</h2>
+<a href="#command language">Main prompt command</a>.
+For loading a new surface. Syntax:
+<pre>
+LOAD <em>filename</em>
+</pre> 
+ Terminates the current surface and loads a new datafile.  The filename is
+ the datafile name, and can be either a quoted string or a string variable.
+ This completely re-initializes everything, including the command 
+ interpreter.  In particular, the currently executing command ends.
+ Useful only as the last command in a script.  For loading a new surface
+ and continuing with the current command, see <a href="#permload">permload</a>.
+  Wildcard matching is in effect
+on some systems (Windows, linux, maybe others), but be very careful when
+using wildcards since there can be unexpected matches.
+
+<hr>
+<a name="logfile"></a><h2>LOGFILE</h2>
+<a href="#command language">Main prompt command</a>.
+Syntax:
+<pre>
+LOGFILE <i>stringexpr</i>
+LOGFILE OFF
+</pre>
+Starts recording all input and output to the file specified by
+<i> stringexpr</i>, which must be a quoted string or a string variable or
+expression.  Appends to an existing file.  To end logging, use
+<tt>logfile off</tt>.  To record just input keystrokes, use
+<a href="#keylogfile">keylogfile</a>.
+
+<hr>
+<a name="keylogfile"></a><h2>KEYLOGFILE</h2>
+<a href="#command language">Main prompt command</a>.
+Syntax:
+<pre>
+KEYLOGFILE <i>stringexpr</i>
+KEYLOGFILE OFF
+</pre>
+Starts recording all input keystrokes to the file specified by
+<i> stringexpr</i>, which must be a quoted string or a string variable or
+expression.  Appends to an existing file.  To end logging, use
+<tt>keylogfile off</tt>.  To record both input and output, use
+<a href="#logfile">logfile</a>.
+
+<hr>
+<a name="kmetis"></a>
+<a name="metis"></a><h2>METIS, KMETIS</h2>
+<a href="#command language">Main prompt command</a>.
+Partitions the set of facets (edges in string model) into n parts using the 
+<a href="http://www.cs.umn.edu/~karypis/metis/metis/index.html">METIS</a>
+library of Karypis and Kumar, if this library has been compiled into
+the Evolver.  
+Meant for experiments in partitioning the surface for
+multiprocessors. The partition number of facet is left in the
+facet extra attribute
+fpart (edge epart for string model), which will be created if it 
+does not already exist. 
+METIS uses the PMETIS algorithm,
+KMETIS uses the KMETIS algorithm. Syntax:
+<pre>
+  <tt>METIS</tt> <i>n</i>
+  <tt>KMETIS</tt> <i>n</i>
+</pre>
+Example:
+<pre>  metis 20;
+  set facet color (fpart imod 15) + 1;
+</pre>
+For partitioning bodies, see <a href="#body_metis">body_metis</a>.
+<hr>
+<a name="longj"></a><h2>LONGJ</h2>
+<a href="#command language">Main prompt command</a>.
+For perturbing the surface. This does a "long jiggle", which
+provides long wavelength 
+                    perturbations that can test a surface for stability.
+                    The parameters are a wavevector, a phase, and a 
+		    vector amplitude.  The user will be prompted for
+		    values.  Numbers for vectors should be entered
+		    separated by blanks, not commas.  An empty reply
+		    will accept the defaults.  A reply of <tt>r</tt> will
+		    generate random values.  Any other will exit the
+		    command without doing a jiggle.  In the random cases,
+                    a random amplitude $\vec A$ and a random wavelength
+                    $\vec L$ are chosen from a sphere whose radius is
+                    the size of the object. The wavelength is inverted
+                    to a wavevector $\vec w$.  A random phase $\psi$
+                    is picked.  Then each vertex $\vec v$ is moved by
+                    $\vec A\sin(\vec v \cdot \vec w + \psi)$.  This command
+                    is archaic. More control
+		    over perturbations may be had with the 
+		    "<tt><a href="#set">set</a> vertex x ...</tt>" type of command.
+
+
+<hr>
+<a name="matrix_inverse"></a><h2>MATRIX_INVERSE</h2>
+<a href="#command language">Main prompt command</a>. For computing
+the inverse of a square matrix.  Currently applies only to global
+matrices, not element attribute matrices.
+ Syntax:
+<pre>
+  MATRIX_INVERSE(<em>matrix1</em>, <em>matrix2</em>)
+</pre>
+Here <em>matrix1</em> is the name of the original matrix, and <em>matrix2</em>
+is the name of the inverse matrix.  They may be the same matrix to get an
+in-place inverse.
+Examples:
+<pre>  define mata real[5][5]
+  define matb real[5][5]
+  ...  // fill in values of mata
+  matrix_inverse(mata,matb)
+  matrix_inverse(mata,mata)  
+</pre>
+
+
+<hr>
+<a name="matrix_multiply"></a><h2>MATRIX_MULTIPLY</h2>
+<a href="#command language">Main prompt command</a>. For computing
+the product of matrices.  Currently applies only to global
+matrices, not element attribute matrices.
+ Syntax:
+<pre>
+  MATRIX_MULTIPLY(<em>matrix1</em>, <em>matrix2</em>, <em>matrix3</em>)
+</pre>
+Here <em>matrix1</em> and <em>matrix2</em> are the names of the multiplicands,
+ and <em>matrix3</em>
+is the name of the product matrix.  The product matrix may be the same as
+one (or both) of the multiplicands.  The matrices can be one-dimensional
+or two-dimensional, so you can do vector-matrix or
+matrix-vector multiplication (but you can't do vector times vector).
+Examples:
+<pre>  define mata real[5][5]
+  define matb real[5][5]
+  define matc real[5][5]
+  ...  // fill in values of mata and matb
+  matrix_multiply(mata,matb,matc)
+  matrix_multiply(mata,mata,mata)  
+</pre>
+
+<hr>
+<a name="move"></a><h2>MOVE</h2>
+<a href="#command language">Main prompt command</a>.
+For moving along the current direction of motion. Syntax:
+<pre>
+  MOVE <em><a href="syntax.htm#expr">expr</a></em>
+</pre> 
+ Moves the surface along the previous direction of motion by the
+ stepsize given by <em>expr</em>.  The previous direction can be
+ either from a gradient step 
+ (<a href="single.htm#g">g</a> command) or a hessian step 
+ (<a href="#hessian command">hessian</a>, <a href="#saddle">saddle</a>,  
+ <a href="#hessian_seek">hessian_seek</a>,
+  <a href="#hessian_menu">hessian_menu</a> option 4, etc.). 
+ The stepsize does not affect the current
+ scale factor.  A negative step is not a perfect undo, since
+ it cannot undo projections to constraints.  "Move" sometimes
+ does not work well with optimizing parameters and hessian together.
+
+<hr>
+<a name="new_vertex"></a><h2>NEW_VERTEX</h2>
+<a href="#command language">Main prompt command</a>. For creating
+a new vertex.  The syntax is that of a function instead of a verb,
+since it returns the id number of the new vertex.  The arguments
+are the coordinates of the vertex.  The new vertex is not connected
+to anything else; use the <a href="#new_edge">new_edge</a> command
+to connect it. Syntax:
+<pre>
+  newid := NEW_VERTEX(<em><a href="syntax.htm#expr">expr</a></em>, <em><a href="syntax.htm#expr">expr</a></em>,...)
+</pre>
+Examples:
+<pre>  newid1 := new_vertex(0,0,1)
+  newid2 := new_vertex(pi/2,0,max(vertex,x))
+</pre>
+
+<hr>
+<a name="new_edge"></a><h2>NEW_EDGE</h2>
+<a href="#command language">Main prompt command</a>. For creating
+a new edge.  The syntax is that of a function instead of a verb,
+since it returns the id number of the new edge.  The arguments
+are the id's of the tail and head vertices. Syntax:
+<pre>
+  newid := NEW_EDGE(<em><a href="syntax.htm#expr">expr</a></em>, <em><a href="syntax.htm#expr">expr</a></em>)
+</pre>
+The new edge has the same default properties as if it had been created
+in the datafile with no attributes, so you will need to explicitly add
+any attributes you want.
+Example to create a set of coordinate axes in 3D:
+<pre>  newv1 := new_vertex(0,0,0); fix vertex[newv1]; 
+  newv2 := new_vertex(1,0,0); fix vertex[newv2];
+  newv3 := new_vertex(0,1,0); fix vertex[newv3];
+  newv4 := new_vertex(0,0,1); fix vertex[newv4];
+  newe1 := new_edge(newv1,newv2); fix edge[newe1]; 
+  newe2 := new_edge(newv1,newv3); fix edge[newe2];
+  newe3 := new_edge(newv1,newv4); fix edge[newe3];
+  set edge[newe1] no_refine; set edge[newe1] bare;
+  set edge[newe2] no_refine; set edge[newe2] bare;
+  set edge[newe3] no_refine; set edge[newe3] bare;
+</pre>
+
+<hr>
+<a name="new_facet"></a><h2>NEW_FACET</h2>
+<a href="#command language">Main prompt command</a>. For creating
+a new facet.  The syntax is that of a function instead of a verb,
+since it returns the id number of the new facet.  The arguments
+are the oriented id's of the edges around the boundary of the
+facet, in the same manner that a face is defined in the datafile.
+The number of edges is arbitrary, and they need not form a closed
+loop in the <a href="model.htm#string model">string model</a>.
+In the <a href="model.htm#soapfilm model">soapfilm model</a>, 
+if more than three edges are given, the new
+face will be triangulated by insertion of a central vertex. In that
+case, the returned value will be the <a href="elements.htm#original">
+original</a> attribute of the new facets. In
+the <a href="model.htm#simplex model">simplex model</a>, 
+the arguments are the id's of the facet vertices.
+Syntax:
+<pre>
+  newid := NEW_FACET(<em><a href="syntax.htm#expr">expr</a></em>, <em><a href="syntax.htm#expr">expr</a></em>,...)
+</pre>
+The new facet has the same default properties as if it had been created
+in the datafile with no attributes, so you will need to explicitly add
+any attributes you want.
+Example:
+<pre>  newf := new_facet(1,2,-3,-4); fix facet where original == newf;
+</pre>
+<hr>
+<a name="new_body"></a><h2>NEW_BODY</h2>
+<a href="#command language">Main prompt command</a>. For creating
+a new body.  The syntax is that of a function instead of a verb,
+since it returns the id number of the new body.  There are no arguments.
+ Syntax:
+<pre>
+  newid := NEW_BODY
+</pre>
+The body is created with no facets. Use the <a href="elements.htm#frontbody">
+set facet frontbody</a> and <a href="elements.htm#backbody">
+set facet backbody</a> commands to install the body's facets.
+The new body has the same default properties as if it had been created
+in the datafile with no attributes, so you will need to explicitly add
+any attributes you want, such as density or target volume.
+Example:
+<pre>  newb := new_body
+  set facet frontbody newb where color == red
+</pre>
+<hr>
+<a name="notch"></a><h2>NOTCH</h2>
+<a href="#command language">Main prompt command</a>.
+For refining a surface in regions of high curvature. Syntax:
+<pre>
+ NOTCH <em><a href="syntax.htm#expr">expr</a></em>
+</pre>
+  Notches all edges with dihedral angle greater than
+  given value.  Same as '<tt><a href="single.htm#n">n</a></tt>' command, or 
+<pre>   foreach edge ee where ee.dihedral &gt; <em>expr</em> do refine ee.facet
+</pre>  Notching is done
+  by adding a vertex in the middle of adjacent facets.  Should be
+  followed by <a href="single.htm#u">equiangulation</a>.
+
+<hr>
+<a name="ometis"></a><h2>OMETIS</h2>
+<a href="#command language">Main prompt command</a>.
+Computes an ordering for Hessian factoring using the 
+<a href="http://www.cs.umn.edu/~karypis/metis/metis/index.html">METIS</a>
+library of Karypis and Kumar, if this library has been compiled into
+the Evolver (not part of the public distribution yet). 
+Prints ordering tree.  To actually use METIS ordering
+during factoring, use the toggle <a href="toggle.htm#metis_factor">metis_factor</a>.
+Note: ometis no longer works for Metis version 3 or later, since Metis
+does not return the tree any more.  But metis_factor still works.
+Syntax:
+<pre>
+  <tt>OMETIS</tt> <i>n</i>  // n is smallest partition size
+  <tt>OMETIS</tt>           // defaults to n = 100
+</pre>
+
+<hr>
+<a name="ooglfile"></a><h2>OOGLFILE</h2>
+<a href="#command language">Main prompt command</a>.
+Writes a file containing OOGL-formatted graphics data for the surface as a
+POLY or CPOLY quad file.  This is a non-interactive version of the 
+<a href="single.htm#P">P 2</a> command.  Syntax:
+<pre> <tt>ooglfile</tt> <i>stringexpr</i>
+</pre>
+The string gets ".quad" appended to form the filename.
+This command does not ask any of the other questions the <tt>P 2</tt> command
+asks; it uses the default values, or whatever the last responses were to
+the previous use of the interactive <tt>P 2</tt> command. Good for use in
+scripts.  Example:
+<pre>   ooglfilename := sprintf "frame%d",framecounter;
+   ooglfile ooglfilename;
+   framecounter += 1;
+</pre>
+
+
+<hr>
+<a name="optimizing"></a>
+<a name="optimise"></a>
+<a name="optimize"></a><h2>OPTIMIZE</h2>
+<a href="#command language">Main prompt command</a>.
+Set gradient descent iteration to
+ <a href="iterate.htm#optimizing scale">optimizing mode</a>,
+with an upper bound on the <a href="iterate.htm#scale factor">scale factor</a>.
+"Optimise" is a synonym.
+  Syntax:
+<pre>  OPTIMIZE <i>expr</i>
+</pre>
+
+<hr>
+<a name="pause"></a><h2>PAUSE</h2>
+<a href="#command language">Main prompt command</a>.
+Pauses execution until the user hits RETURN.  Useful in scripts to
+give the user a chance to look at some output before proceeding.
+
+<hr>
+<a name="permload"></a><h2>PERMLOAD</h2>
+<a href="#command language">Main prompt command</a>.
+Loads a new datafile and continues with the current command after the
+<tt>read</tt> section of the datafile finishes.  The filename is
+the datafile name, and can be either a quoted string or a string variable.
+Since the automatic re-initialization makes Evolver forget all non-permanent
+variables, care should be taken that the current command only uses
+permanently assigned variables (assigned with <tt>::=</tt> ).  Useful for
+writing scripts that run a sequence of evolutions based on varying
+parameter values.  Using <tt>permload</tt> is a little tricky, since
+you don't want to be redefining your permanent commands and variables
+every time you reload the datafile, and your permanent command cannot
+refer directly to variables parameterizing the surface.  One way to do it
+is to read in commands from separate files.  For example, the catenoid
+of <tt>cat.fe</tt> has height controlled by the variable <tt>zmax</tt>.
+ You could have
+a file <tt>permcat.cmd</tt> containing the overall series script command
+<pre>
+  run_series ::= {
+    for ( height ::= 0.5 ; height &lt; 0.9 ; height ::= height + .05 )
+    { permload "cat"; read "permcat.gogo"; }
+  }
+</pre>
+and a file <tt>permcat.gogo</tt> containing the evolution commands
+<pre>
+  u; zmax := height; recalc; r; g 10; r; g 10; hessian;
+  printf "height: %f  area: %18.15f\n",height,total_area &gt;&gt; "permcat.out";
+</pre>
+Then at the Evolver command prompt,
+<pre>
+  Enter command: read "permcat.cmd"
+  Enter command: run_series
+</pre>
+For loading a new surface and not continuing with the current command,
+see <a href="#load">load</a>.
+  Wildcard matching is in effect
+on some systems (Windows, linux, maybe others), but be very careful when
+using wildcards since there can be unexpected matches.
+
+
+
+
+<hr>
+<a name="pop"></a><h2>POP</h2>
+<a href="#command language">Main prompt command</a>.
+Pops an individual edge or vertex or set of edges or vertices, 
+giving finer control than
+the universal popping of the 
+<a href="single.htm#O">O</a> and <a href="single.htm#o">o</a>
+ commands.  The specified vertices or edges are
+tested for not being minimal in the soap film sense. For vertices, this
+means having more than four triple edges adjacent; higher valence
+edges are automatically popped.  For edges, this means
+having more than three adjacent facets when not on constraints or
+otherwise restricted.  It tries to act properly on constrained edges
+also, but beware that my idea of proper behavior may be different from
+yours.  Normally, popping puts in new edges and facets to keep originally
+separated regions separate, but that behavior can be changed with the
+<a href="toggle.htm#pop_disjoin">pop_disjoin</a> toggle.  The style
+of popping a cone over a triangular prism can be controlled with
+the <a href="toggle.htm#pop_to_edge">pop_to_edge</a>
+and <a href="toggle.htm#pop_to_face">pop_to_face</a> commands.
+The <a href="toggle.htm#pop_enjoin">pop_enjoin</a> toggle forces
+joining cones to be popped by widening the vertex into a neck.  
+ Examples:
+<pre>
+   pop edge[2]
+   pop edge where valence==5
+</pre>
+
+<hr>
+<a name="pop_edge_to_tri"></a><h2>POP_EDGE_TO_TRI</h2>
+<a href="#command language">Main prompt command</a>.
+ This command does a particular topological transformation common in
+three-dimensional foam evolution.  An edge with tetrahedral point endpoints 
+is transformed to a single facet.  A preliminary geometry check is made to
+be sure the edge satisfies the necessary conditions, one of which is that 
+the triple edges radiating from the endpoints have no common farther endpoints.
+If run in <a href="toggle.htm#verbose">verbose</a> mode, messages are printed
+when a specified edge fails to be transformed. This command
+ is the inverse of the
+<a href="#pop_tri_to_edge">pop_tri_to_edge</a> command.
+  Works in linear and quadratic mode. 
+Examples:
+<pre>
+   pop_edge_to_tri edge[2]
+   pop_edge_to_tri edge where valence==3 and length &lt; 0.001
+</pre>
+
+
+<hr>
+<a name="pop_quad_to_quad"></a><h2>POP_QUAD_TO_QUAD</h2>
+<a href="#command language">Main prompt command</a>.
+ This command does a particular topological transformation common in
+three-dimensional foam evolution. A quadrilateral bounded by four
+triple edges is transformed to a quadrilateral oriented in the opposite
+direction.  The shortest pair of opposite quadrilateral edges are shrunk
+to zero length, converting the quadrilateral to an edge, then the edge
+is expanded in the opposite direction to form the new quadrilateral. 
+The new quadrilateral inherits attributes such as color from the first
+quadrilateral, although all the facet numbers are different.
+A preliminary geometry check is made to
+be sure the edge satisfies the necessary conditions, one of which is that 
+the triple edges radiating from the quadrilateral corners
+ have no common farther endpoints.
+If run in <a href="toggle.htm#verbose">verbose</a> mode, messages are printed
+when a specified quadriteral fails to be transformed. 
+The specified facet can be any one of the facets of the quadrilateral
+with a triple line on its border.  It doesn't hurt to apply the command to
+all the facets of the quadrilateral, or to facets of multilple quadrilaterals.
+Quadrilaterals may be arbitrarily subdivided into facets; in particular,
+they may have some purely interior facets.
+  Works in linear and quadratic mode.
+ Examples:
+<pre>
+   pop_quad_to_quad facet[2]
+   pop_quad_to_quad facet where color==red
+</pre>
+
+
+
+<hr>
+<a name="pop_tri_to_edge"></a><h2>POP_TRI_TO_EDGE</h2>
+<a href="#command language">Main prompt command</a>.
+ This command does a particular topological transformation common in
+three-dimensional foam evolution.  A facet with three tetrahedral point
+vertices
+is transformed to a single facet.  A preliminary geometry check is made to
+be sure the edge satisfies the necessary conditions, one of which is that 
+the triple edges radiating from the vertices have no common farther endpoints.
+If run in <a href="toggle.htm#verbose">verbose</a> mode, messages are printed
+when a specified edge fails to be transformed. This command
+ is the inverse of the
+<a href="#pop_edge_to_tri">pop_edge_to_tri</a> command.
+  Works in linear and quadratic mode. 
+ Examples:
+<pre>
+   pop_tri_to_edge facet[2]
+   pop_tri_to_edge facet where color == red
+</pre>
+
+
+
+<hr>
+<a name="postscript command"></a><h2>POSTSCRIPT</h2>
+<a href="#command language">Main prompt command</a>.
+Creates a PostScript file of the current surface in a file. Syntax:
+<pre>  POSTSCRIPT <i>stringexpr</i> </pre>
+The string gives the name of the file; a <tt>.ps</tt> extension will
+be appended if it is missing.  It is the same as the 
+<a href="graphics.htm#postscript">P</a> option 3 command, except that
+there are no interactive responses needed.  Output options are
+controlled by the 
+<a href="toggle.htm#ps_colorflag">ps_colorflag</a>,
+<a href="toggle.htm#ps_gridflag">ps_gridflag</a>,
+<a href="toggle.htm#ps_crossingflag">ps_crossingflag</a>, and
+<a href="toggle.htm#ps_labelflag">ps_labelflag</a> toggles.
+<a href="toggle.htm#full_bounding_box">full_bounding_box</a> toggles.
+
+<hr>
+<a name="warning_messages"></a>
+<a name="arrayslice"></a>
+<a name="print"></a><h2>PRINT</h2>
+<a href="#command language">Main prompt command</a>.
+For printing expression values, strings, commands, arrays, or accumulated
+warning messages. Syntax:
+<pre>
+PRINT <em><a href="syntax.htm#expr">expr</a></em>
+PRINT <em><a href="syntax.htm#stringexpr">stringexpr</a></em>
+PRINT <em><a href="commands.htm#command definition">commandname</a></em>
+PRINT <em>arrayslice</em>
+PRINT WARNING_MESSAGES
+</pre>
+  The arrayslice option takes an array name or a partially indexed array name.
+  If more than one element results, the slice is printed in nested curly 
+  braces.  The arrayslice can also be that of an array attribute of an
+  element.  The warning_messages option is handy for reviewing warning
+  messages that occur early in the loading of a datafile but scroll off the
+  screen too rapidly to see.
+  <tt>PRINT</tt> <em>expr</em> can also be used
+  inside an expression, where it prints the expression and evaluates to 
+  the value of its expression.  Examples:
+<pre>
+  print datafilename;
+  print max(edge,length);
+  print max(vertex, print (x^2+y^2+z^2) );
+  gg := {list vertex where id &lt; 10; g 5};
+  print gg;
+  define parts real[3][2][3];
+  print parts;
+  print parts[3][2];
+</pre>
+
+<hr>
+<a name="printf"></a><h2>PRINTF</h2>
+<a href="#command language">Main prompt command</a>.
+For printing formatted output.  Syntax:
+<pre>PRINTF <em>string,expr,expr,...</em>
+</pre>
+  Prints to standard output using the standard C sprintf function.  
+  All string, integer, and floating point formats are valid.
+  Integer formats force floating point arguments to be converted to integer.
+  The format string can be a string variable or a quoted string.
+  There is a limit of 1000 characters on the format string, otherwise
+  there is no limit on the number of arguments.
+ Example:
+<pre>
+  printf "This is %s with total energy %f\n",datafilename,total_energy
+</pre>
+
+<hr>
+<a name="quadratic"></a><h2>QUADRATIC </h2>
+
+<a href="#command language">Main prompt command</a>.
+   Changes to <a href="model.htm#quadratic model">quadratic model</a>
+    from <a href="model.htm#linear model">linear</a>
+     or <a href="model.htm#Lagrange model">Lagrange models</a>.
+
+<hr>
+<a name="bye"></a>
+<a name="exit"></a>
+<a name="quit"></a><h2>QUIT, BYE, EXIT</h2>
+
+<a href="#command language">Main prompt command</a>.
+ Exits Evolver or starts new datafile. Same as 
+ `<tt><a href="single.htm#q">q</a></tt>' command.  
+
+<hr>
+<a name="rawestv"></a><h2>RAWESTV</h2>
+
+<a href="#command language">Main prompt command</a>.
+Does <a href="single.htm#V">vertex averaging</a>
+for all vertices without regard for conserving volume or
+whether averaged vertices have like constraints.   But doesn't
+move vertices on boundaries.
+To do a selected group of vertices, use
+<a href="#rawest_vertex_average">rawest_vertex_average</a>.
+
+<hr>
+<a name="rawest_vertex_average"></a><h2>RAWEST_VERTEX_AVERAGE</h2>
+
+<a href="#command language">Main prompt command</a>.
+Does <a href="single.htm#V">vertex averaging</a>
+on selected vertices
+ without conserving volume on each side of surface,
+ or attention to being on like constraints.
+Doesn't move vertices on boundaries.
+Using the <a href="toggle.htm#verbose">verbose</a> toggle
+will print messages.
+Syntax:
+<pre>
+RAWEST_VERTEX_AVERAGE <em><a href="#generators">generator</a></em>
+</pre>
+Example:
+<pre>
+rawest_vertex_average vertex[3]
+</pre>
+
+<hr>
+<a name="rawv"></a><h2>RAWV</h2>
+
+<a href="#command language">Main prompt command</a>.
+Does <a href="single.htm#V">vertex averaging</a>
+for all vertices without conserving volume on each side of surface.
+Will only average vertices with those of like type of constraints.
+Doesn't move vertices on boundaries.
+To do a selected group of vertices, use
+<a href="#raw_vertex_average">raw_vertex_average</a>.
+
+<hr>
+<a name="raw_vertex_average"></a><h2>RAW_VERTEX_AVERAGE</h2>
+
+<a href="#command language">Main prompt command</a>.
+Does <a href="single.htm#V">vertex averaging</a>
+on selected vertices
+ without conserving volume on each side of surface.
+Will only average vertices with those of like type of constraints.
+Doesn't move vertices on boundaries.
+Using the <a href="toggle.htm#verbose">verbose</a> toggle
+will print messages.
+Syntax:
+<pre>
+RAW_VERTEX_AVERAGE <em><a href="#generators">generator</a></em>
+</pre>
+Example:
+<pre>
+raw_vertex_average vertex where valence == 6
+</pre>
+
+<hr>
+<a name="read"></a><h2>READ</h2>
+
+<a href="#command language">Main prompt command</a>.
+For reading commands from a file. Syntax:
+<pre>
+READ <em>filename</em>
+</pre>
+   The filename can be either a quoted string or a string variable.
+   The effect is as if the file were typed in at the keyboard.
+   Hence main commands, responses to commands, and graphics mode
+   commands can be included.  Read commands may be nested.
+   On the occurence of an error, input reverts to the original
+   standard input.  Example:
+<pre>   read "zebra.cmd"
+</pre>
+
+<hr>
+<a name="rebody"></a><h2>REBODY</h2>
+
+<a href="#command language">Main prompt command</a>.
+Recalculates connected bodies.  Useful after a body has been disconnected
+by a neck pinching off.  Facets of an old body are divided into 
+edge-connected sets, and each set defines a new body (one of which gets
+the old body <a href="elements.htm#id">id</a>).  
+The new bodies inherit the attributes of the
+old body.  If the original body volume was fixed, 
+then the new bodies' target volumes become the
+new actual volumes.  If the original body had a 
+<a href="elements.htm#body volconst">volconst</a>, the new bodies will
+inherit the same value.  This will likely lead to incorrect values,
+so you will have to adjust the volconsts by hand.
+  In commands, you may specify the new bodies 
+descended from an original body by using the 
+'<a href="elements.htm#original">original</a>' atttribute.
+
+<hr>
+<a name="recalc"></a><h2>RECALC</h2>
+
+<a href="#command language">Main prompt command</a>.
+   Recalculates and redisplays everything.  Useful after changing some variable
+   or something and recalculation is not automatically done.  Evolver tries
+   to automatically recalculate when some significant change is made,
+   but doesn't always know.  Also see <a href="toggle.htm#autorecalc">
+   autorecalc</a>.
+
+<hr>
+<a name="refine"></a><h2>REFINE</h2>
+
+<a href="#command language">Main prompt command</a>.
+For subdividing  sets of edges or facets. Syntax:
+<pre>
+REFINE <em><a href="#generators">generator</a></em>
+</pre>
+Subdivides the generated edges or facets.
+   Subdivides edges by putting a vertex in the middle
+   of each edge, and splitting neighboring facets in two in the 
+   <a href="model.htm#soapfilm model">soapfilm model</a>. It is the
+   same action as the long edge subdivide command (command 
+   <a href="single.htm#l">l</a>).
+   Facets will be subdivided by putting a vertex in the center and
+   creating edges out to the old vertices.  It is strongly suggested
+   that you follow this with 
+   <a href="single.htm#u">equiangulation</a> to nicen up the triangulation.
+   Edge refinement is better than facet refinement as facet refinement
+   can leave long edges even after equiangulation.  This command does not respect the <a href="elements.htm#no_refine">
+no_refine</a> attribute.
+   Example:
+<pre>
+       refine edges where not fixed and length &gt; .1 
+</pre>
+
+<hr>
+<a name="reset_counts"></a><h2>RESET_COUNTS</h2>
+<a href="#command language">Main prompt command</a>.
+Resets to 0 various internal counters.
+The counters are: 
+<ul>
+<li>equi_count,
+<li>edge_delete_count,
+<li>facet_delete_count,
+<li>edge_refine_count,
+<li>facet_refine_count,
+<li>notch_count,
+<li>vertex_dissolve_count,
+<li>edge_dissolve_count,
+<li>facet_dissolve_count,
+<li>body_dissolve_count,
+<li>vertex_pop_count,
+<li>edge_pop_count,
+<li>facet_pop_count,
+<li>pop_tri_to_edge_count,
+<li>pop_edge_to_tri_count,
+<li>pop_quad_to_quad_count,
+<li>where_count,
+<li>edgeswap_count,
+<li>fix_count,
+<li>unfix_count,
+<li>t1_edgeswap_count, and
+<li>notch_count.
+</ul>
+Normally, a count is set to 0 at the start of a command that
+potentially affects it, 
+ accumulated during the execution of the command,
+and printed at the end of the command.  To be precise, each counter has
+a "reported" bit associated with it, and if the "reported" bit is set when
+the appropriate command (such as 'u') is encountered, the counter will
+be reset to 0 and the "reported" bit cleared. The "reported" bit is set by
+either <a href="#flush_counts">flush_counts</a> or the end of a command.  
+The idea is to have the counts from previous commands available to 
+subsequent commands as long as possible, but still have the counter
+reflect recent activity.
+
+
+<hr>
+<a name="reverse_orientation"></a><h2>REVERSE_ORIENTATION</h2>
+
+<a href="#command language">Main prompt command</a>.
+For reversing the orientation of  sets of edges or facets. Syntax:
+<pre>
+REVERSE_ORIENTATION <em><a href="#generators">generator</a></em>
+</pre>
+Reverses the internal orientation of selected edges or facets,
+as if they had been entered in the datafile with the opposite
+orientation.  Useful, for example, when edges come in contact
+with a constraint and you want to get them all oriented in the
+same direction.  Relative orientations of constraint and quantity
+integrals change to compensate, so energy, volumes, etc. should
+be the same after the command, but it would be wise to check in
+your application.  Examples:
+<pre>
+   reverse_orientation edge[7]
+   reverse_orientation facets where backbody != 0
+</pre>
+
+
+
+<hr>
+<a name="ritz"></a><h2>RITZ</h2>
+
+<a href="#command language">Main prompt command</a>.
+For finding eigenvalues of the energy Hessian near a given value.
+Syntax:
+<pre>
+RITZ(<em>expr</em>,<em>expr</em>)
+</pre>
+Applies powers of inverse shifted Hessian to a random subspace
+to calculate eigenvalues near the shift value.  First argument
+is the shift.  Second argument is the dimension of the subspace.
+Prints out eigenvalues as they converge to machine accuracy.
+This may happen slowly, so you can interrupt it by hitting
+whatever your interrupt key is, such as CTRL-C, and the current
+values of the remaining eigenvalues will be printed out.  Good
+for examining multiplicities of eigenvalues.  It is legal to 
+shift to an exact eigenvalue, but not wise, as they will not
+be printed.  See the <a href="eigentut.htm">Hessian tutorial</a>
+for more.
+The first eigenvalue is subsequently available in the
+<a href="syntax.htm#last_eigenvalue">last_eigenvalue</a> internal
+variable.
+ The full list of eigenvalues produced is subsequently 
+available in the <tt>eigenvalues[]</tt> array.
+  Example: To get the lowest 5 eigenvalues of a Hessian
+you know is positive definite:
+<pre>
+   ritz(0,5)
+</pre>
+
+<hr>
+<a name="renumber_all"></a><h2>RENUMBER_ALL</h2>
+
+Reassigns element id numbers of all types of elements
+in accordance with order in storage, i.e.
+as printed with the LIST commands.  Besides renumbering after massive
+topology changes, this can be used with the <a href="#reorder_storage">
+reorder_storage</a>
+command to number elements as you desire.  Do NOT use this command
+inside an element generator loop!
+
+<hr>
+<a name="reorder_storage"></a><h2>REORDER_STORAGE</h2>
+
+Reorders the storage of element data structures, sorted by the
+extra attributes <tt>vertex_order_key</tt>, <tt>edge_order_key</tt>,
+<tt>facet_order_key</tt>,
+<tt>body_order_key</tt>, and <tt>facetedge_order_key</tt>. 
+ Originally written
+for testing dependence of execution speed on storage ordering, but
+could be useful for other purposes, particularly when 
+<a href="#renumber_all">renumber_all</a>
+is used afterwards.  Example:
+<pre>
+   define vertex attribute vertex_order_key real
+   define edge attribute edge_order_key real
+   define facet attribute facet_order_key real
+   define body attribute body_order_key real
+   define facetedge attribute facetedge_order_key real
+
+   reorder := {
+     set vertex vertex_order_key x+y+z;
+     set edge ee edge_order_key min(ee.vertex,vertex_order_key);
+     set facetedge fe facetedge_order_key fe.edge[1].edge_order_key;
+     set facet ff facet_order_key min(ff.vertex,vertex_order_key);
+     set body bb body_order_key min(bb.facet,facet_order_key);
+     reorder_storage;
+     }
+</pre>
+
+
+
+<hr>
+<a name="saddle"></a><h2>SADDLE</h2>
+
+<a href="#command language">Main prompt command</a>.
+Seek to minimum energy along the eigenvector of the lowest negative
+eigenvalue of the <a href="eigentut.htm">Hessian</a>. 
+If there is no negative eigenvalue,
+then the surface is unchanged. The alternate form 
+<pre>SADDLE <em>expr</em>
+</pre>
+will limit the step size to <em>expr</em>.  The motion vector is
+available afterwards through the <a href="#move">move</a> command.
+
+<hr>
+<a name="set"></a><h2>SET</h2>
+<a href="#command language">Main prompt command</a>.
+For  setting <a href="elements.htm#attributes">element attributes</a>
+ to values. Syntax:
+<pre>
+ SET <em>elementtype</em> [<em>name</em>] <em>attrib expr1 where expr2</em> 
+ 
+ SET <em>elementtype.attrib expr1 where expr2</em> 
+ 
+ SET <em>name</em> <em>attrib expr</em>
+ 
+ SET <em>name.attrib expr</em>
+
+ SET <em>quantityname attrib expr</em>
+
+ SET <em>instancename attrib expr</em>
+</pre>
+The first two forms set the value of the attribute <i>attrib</i> to the
+value <i>expr1</i> for all elements of the given type that satisfy
+<i>expr2</i>. 
+<i>elementtype</i> can be vertex, edge, facet, or body, or any
+<a href="#generators">element generator</a> without a <tt>where</tt>
+clause.  The optional <i>name</i> refers to the element under
+consideration, and can be used in <i>expr1</i> and <i>expr2</i> to
+refer to attributes of that element.  Even without <i>name</i>, 
+attributes of the element can be referred to if the references are
+not nested in 
+<a href="#generators">element generators</a> in <i>expr1</i> or <i>expr2</i>.
+The next two forms can be used inside an element <a href="#generators">
+generator</a> which defines <em>name</em>.
+When <em>name</em> is not used, a '.' can be used, for those who like
+that sort of thing.
+ SET can change
+   the following attributes: constraint, coordinates, density, orientation,
+    non-global named quantity or named method, user-defined extra attributes,
+    body target volume, body volconst, fixed, frontbody, backbody,
+    pressure, color, frontcolor, backcolor, boundary, and opacity
+    (for the appropriate type elements).  Fixed, named quantity, and named
+    method attributes are just toggled on; they do not need the first
+    <i>expr</i>.  Setting the pressure on a body automatically unfixes
+    its volume. For constraint, the <i>expr</i> is the constraint number.
+    If using set to put a vertex on a parametric boundary, set the 
+    vertex's boundary parameters p1, p2, etc. first.
+Examples:
+<pre>
+  set facets density 0.3 where original == 2
+  set vertices x 3*x where id &lt; 5  // multiplies x coordinate by 3
+  set body target 5 where id == 1   // sets body 1 target volume to 5
+  set vertices constraint 1 where id == 4
+  set facet color clear where original &lt; 5
+  foreach facet ff do set ff color red
+  define vertex attribute weight real; set vertex weight 3
+  set vertex quantity my_quantity
+  set vertex[1].facet color red
+</pre>
+Note the first form of syntax has the attribute and new value in the middle of 
+an element generator.  Syntactically inconsistent with other commands
+that use element generators, but more natural
+English.   Actually, the syntactically consistent <br>
+    <tt>set facet where id &lt; 5 color red</tt> <br> does
+work. <p>
+
+ The last two forms set the value of a named quantity or named method instance attribute.
+ For a named quantity, the settable attributes are target, modulus, volconst, and
+ tolerance. For a named method instance, only modulus.  There is no implicit
+ reference to the quantity in the expression, so say
+<pre>
+   set myquant target myquant.value 
+</pre>
+ rather than  <tt>set myquant target value</tt>.
+
+Also see <a href="#unset">unset</a>.
+<hr>
+<a name="shell"></a><h2>SHELL</h2>
+
+<a href="#command language">Main prompt command</a>.
+   Invokes a system subshell for the user on systems where this is 
+   possible.  No arguments.  See the <a href="#system">system</a>
+command for execution of an explicit shell command.
+
+<hr>
+<a name="show"></a><h2>SHOW</h2>
+<a href="#command language">Main prompt command</a>.
+Which edges and facets are actually shown in graphics displays
+can be controlled by defining boolean expressions that edges or
+facets must satisfy in order to be passed to the graphics display.
+There are two expressions internally: one for edges and one for facets.
+They may be set with the syntax
+<pre>
+   show edges where <em>expr</em>
+   
+   show facets where <em>expr</em>
+</pre>
+The default is to show all facets, and to show all special edges:
+<a href="elements.htm#fixed edge">fixed</a> edges, 
+<a href="elements.htm#edge constraints">constraint</a> edges, 
+<a href="elements.htm#edge boundary">boundary</a> edges, and edges without
+exactly two adjacent facets.  The defaults can be restored with
+"<tt>show facets</tt>" and "<tt>show edges</tt>".  Some graphics
+modules (like geomview) can show edges of facets on their own initiative.
+This is separate from the edge show criterion here;  to show the colors
+of edges, the edges must satisfy the criterion.  <tt>Show</tt> causes
+graphics to be redrawn. If a graphics display
+is not active, <tt>show</tt> will start <a href="graphics.htm#screen graphics">
+screen graphics</a>.  <a href="#show_expr"><tt>Show_expr</tt></a> is the same as
+<tt>show</tt> in setting the show expressions, except it does not start
+graphics.  <tt>Show</tt> alone will just start screen graphics.
+Examples:
+<pre> show facets where color == red
+ show edges where 1
+ show edges where color != black
+</pre>
+The string model will show facets (default is not to show them) as
+the facet show expression specifies, but the triangulation algorithm
+is fairly simple.
+<p>
+As an edge or facet attribute, "show" is a Boolean read-only
+attribute giving the current status of the edge or facet, for
+example, to report the number of edges being shown, do
+<pre>
+   print sum(edge,show)
+</pre>
+
+<hr>
+<a name="show_expr"></a><h2>SHOW_EXPR</h2>
+<a href="#command language">Main prompt command</a>.
+This does the same as <a href="#show"><tt>show</tt></a>, except it does
+not start or redraw graphics; it just sets a show expression.  Good for
+use in the <a href="datafile.htm#read section">read</a> section of the
+datafile for controlling which elements will be displayed without
+automatically starting a display.
+<hr>
+
+<a name="show_trans"></a><h2>SHOW_TRANS</h2>
+<a href="#command language">Main prompt command</a>.
+  Applies string of graphics commands to the image transformation
+   matrix without doing any graphic display.   The string must be in 
+   double quotes or be a string variable, and
+     is the same format as is accepted by the regular graphics command
+ prompt. Example:
+<pre>
+  show_trans "rrdd5z" 
+</pre>
+
+<hr>
+<a name="showq"></a><h2>SHOWQ</h2>
+<a href="#command language">Main prompt command</a>.
+Displays <a href="graphics.htm#screen graphics">screen graphics</a>,
+ but returns immediately to the main prompt and
+ does not go into graphics command mode.
+
+
+
+<hr>
+<a name="simplex_to_fe"></a><h2>SIMPLEX_TO_FE</h2>
+<a href="#command language">Main prompt command</a>.
+Converts a 
+<a href="model.htm#simplex model">simplex model</a>
+ surface to a <a href="model.htm#string model">string</a>
+ or <a href="model.htm#soapfilm model">soapfilm
+model</a> surface. Only works for dimension 1 or 2 surfaces,
+but works in any ambient dimension.
+
+
+
+
+
+
+<hr>
+<a name="sobolev_seek"></a>
+<a name="sobolev"></a><h2>SOBOLEV</h2>
+
+<a href="#command language">Main prompt command</a>.
+Uses a positive definite approximation to the area Hessian
+to do one Newton iteration, following a scheme due to
+Renka and Neuberger <a href="biblio.htm#ref[RN]">[RN]</a>. 
+Works only on area with fixed
+boundary; no volume constraints or anything else.  Seems to converge
+very slowly near minimum, so not a substitute for other iteration
+methods.  But if you have just a simple soap film far, far from
+the minimum, then this method can make a big first step.
+SOBOLEV_SEEK will do an energy-minimizing search in the
+direction. 
+
+<hr>
+<a name="sprintf"></a><h2>SPRINTF</h2>
+<a href="#command language">Main prompt command</a>.
+  Prints to a string  using the standard C sprintf function. May
+  be used whereever a <a href="syntax.htm#stringexpr"><em>stringexpr</em></a>
+ is called for in syntax.
+  Otherwise same as <a href="#printf">printf</a>.
+Syntax:
+<pre>SPRINTF <em>stringexpr,expr,expr,...</em>
+</pre>
+Example:
+<pre>
+   dumpname := SPRINTF "file%04g.dmp",counter
+</pre>
+
+
+
+<hr>
+<a name="subcommand"></a><h2>SUBCOMMAND</h2>
+<a href="#command language">Main prompt command</a>.
+Invokes a subsidiary command interpreter.  Useful
+if you want to pause in the middle of a script to
+give the user the chance to enter commands.
+A subcommand interpreter gives the prompt
+<tt>Subcommand:</tt> instead of <tt>Enter command:</tt>.
+Subcommands may be nested several deep, in which case
+the prompt will display the subcommand level.  To 
+exit a subcommand prompt, use <tt>q</tt>, <tt>quit</tt>,
+or <tt>exit</tt>.  The <a href="#abort"><tt>abort</tt></a>
+command will return to the prompt on the same
+subcommand level.
+
+
+
+<hr>
+<a name="system"></a><h2>SYSTEM</h2>
+<a href="#command language">Main prompt command</a>.
+For executing a program. Syntax:
+<pre>
+  SYSTEM <em>stringexpr</em>
+</pre>
+   Invokes a subshell to execute the given command, on systems
+   where this is possible. Command must be
+   a quoted string or a string variable.  
+   Will wait for command to finish before resuming.
+
+<hr>
+<a name="transform_depth"></a><h2>TRANSFORM_DEPTH</h2>
+<a href="#command language">Main prompt command</a>.
+Quick way of generating all possible view transforms from
+<a href="datafile.htm#view generators">view transform generators</a>,
+to a given depth <i>n</i>.  Syntax:
+<pre>
+  TRANSFORM_DEPTH n
+</pre>
+where n is the maximum number of generators to multiply together.
+This will toggle immediate showing of 
+<a href="toggle.htm#transforms">transforms</a>, if they are
+not already being shown.
+
+<hr>
+<a name="transform_expr"></a><h2>TRANSFORM_EXPR</h2>
+<a href="#command language">Main prompt command</a>.
+If <a href="datafile.htm#view generators">view transform generators</a>
+were included in the datafile, then a set of view transforms may be
+generated by an expression with syntax much like a regular expression.
+An expression generates a set of transform matrices, and are compounded
+by the following rules.  Here a lower-case letter stands for one of the
+generators, and an upper-case letter for an expression.
+<table>
+<tr><td>a</td><td>  Generates set {I,a}.</td></tr>
+<tr><td>!a</td><td>  Generates set {a}.</td></tr>
+<tr><td>AB</td><td>  Generates all ordered products of pairs from A and B.</td></tr>
+<tr><td>nA</td><td>  Generates all n-fold ordered products.</td></tr>
+<tr><td>A|B</td><td>  Generates union of sets A and B.</td></tr>
+<tr><td>(A)</td><td>  Grouping; generates same set as A.</td></tr>
+</table>
+The precedence order is that nA is higher than AB which is higher than A|B.
+The "!" character suppresses the identity matrix in the set of matrices
+generated so far.
+Note that the expression string must be enclosed in double quotes or be
+a string variable.  Examples:
+<pre>
+  transform_expr "3(a|b|c)"    //all products of 3 or fewer generators
+  transform_expr "abcd"  // generates 16 transforms
+  transform_expr "!a!a!a!a!"  // generates one transform
+</pre>
+All duplicate transforms are removed, so the growth of the sets does not
+get out of hand.  Note the identity transform is always included.  The 
+letter denoting a single generator may be upper or lower case.  The order
+of generators is the same as in the datafile.  In the 
+<a href="model.htm#torus model">torus model</a>,
+transforms along the three period vectors are always added to the end
+of the list of generators given in the datafile. If 26 generators are not
+enough for somebody, let me know.
+The current value of the expression may be accessed as a string
+variable, and the number of transformations generated can be
+accessed as <a href="syntax.htm#transform_count">transform_count</a>. 
+For example, 
+<pre>  print transform_expr
+  print transform_count
+</pre>
+
+<hr>
+<a name="t1_edgeswap"></a><h2>T1_EDGESWAP</h2>
+<a href="#command language">Main prompt command</a>.
+Does a T1 topological transition in the string model. 
+When applied to an edge joining two triple points, it reconnects edges
+so that opposite faces originally adjacent are no longer adjacent, but
+two originally non-adjacent faces become adjacent.  
+<pre>
+      \_/   =&gt;   \ /
+      / \         |
+                 / \
+</pre>
+It will silently
+skip edges it is applied to that don't fulfill the two triple endpoint
+criteria, or whose flipping is barred due to fixedness or constraint
+incompatibilities.  The number of edges flipped can be accessed through
+the <a href="syntax.htm#t1_edgeswap_count">t1_edgeswap_count</a> internal
+variable. Running with the <a href="toggle.htm#verbose">verbose</a>
+toggle on will print details of what it is doing.
+Syntax:
+<pre> T1_EDGESWAP <em>edge_generator</em>
+</pre>
+Examples:
+<pre>
+   t1_edgeswap edge[23]
+   t1_edgeswap edge where length &lt; 0.1
+</pre>
+
+<hr>
+<a name="unfix"></a><h2>UNFIX</h2>
+<a href="#command language">Main prompt command</a>.
+   Removes the FIXED attribute from a set of elements. Syntax:
+<pre> UNFIX <em>generator</em>
+</pre>
+ Example:
+<pre>  unfix vertices where on_constraint 2
+</pre>
+Can also convert a parameter from non-optimizing to
+<a href="datafile.htm#optimizing_parameter">optimizing</a>.
+Example:
+<pre>
+  unfix radius
+</pre>
+Can also convert a 
+<a href="quants.htm">named quantity</a> from fixed to info_only.
+
+<hr>
+<a name="unset"></a><h2>UNSET</h2>
+<a href="#command language">Main prompt command</a>.
+Removes an attribute from a set of elements. Syntax:
+<pre>
+UNSET <em>elements</em> [<em>name</em>] <em>attrib where clause</em>
+</pre>
+ Unsettable attributes 
+   are fixed (<a href="elements.htm#fixed vertex">vertices</a>,
+   <a href="elements.htm#fixed edge">edges</a>, or
+   <a href="elements.htm#fixed facet">facets</a>)
+   , body <a href="elements.htm#target volume">target volume</a>,
+   body <a href="elements.htm#body pressure">pressure</a>, body 
+   gravitational <a href="elements.htm#body density">density</a>,
+   non-global <a href="quants.htm">named quantities</a>,
+   non-global <a href="quants.htm">named methods</a>,
+   level-set <a href="constrnt.htm">constraints</a>, 
+   <a href="constrnt.htm#parametric boundaries">parametric boundary</a>.
+   <a href="elements.htm#frontbody">frontbody</a>, or
+   <a href="elements.htm#backbody">backbody</a>.
+     A use for the
+   last is to use a boundary or constraint to define an initial
+   curve or surface, refine to get a decent triangulation, then
+   use "unset vertices boundary 1" and "unset edges boundary 1"
+   to free the curve or surface to evolve.  The form "unset
+   facet bodies ..." is also available to disassociate given
+   facets from their bodies. Examples:
+<pre>   unset body[1] target
+   unset vertices constraint 1; unset edges constraint 1
+</pre>
+
+<hr>
+<a name="vertex_average"></a><h2>VERTEX_AVERAGE</h2>
+<a href="#command language">Main prompt command</a>.
+Does vertex averaging for one vertex at a time. Syntax:
+<pre>  VERTEX_AVERAGE <em>vertex_generator</em>
+</pre>
+The action is the same as the <a href="single.htm#V">V</a> command,
+except that each new vertex position is calculated sequentially,
+instead of simultaneously, and an arbitrary subset of vertices 
+may be specified. Fixed vertices do not move. Examples:
+<pre>  vertex_average vertex[2]
+  vertex_average vertex where id &lt; 10
+  vertex_average vertex vv where max(vv.facet,color==red) == 1
+</pre>
+
+<hr>
+<a name="vertex_merge"></a><h2>VERTEX_MERGE</h2>
+<a href="#command language">Main prompt command</a>.
+Merges two soapfilm-model vertices into one. 
+Meant for joining together surfaces that bump into each other. 
+Should not be used for vertices already joined by an edge.
+ Syntax:
+<pre>
+  vertex_merge(integer,integer)
+</pre>
+Note the syntax is a function taking integer vertex id arguments, not element
+generators.
+Example:
+<pre>
+   vertex_merge(3,12)
+</pre>
+
+<hr>
+<a name="whereami"></a><h2>WHEREAMI</h2>
+<a href="#command language">Main prompt command</a>.
+If Evolver is at a debugging breakpoint,
+then <tt>whereami</tt> will print a stack trace
+of the sequence of commands invoked to get to
+the current breakpoint.
+
+<hr>
+<a name="wrap_vertex"></a><h2>WRAP_VERTEX</h2>
+<a href="#command language">Main prompt command</a>.
+Syntax:
+<pre> wrap_vertex(<em>vexpr</em>,<em>wexpr</em>)
+</pre>
+In a symmetry group model, transforms the coordinates of
+vertex number <em>vexpr</em> by symmetry group element <em>wexpr</em>
+and adjusts wraps of adjacent edges accordingly.
+
+
+<hr>
+<a name="zoom"></a><h2>ZOOM</h2>
+<a href="#command language">Main prompt command</a>.
+For isolating a region of a surface. Syntax:
+<pre>
+ ZOOM <em>integer expr</em>
+</pre>
+   Zooms in on vertex whose id is the given <em>integer</em>, with radius the
+   given <em>expr</em>.  Same as the '<a href="single.htm#Z">Z</a>' command, 
+   but not interactive.  
+
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>
+

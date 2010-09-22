@@ -1,0 +1,875 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><TITLE>Surface Evolver Documentation - Mathematical model</title></head>
+
+<BODY>
+<!--NewPage-->
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<a name="models"></a>
+<h1> Surface models. </h1>
+
+The Surface Evolver can handle several different models of 
+surfaces.  In fact, there are several different categories
+of models regarding different features, so 
+one variety of each category is active.  However, some combinations are
+<a href="#incompatible models">incompatible</a>.
+<h3>Model categories:</h3>
+<ul>
+<li><a href="#combinatorics">Surface representation</a>
+<menu>
+<li><a href="#string model">String model</a> 
+<li><a href="#soapfilm model">Soapfilm model</a> (default)
+<li><a href="#simplex model">Simplex model</a>
+</menu>
+<li><a href="#element representation">Representation of surface elements</a>
+<menu>
+<li><a href="#linear model">Linear model</a> (default)
+<li><a href="#quadratic model">Quadratic model</a>
+<li><a href="#Lagrange model">Lagrange model</a>
+</menu>
+<li><a href="#space dimension">Ambient space dimension</a> (default 3)
+<li><a href="#symmetries">Symmetries</a>
+<menu>
+<li><a href="#default symmetry">No symmetry</a> (default)
+<li><a href="#torus model">Torus model</a>
+<li><a href="#symmetry groups">Symmetry groups</a>
+</menu>
+<li><a href="#metric">Metric</a> 
+<menu>
+<li><a href="#Euclidean metric">Euclidean metric</a> (default)
+<li><a href="#Riemannian metric">Riemannian metric</a>
+<li><a href="#conformal metric">Conformal metric</a>
+<li><a href="#Klein hyperbolic metric">Klein hyperbolic metric</a>
+</menu>
+<li><a href="#mobility">Mobility</a>
+<menu>
+<li><a href="#unit mobility">Unit mobility</a> (default)
+<li><a href="#area normalization">Area-weighted mobility</a>
+<li><a href="#user-defined mobility">User-defined mobility</a>
+</menu>
+</ul>
+<hr>
+<a name="incompatible models"></a><h2>Incompatible models</h2>
+The following combinations of <a href="#models">surface models</a>
+are incompatible:
+<ul>
+<li> <a href="#simplex model">Simplex model</a> and 
+<a href="#torus model">torus model</a> or other <a href="#symmetry groups">
+symmetry group</a>.   This is because the simplex model does not have
+the necessary edges to carry the symmetry wraps.
+</ul>
+<hr>
+<hr>
+<a name="combinatorics"></a><h2>Surface representation and combinatorics
+</h2>
+All surfaces are simplicial complexes made of the basic elements:
+vertices, edges, and facets.
+The Evolver has three different ways of representing the combinatorics
+of the surface, depending on the dimension of the surface.  Any of these
+may be used in any ambient space dimension at least as great at
+ the surface dimension.
+<menu>
+<li><a href="#string model">String model</a> for dimension 1 surface.
+<li><a href="#soapfilm model">Soapfilm model</a> (default) for dimension 2 surface.
+<li><a href="#simplex model">Simplex model</a> for dimension 3 or higher surface.
+</menu>
+
+<hr>
+<a name="string model"></a><h2>String model</h2>
+The term "string model" means that the surface is one-dimensional.
+The datafile must have the keyword "STRING" or "SURFACE_DIMENSION 1" 
+in its top section.
+Edges are defined in terms of their vertices, and facets by a list 
+of boundary edges.
+Facets are not divided into triangles, and may have any number of edges.  
+The edges of a facet need not form a closed loop, for example if the
+facet is partly bounded by a constraint.
+A body is defined by associating one facet to it, and
+the volume of the body is the area of the facet.
+The default energy is edge length.  
+<hr>
+<a name="soapfilm model"></a><h2>Soapfilm model</h2>
+The term "soapfilm model" means that the dimension of the surface is 2.
+This is the default model. The surface is subdivided into triangular
+facets, and the default energy is surface area.  Edges are defined
+by their vertices. Facets are defined by an oriented list of three edges, which
+must form a closed loop.  However, faces in the datafile may have more
+than three edges, since they are automatically refined into facets when
+loaded.  In official Evolver-speak, a "face" is what appears in the
+datafile, and a "facet" is the triangle in the internal Evolver representation
+of the surface.
+Bodies are defined by a set of oriented facets, which need not form the
+complete boundary of the body, for example if part of the boundary is
+on a constraint.
+<p>
+Internally, the surface is held together by a set of structures called
+"facet-edges".  There is one such structure for each incidence of an
+edge on a facet.  There is a doubly linked list of facet-edges around each
+facet, so edges can be traversed in order, and there is a doubly-linked
+list around each edge, so the facets around an edge can be traversed
+in geometric order.  Evolver figures out the geometric order from the
+geometric data in the datafile.  If geometric order does not make sense,
+as when the space dimension is 4 or more, then the order is random.
+<hr>
+<a name="simplex model"></a><h2>Simplex model</h2>
+
+
+The simplex model enables the representation of arbitrary dimension surfaces,
+but many Evolver features are not available with it. 
+ Here each facet
+is represented as an oriented list of k+1 vertices, where k is
+the dimension of the surface.  Edges may be specified as k-1 dimensional
+simplices, but they are used only to compute constraint and named
+quantity integrals; a
+complete list of edges is not needed.
+Bodies are specified as lists of oriented facets.
+<p>
+The datafile must have the keyword  SIMPLEX_REPRESENTATION in
+the top section, and the phrase  'SURFACE_DIMENSION k' if k isn't 2.
+k = 1 and k = 2 are allowed, but not very useful in comparison to
+the <a href="#string model">string</a> or <a href="#soapfilm model">
+soapfilm</a> models.
+If the  domain is not 3-dimensional, then 'SPACE_DIMENSION n'
+must also be included.
+The  datafile edges section is optional.  Each
+facet should list k+1 vertex numbers.  Non-simplicial facets are
+not allowed. See the sample datafile simplex3.fe.
+<p>
+Most features are not implemented.
+The <a href="#quadratic model">quadratic model</a> is not allowed,
+but the <a href="#Lagrange model">Lagrange model</a> is.
+ Vertices may be FIXED.
+Constraints are allowed, with energy integrands.
+Several basic named quantity methods work.
+No <a href="#torus model">torus model</a>
+ or <a href="#symmetry groups">symmetry groups</a>.
+No changing of surface topology or combinatorics is allowed except
+global refining with the
+<a href="single.htm#r">r</a> command.
+Refining subdivides each simplex 1-edge, with the edge midpoint
+inheriting the common attributes of the edge endpoints.
+Refining will increase the number of facets by
+a factor of 2^k.
+<hr>
+<hr>
+
+<a name="element representation"></a><h2>Representation of surface elements</h2>
+A surface is represented by a finite element method, where each element
+is a simplex.  The simplest types of elements are just straight line segments
+and flat triangles.  These combine to represent a piecewise linear surface,
+for which calculated quantities generally have an error of order h^2 compared
+to the ideal smooth surface, where h is the linear size of an element.
+Various ways of representing more accurate curved elements exist, and
+Evolver implements a couple of versions of what are called "Lagrange elements".
+<menu>
+<li><a href="#linear model">Linear model</a> (default)
+<li><a href="#quadratic model">Quadratic model</a>
+<li><a href="#Lagrange model">Lagrange model</a>
+</menu>
+<hr>
+<a name="linear model"></a><h2>Linear model</h2>
+In the linear model, all edges and triangular facets are flat
+line segments and triangles, respectively.  For all calculations,
+an edge is defined by
+its two endpoints, and a facet (in the <a href="#soapfilm model">
+soapfilm model</a>) is defined by its three vertices.  This is the 
+default.  Quadratic or Lagrange models may be changed to linear
+with the <a href="single.htm#M">M 1</a> or <a href="commands.htm#linear">
+linear</a> commands.  An exception is if the 
+<a href="quants.htm#spherical_arc_length">spherical_arc_length</a>
+method is used for <a href="datafile.htm#length_method_name">length_method_name
+</a> in the  <a href="#string model">string model</a>, in which case edges 
+are computed and drawn on a sphere centered at the origin.
+ 
+<hr>
+<a name="quadratic model"></a><h2>Quadratic model</h2> 
+
+          By default, edges and facets are linear.  But it is possible
+          to represent edges as quadratic curves and facets as
+          quadratic patches by using the quadratic model.
+          Each edge is endowed with a midpoint vertex.
+          Most features are implemented for the quadratic representation,
+          but some named quantity methods are not available, such as
+          those involving curvature.
+<p>
+  A special case is circular arc mode, which is effective in quadratic mode
+in the string model with  the <a href="quants.htm#circular_arc_length">
+circular_arc_length</a> method used for 
+<a href="datafile.htm#length_method_name">length_method_name</a>.
+Then edges are calculated and drawn as exact circular arcs through
+their three vertices.
+<p> The smoothness of graphing of curved quadratic edges can be
+controlled with the internal variable 
+<a href="syntax.htm#string_curve_tolerance"><tt>string_curve_tolerance</tt></a>,
+which is the desired angle in degrees between successive graphed segments
+making up the edge.
+<p>
+ The quadratic model can be invoked by putting the 
+<a href="datafile.htm#quadratic decl">QUADRATIC</a> keyword
+          in the top section of the datafile or 
+      by using the <a href="commands.htm#quadratic">quadratic</a> or 
+          <a href="single.htm#M">M 2</a> commands.  
+<hr>
+<a name="Lagrange model"></a><h2>Lagrange model</h2>
+The Evolver has a very limited implementation of higher-order
+elements.  In the Lagrange model of order n, each edge is defined
+by interpolation on n+1 vertices evenly spaced in the parameter 
+domain, and each facet is defined by interpolation on (n+1)(n+2)/2
+vertices evenly spaced in a triangular pattern in the parameter
+domain.  That is, the elements are Lagrange elements in the terminology
+of finite element analysis.
+<p>
+The Lagrange model is defined only for 
+<a href="quants.htm">named quantities and methods</a>,
+so Evolver will automatically do 
+<a href="toggle.htm#convert_to_quantities">
+<tt>convert_to_quantities</tt></a> when you invoke the Lagrange model.  
+The methods that currently accept the Lagrange model are
+<ul>
+<li> <a href="quants.htm#vertex_scalar_integral">vertex_scalar_integral</a>
+<li> <a href="quants.htm#edge_length">edge_length</a>
+<li> <a href="quants.htm#edge_area">edge_area</a>
+<li> <a href="quants.htm#edge_scalar_integral">edge_scalar_integral</a>
+<li> <a href="quants.htm#edge_vector_integral">edge_vector_integral</a>
+<li> <a href="quants.htm#edge_general_integral">edge_general_integral</a>
+<li> <a href="quants.htm#facet_area">facet_area</a>
+<li> <a href="quants.htm#facet_volume">facet_volume</a>
+<li> <a href="quants.htm#facet_vector_integral">facet_vector_integral</a>
+<li> <a href="quants.htm#facet_scalar_integral">facet_scalar_integral</a>
+<li> <a href="quants.htm#facet_general_integral">facet_general_integral</a>
+</ul>
+  A surface may be converted to an order n
+Lagrange model with the command "lagrange n".  This will convert
+<a href="model.htm#linear model">linear</a>
+ or <a href="model.htm#quadratic model">quadratic models</a>
+ to Lagrange, and will convert between
+different order Lagrange models. The commands
+<a href="commands.htm#linear">linear</a> and 
+<a href="commands.htm#quadratic">quadratic</a> will
+convert Lagrange model back to the linear or quadratic models.
+<p>
+No triangulation manipulations are available in the Lagrange model.
+No refining, equiangulation, or anything.  There is some vertex averaging, 
+but just internal to edges and facets.    Use the linear or
+quadratic model to establish your final triangulation, and just use
+the Lagrange model to get extra precision.
+<p>
+The current order can be accessed through the read-only internal
+variable <a href="syntax.htm#lagrange_order">lagrange_order</a>.
+The Lagrange model can be <a href="commands.htm#dump">dumped</a> and reloaded.
+<p>
+As the Lagrange order is raised, calculations slow down rapidly.
+This is not only due to the large number of points involved, but is
+also due to the fact that the order of Gaussian integration is also
+raised.
+<p>
+Lagrange elements are normally plotted subdivided on their
+vertices, but if the <a href="toggle.htm#smooth_graph">smooth_graph</a>
+ flag is on, they are plotted with 8-fold subdivision.
+<p> 
+The toggle command <a href="toggle.htm#bezier_basis">bezier_basis</a>
+toggle replaces the Lagrange interpolation polynomials (which pass through
+the control points) with Bezier basis polynomials (which do not pass
+through interior control points, but have positive values, which guarantees
+the edge or facet is within the convex hull of the control points).
+This is experimental at the moment, and not all features such as 
+graphing or refinement have been suitably adjusted.
+<hr>
+<hr>
+
+<a name="space dimension"></a><h2>Space dimension</h2>
+<a name="MAXCOORD"></a>
+
+      By default, surfaces live in 3 dimensional space.  However,
+      the phrase "SPACE_DIMENSION n" in the datafile header sets the
+      dimension to n.  This means that all coordinates and vectors
+      have n components.  The only restriction is that Evolver has
+      to be compiled with the MAXCOORD macro defined to be 
+      at least n 
+in Makefile or in  model.h.  The default MAXCOORD is 4. Change MAXCOORD
+and recompile if you want more than four dimensions.  The actual space
+dimension can be accessed in commands through the read-only variable
+<a href="syntax.htm#space_dimension">space_dimension</a>.
+
+       Graphics will display only the first three dimensions of spaces
+       with more than three dimensions, except for geomview, which
+       has a four-dimensional viewer built in (although its use is
+       awkward now).
+<hr>
+<hr>
+<a name="metric"></a><h2>Metric</h2>
+For length and area to make sense, the ambient space must be endowed
+with a metric.  The Evolver offers several choices, but keep in mind
+that they are only used to calculate default length and area.  Other
+quantities that depend on the metric, such as volume, are up to the
+user to put in by hand with <a href="quants.htm">named quantities</a>. 
+ All displaying is done as if the metric is Euclidean.
+<menu>
+<li><a href="#Euclidean metric">Euclidean metric</a> (default)
+<li><a href="#Riemannian metric">Riemannian metric</a>
+<li><a href="#conformal metric">Conformal metric</a>
+<li><a href="#Klein hyperbolic metric">Klein hyperbolic metric</a>
+</menu>
+<hr>
+<a name="Euclidean metric"></a> <h2>Euclidean metric</h2>
+The default metric on the ambient space is the ordinary Euclidean
+metric.  There are no built-in units of measurement like meters
+or grams, so the user should express all physical quantities in some
+consistent system of units, such as MKS or cgs.
+<hr>
+<a name="Riemannian metric"></a><h2>Riemannian metric</h2>
+
+         The ambient space can be endowed with a general Riemannian metric
+         by putting the keyword  METRIC 
+          in the <a href="datafile.htm#metric decl">datafile</a> followed
+         by the elements of the metric tensor. 
+         Only one coordinate
+         patch is allowed, but the <a href="#quotient spaces">quotient space</a>
+      feature makes this
+         quite flexible.  Edges and facets are linear in coordinates,
+         they are not geodesic.  The metric is used solely to calculate
+         lengths and areas.  It is not used for volume.  To get a volume
+         constraint on a body, you will have to define your own
+         <a href="quants.htm#fixed quantity">named quantity constraint</a>.
+ See quadm.fe for an example of a metric.
+<hr>
+<a name="conformal metric"></a><h2>Conformal metric</h2>
+         The ambient space can be endowed with a conformal Riemannian metric
+         by putting the keyword CONFORMAL_METRIC
+          in the <a href="datafile.htm#metric decl">datafile</a> followed
+         by a formula for the conformal factor, i.e. the 
+         multiple of the identity matrix that gives the metric.
+         Only one coordinate
+         patch is allowed, but the quotient space feature makes this
+         quite flexible.  Edges and facets are linear in coordinates,
+         they are not geodesic.  The metric is used solely to calculate
+         lengths and areas.  It is not used for volume.  To get a volume
+         constraint on a body, you will have to define your own
+         <a href="quants.htm#fixed quantity">named quantity constraint</a>.
+         See quadm.fe for an example of a metric.
+<hr>
+<a name="Klein hyperbolic metric"></a><h2>Klein hyperbolic metric</h2>
+         One special metric is available built-in.  It is the Klein
+	 model of hyperbolic space in n dimensions.  The domain is
+	 the unit disk or sphere in Euclidean coordinates.  Including
+	 the keyword  KLEIN_METRIC in the top section of the 
+	 datafile will invoke this metric.  Lengths and areas are
+	 calculated exactly, but as with other metrics you are on your
+	 own for volumes and quantities. 
+
+<hr>
+<hr>
+<a name="symmetries"></a><h2>Symmetries</h2>
+         There are many interesting problems dealing with symmetric
+         surfaces.  A natural way to deal with a symmetric surface is
+ to compute with only one fundamental domain of the symmetry, and use
+special boundary conditions.  Some symmetries, such as mirror symmetries,
+can be handled with normal Evolver features.  For example, a mirror
+can be implemented as a planar level set constraint.  But symmetries
+such as translational or rotational symmetry require some built-in
+features.  In any case, multiple copies of the fundamental domain may be displayed
+with the <a href="datafile.htm#view transforms">view_transforms</a> command.
+<menu>
+<li><a href="#default symmetry">No symmetry</a> (default)
+<li><a href="#torus model">Torus model</a>  (translational symmetry)
+<li><a href="#symmetry groups">Symmetry groups</a> (general symmetry)
+</menu>
+<hr>
+<a name="default symmetry"></a><h2>No symmetry</h2>
+
+         By default, the domain of a surface is Euclidean space.
+A symmetric surface can be done this way if its fundamental domain
+is bounded by mirror planes.  Each mirror plane should be implemented
+as a linear level set constraint.
+<hr>
+<a name="torus model"></a> <h2>Torus model</h2>
+
+The Evolver can take as its domain
+         a flat torus with an arbitrary parallelpiped as its unit
+         cell, i.e. the domain is a parallelpiped with its opposite
+         faces identified.  This is indicated by the 
+         <a href="datafile.htm#torus declaration">TORUS</a> keyword
+         in the datafile. The defining basis vectors of the parallelpiped
+         are given  in the 
+         <a href="datafile.htm#torus periods">TORUS_PERIODS</a>
+          entry of the datafile.
+	 See  <a href="twointor.htm">twointor.fe</a> for an example.
+<p>
+         Vertex coordinates are given as Euclidean coordinates
+         within the unit cell, not as linear combinations of
+         the period vectors.  The coordinates need not lie within
+         the parallelpiped, as the exact shape of the unit cell
+         is somewhat arbitrary. 
+<p>
+          The way the surface wraps around in the torus
+         is given by saying how the edges cross the faces of the
+         unit cell.  In the datafile
+         <a href="datafile.htm#edges section">edges section</a>,
+          each edge has one symbol per dimension
+         indicating how the edge vector crosses each identified pair of faces,
+         and how the vector between the endpoints needs to be
+         adjusted to get the true edge vector:
+<table>
+<tr> <td> * </td><td> does not cross face </td></tr>
+<tr> <td> + </td><td> crosses in same direction as basis vector, 
+                           so basis vector added to edge vector </td></tr> 
+<tr> <td> - </td><td> crosses in opposite direction, so basis 
+                           vector subtracted from edge vector. </td></tr>
+</table>
+     Wraps are automatically maintained  by the various
+     triangulation manipulation operations.
+     <p>
+<a name="torus display"></a>
+         There are several commands for ways of displaying a torus surface:<br>
+<a href="toggle.htm#raw_cells">raw_cells</a>
+ - Graph the facets as they are, without clipping.  The
+   first vertex of a  facet is used as the basepoint for any unwrapping
+of other vertices needed.
+                 <br>
+<a href="toggle.htm#connected">connected</a>  - Each body's facets are unwrapped
+                 in the torus, so the body appears in one connected
+                 piece.  Nicest option, but won't show facets not on bodies. <br>
+<a href="toggle.htm#clipped">clipped</a> - Shows the unit cell specified in the
+                 datafile.  Facets are clipped on the parallelpiped
+                 faces.  
+<p>
+         A few features are not available with the torus model,
+         such as gravity and the simplex model.  (Actually,
+         you could put them in, but they will not take into account
+         the torus model.) 
+<p>
+         Volumes and volume constraints are available.  However,
+         if the torus is completely partitioned into bodies of
+         prescribed volume, then the volumes must add up to the
+         volume of the unit cell and the  TORUS_FILLED keyword
+         must be given in the datafile.  Or just don't prescribe
+	 the volume of one body. 
+<p>
+         Volumes are somewhat ambiguous. The volume calculation
+         method is accurate only to one torus volume, so it is
+         possible that a body whose volume is positive gets its
+         volume calculated as negative.  Evolver adjusts volumes
+         after changes to be as continuous as possible with the previous
+         volumes as possible, or with target volumes when available.
+         You can also set a body's volconst attribute if you don't
+         like the Evolver's actions.
+
+<p>
+         <a href="constrnt.htm#level set constraints">Level set constraints</a>
+	 can be used in the torus model,
+	 but be cautious when using them as mirror symmetry planes
+	 with volumes.  The torus volume algorithm does not cope
+	 well with such partial surfaces.  If you must, then
+	 use y=const symmetry planes rather than x=const, and
+	 use the <a href="general.htm#options">-q option</a>
+	 or do <a href="toggle.htm#convert_to_quantities">
+	 <b>convert_to_quantities</b></a>.  Double-check
+	 that your volumes are turning out correctly; use volconst
+	 if necessary.
+<p>
+<a name="display_periods"></a>
+<b>Display_periods:</b> The displayed parallelogram unit cell can be 
+different from the  actual unit cell if you 
+put an array called <tt>display_periods</tt> in the top of the datafile,
+in addition to the regular periods. For a string model example,
+<pre>   parameter shear = 1
+   torus_filled
+   periods
+   4  0
+   shear  4
+   display_periods
+   4 0
+   0 4 </pre>
+This will always display a square, no matter how much the actual unit
+cell is sheared.  This feature works well for shears; it may not work
+nicely for other kinds of deformation.  Display_periods works better 
+for the string model than the soapfilm model.  For the soapfilm model,
+it seems to do horizontal shears best, but it can't cope with large shears,
+so if your shear gets too large, I advise resetting your fundamental
+region to less shear, say with the <tt>unshear</tt> command in 
+<tt>unshear.cmd</tt>.
+<p>
+<b><a name="display_origin"> Display_origin: </a></b>
+    For a torus mode surface,
+if clipped mode is in effect, the center of the clip box is
+set with the <tt>display_origin[]</tt> array whose dimension
+ is the dimension of
+the ambient space.  This array does not exist by default,
+it has to be created by the user in the top of the datafile
+with the syntax
+<pre>
+  display_origin <em>x y z</em>
+</pre> where <em>x y z</em> are the coordinates for the
+desired center of the clip box.  At runtime, the
+array elements may be changed as normal:
+<pre>  display_origin[2] := 0.5
+</pre>
+Changing display_origin will automatically cause the
+graphics to re-display.
+
+
+
+<hr>
+<a name="quotient spaces"></a>
+<a name="symmetry groups"></a><h2>Symmetry groups and quotient spaces</h2>
+         As a generalization of the 
+         <a href="#torus model">torus model</a>, you may declare
+         the domain to be the quotient space of R^n with respect to
+         some symmetry group.  Several built-in groups are available,
+         and ambitious users can compile C code into Evolver
+         to define group operations.  Group elements are represented
+         by integers attached to edges (like the wrap specifications
+         in the torus model at runtime).  You define the integer representation
+         of the group elements. See the file quotient.c
+         for an example.  See  khyp.c and khyp.fe
+	 for a more intricate example
+	 modelling an octagon in Klein hyperbolic space identified into
+	 a genus 2 surface.  
+<p>
+The datafile requires the keyword 
+         <a href="datafile.htm#symmetry decl">SYMMETRY_GROUP</a>
+          followed by the name for the group in quotes.
+         Edges that wrap have their group element specified in the
+         datafile by the phrase "wrap n", where n is the
+         number of the group element.
+	 The wrap values are accessible
+	 at run time with the <tt>wrap</tt> attribute of edges.
+         The group operations are accessible by the functions
+    <tt>wrap_inverse(w)</tt> and <tt>wrap_compose( w1,w2)</tt>.
+<p>
+Using any Hessian commands with any symmetry group
+(other than the built-in torus model) will cause automatic
+converting to named quantities (with the 
+"<a href="toggle.htm#convert_to_quantities">
+convert_to_quantities</a>" command,
+since only named quantity Hessian evaluation routines have the proper
+symmetry transformation of the Hessian programmed in.
+<p>
+        Volumes of bodies might not be calculated correctly with a
+         symmetry group.  The volume calculation only knows about
+         the built-in torus model.  For other symmetry groups, if
+         you declare a body, it will use the Euclidean volume 
+         calculation.  It is up to you to design an alternate
+         volume calculation using named quantities and methods.
+
+<a name="implemented symmetries"></a>
+<p> The currently implemented symmetry groups are:
+<ul>
+<li> <a href="#torus symmetry group"><tt>torus</tt></a>
+- The underlying group for the <a href="#torus model">torus model</a>.
+<li> <a href="#rotate symmetry group"><tt>rotate</tt></a>
+- Cyclic group of rotations in the x-y plane.
+<li> <a href="#flip-rotate symmetry group"><tt>flip_rotate</tt></a>
+- Cyclic group of rotations in the x-y plane with z mapping to -z with every
+odd rotation.
+<li> <a href="#cubocta"><tt>cubocta</tt></a>
+- Full point group of a cube.
+<li> <a href="#xyz symmetry group"><tt>xyz</tt></a>
+- The orientation-preserving subgroup of <a href="#cubocta">cubocta</a>.
+<li> <a href="#genus2 symmetry group"><tt>genus2</tt></a>
+- For a 2 dimensional genus 2 hyperbolic quotient space.
+<li> <a href="#dodecahedron symmetry group"><tt>dodecahedron</tt></a>
+- For a 3D hyperbolic quotient space with dodecahedral fundamental region.
+<li> <a href="#central_symmetry"><tt>central_symmetry</tt></a>
+- Inversion through the origin, X mapping to -X.
+<li> <a href="#screw_symmetry"><tt>screw_symmetry</tt></a>
+- Screw motion along z axis.
+<li> <a href="#quarter_turn"><tt>quarter_turn</tt></a>
+</ul>
+
+<hr> <a name="torus symmetry group"></a><h3><tt>TORUS</tt> symmetry group</h3>
+ This is the underlying
+<a href="#symmetry groups">symmetry</a> for the <a href="#torus model">torus model</a>.
+Although the torus model has a number of special features built in to the
+Evolver, it can also be accessed through the general symmetry group interface.
+The torus group is the group on <i>n</i>-dimensional Euclidean space
+generated by <i>n</i> independent vectors, called the period vectors.
+The torus group uses the <a href="datafile.htm#torus periods"> torus
+periods</a> listed in the datafile.
+<p>
+<b>Datafile declaration:</b> <tt>symmetry_group "torus"</tt>
+<p>
+<b>Group element encoding:</b>
+ The 32-bit code word is divided into 6-bit fields,
+one field for the wrap in each dimension, with low bits for the first
+dimension.  Hence the maximum space dimension is 5.
+Within each bitfield, 1 codes for positive wrap and 011111
+codes for negative wrap.  The coding is actually a 2's complement 5-bit integer,
+so higher wraps could be represented.
+
+<a name="generator_power"></a>
+<hr> 
+<a name="rotate symmetry group"></a><h3><tt>ROTATE</tt> symmetry group </h3>
+This is the cyclic 
+<a href="#symmetry groups">symmetry group</a>
+ of rotations in the x-y plane, where the order
+of the group is given by the internal variable 
+<a href="syntax.htm#rotation_order">rotation_order</a> (default 
+value 4). There is also an internal variable generator_power (default 1)
+such that the angle of rotation is 2*pi*generator_power/rotation_order.
+<b>Note:</b> Since this group has fixed points, some special precautions
+are necessary.  Vertices on the rotation axis must be labelled with
+the attribute <a href="elements.htm#axial_point">axial_point</a> in the datafile.
+  Edges out of an
+axial point must have the axial point at their tail, and must have zero 
+wrap.  Facets including an axial point must have the axial point at
+the tail of the first edge in the facet.
+<p>
+<b>Datafile declaration:</b><pre>  symmetry_group "rotate"
+  parameter rotation_order = 6 </pre>
+<p>
+<b>Group element encoding:</b> An element is encoded as the power of 
+the group generator.
+
+<hr> <a name="flip-rotate symmetry group"></a><h3><tt>FLIP_ROTATE</tt> symmetry group </h3>
+This is the cyclic 
+<a href="#symmetry groups">symmetry group</a>
+ of rotations in the x-y plane with a flip
+z mapping to -z on every odd rotation, where the order
+of the group is given by the internal variable 
+<a href="syntax.htm#rotation_order">rotation_order</a>, which had better
+be even.
+<b>Note:</b> Since this group has points that are fixed under an even
+number of rotations, some special precautions
+are necessary.  Vertices on the rotation axis must be labelled with
+the attribute "<tt>double_axial_point</tt>" in the datafile.  Edges out of an
+axial point must have the axial point at their tail, and must have zero 
+wrap.  Facets including an axial point must have the axial point at
+the tail of the first edge in the facet.
+<p>
+<b>Datafile declaration:</b><pre>  symmetry_group "flip_rotate"
+  parameter rotation_order = 6 </pre>
+<p>
+<b>Group element encoding:</b> An element is encoded as the power of 
+the group generator.
+
+
+<hr>
+<a name="cubocta"></a>
+ <a name="cubocta symmetry group"></a><h3><tt>CUBOCTA</tt> symmetry group </h3>
+This is the full
+<a href="#symmetry groups">symmetry group</a>
+ of the cube. It can be viewed as all
+permutations and sign changes of (x,y,z).
+<p><b>Datafile declaration:</b> <tt>symmetry_group "cubocta"</tt>
+<p><b>Group element encoding:</b>  wrap &amp; {1,2,4} gives the sign
+changes for x,y,z respectively; (wrap&amp;24)/8 is the power of the (xyz) 
+permutation cycle;
+(wrap&amp;32)/32 tells whether to then swap x,y. (By John Sullivan; source
+in quotient.c under name pgcube)
+
+<hr> <a name="xyz symmetry group"></a><h3><tt>XYZ</tt> symmetry group </h3>
+The orientation-preserving subgroup of <a href="#cubocta symmetry group">
+cubocta</a>.  Same representation.
+
+<hr> <a name="genus2 symmetry group"></a><h3><tt>GENUS2</tt> symmetry group </h3>
+This is a symmetry group on the
+<a href="model.htm#Klein hyperbolic metric">Klein model</a> of hyperbolic space whose
+quotient group is a genus 2 hyperbolic manifold.  The fundamental region
+is an octagon.
+
+<p><b>Datafile declaration:</b> <pre>
+   Klein_metric
+   symmetry_group "genus2" </pre>
+ 
+<b>Group element encoding:</b>
+   There are 8 translation elements that translate the fundamental region
+   to one of its neighbors.  Translating around a vertex gives a
+   circular string of the 8 elements.  The group elements encoded are
+   substrings of the 8, with null string being the identity.  Encoding
+   is 4 bits for each element.  See khyp.fe for an example.
+
+<hr> <a name="dodecahedron symmetry group"></a><h3><tt>DODECAHEDRON</tt> symmetry group </h3>
+This is the 
+<a href="#symmetry groups">symmetry group</a> of translations of
+hyperbolic 3 space tiled with right-angled dodecahedra. The elements of the
+group are represented as integers. There are 32 generators of the group
+so each generator is represented by five bits.  Under this scheme any
+element that is the composition of up to five generators can be
+represented.  If you want to use this group, you'll have to check out
+the source code in dodecgroup.c, since somebody else wrote this group
+and I don't feel like figuring it all out right now.
+<p><b>Datafile declaration:</b> <pre>
+   Klein_metric
+   symmetry_group "dodecahedron" </pre>
+ 
+<hr> <a name="central_symmetry"></a><h3><tt>CENTRAL_SYMMETRY</tt> symmetry group </h3>
+This is the order 2
+<a href="#symmetry groups">symmetry group</a> of inversion through the origin,
+X maps to -X.  
+<p><b>Datafile declaration:</b> <pre>
+   symmetry_group "central_symmetry" </pre>
+<b>Group element encoding:</b> 0 for identity, 1 for inversion.
+
+<a name="screw_height"></a><a name="screw_angle"></a>
+<hr> <a name="screw_symmetry"></a><h3><tt>SCREW_SYMMETRY</tt> symmetry group </h3>
+This is the 
+<a href="#symmetry groups">symmetry group</a> of screw motions along the z axis.
+The global parameter <tt>screw_height</tt> is the translation distance (default 1), and
+the global parameter <tt>screw_angle</tt> is the rotation angle in degrees (default 0).
+<p><b>Datafile declaration:</b> <pre>
+  parameter screw_height = 4.0
+  parameter screw_angle  = 180.0
+  symmetry_group "screw_symmetry"
+</pre>
+<b>Group element encoding:</b> the integer value is the power of the group generator.
+
+<a name="quarter_turn_period"></a>
+<a name="quarter_turn"></a>
+<hr>
+<h3>quarter_turn</h3>
+<a href="#symmetry groups">Symmetry group</a> 
+3D torus with quarter turn in identification of top
+and bottom. x and y periods taken to be 1. z period is the user-defined
+variable quarter_turn_period.  Generators x,y,z. x and y as in regular
+torus mode. z is vertical translation with quarter turn: (x,y,z)->(-y,x,z).
+<br>
+Relations: x z = z y^-1,   y z = z x
+<br>
+Numerical representation: as in the
+<a href="#torus symmetry group">torus symmetry group</a>, for powers of x,y,z
+with generators applied in that order.
+
+
+
+<hr>
+<hr>
+<a name="mobility"></a><h2>Mobility</h2>
+
+There is a choice to be made in the conversion of the forces on
+vertices into velocities of vertices.  Technically, force is the
+gradient of energy, hence a covector on the manifold of all
+possible configurations. In the Evolver representations of
+surfaces, that global covector
+can be represented as a covector at each vertex.  The velocity
+is a global vector, which is represented as a vector at each
+vertex.  Conversion from the global covector to the global vector
+requires multiplication by a metric tensor, i.e. singling out
+a particular inner product on global vectors and covectors.
+The tensor converting from force to velocity is the  mobility
+tensor, represented as the  mobility matrix M in some
+coordinate system.  Its inverse, converting
+from velocity to force, is the resistance tensor
+S = M^{-1}.  The same inner product has to be used in
+projecting the velocity tangent to the constraints, whether
+they be level set constraints on vertices or constraints on
+body volumes or quantity integrals.
+There are several choices implemented in the Evolver,
+corresponding to several different physical pictures of how
+the medium resists the motion of the surface through it:
+<menu>
+<li> <a href="#unit mobility">unit mobility</a>
+<li> <a href="#area normalization">area normalization</a>
+<li> area normalization with <a href="#effective area">effective area</a>
+<li> <a href="#polyhedral curvature">approximate polyhedral curvature</a>
+<li> <a href="#user-defined mobility">user-defined mobility</a>
+</menu>
+<hr>
+<a name="unit mobility"></a>  <h2>Unit mobility</h2>
+
+This is the default <a href="#mobility">mobility</a>, in which the velocity is equal to the
+force.  Hence M and S are the identity matrices in standard
+coordinates.  The physical interpretation of this is that there
+is a  resistance to motion of each vertex through the medium
+proportional to its velocity, but not for the edges.  This does
+not approximate motion by mean curvature, but it is very easy
+to calculate.
+<hr>
+<a name="area normalization"></a><h2>Area normalization</h2>
+A type of  <a href="#mobility">mobility</a>.
+In motion by mean curvature, the resistance to motion is really due
+to the surfaces, not the vertices. One way to approximate this is
+to say the resistance to motion of a vertex is proportional to
+the area associated with the vertex.  So this scheme counts the
+area of a vertex equal to 1/3 of the area of the star of 
+facets around it (or 1/2 the area of the star of edges in the 
+string model).  This is easy to calculate, since it is a local
+calculation for each vertex. S and M are diagonal matrices
+(see <a href="#mobility">mobility</a>).
+The result is that motion = force/area, which is a much better
+approximation to motion by mean curvature than the default
+of motion = force.
+Area normalization can be toggled with the
+<a href="single.htm#a">a</a> command or the
+<a href="toggle.htm#area_normalization">area_normalizaton</a> toggle.
+<hr>
+<a name="effective area"></a>  <h2> Area normalization with effective area</h2>
+
+A type of  <a href="#mobility">mobility</a>.
+Simple area normalization as described in the previous paragraph
+isn't what's really wanted in certain circumstances.  It has
+equal resistance for motion in all directions, both parallel and
+normal to the surface.  If a vertex is a triple junction and 
+migrating along the direction of one of the edges, it shouldn't
+matter how long that edge is.  Therefore, if the effective area
+mode is in effect, the area associated with a vertex is the
+area of its star projected normal to the force at the vertex.
+This is a little more complicated calculation, but it is still
+local.  S and M are block diagonal matrices, with one
+block for each vertex
+(see <a href="#mobility">mobility</a>).
+ At a free edge not on any constraint, the force is tangent
+to the surface, the resistance is zero, and the mobility is
+infinite.  But this accurately describes a popping soapfilm.
+Effective area can be toggled with the <a href="toggle.htm#effective_area">
+effective_area</a> toggle.  Note that area normalization itself must
+still be toggled with <a href="single.htm#a">a</a> or 
+<a href="toggle.htm#area_normalization">area_normalizaton</a>.
+<hr>
+<a name="polyhedral curvature"></a><h2> Approximate polyhedral curvature</h2>
+
+A type of  <a href="#mobility">mobility</a>.
+Following a suggestion of Gerhard Dzuik and Alfred Schmidt, the
+inner product of global vectors is taken to be the integral of 
+the scalar product of their linear interpolations over the facets
+(or edges in the string model).  This has the advantage that
+the rate of area decrease of the surface is equal to the rate
+volume is swept out by the surface, which is a characteristic
+of motion by mean curvature.  A big disadvantage is that the
+matrices M and S are no longer local (see <a href="#mobility">mobility</a>).  
+S is a sparse matrix with entries corresponding
+to each pair of vertices joined by an edge, and M is its
+dense inverse.  Approximate polyhedral curvature can be toggled with
+the <a href="toggle.htm#approximate_curvature">approx_curv</a> toggle command.
+<hr>
+<a name="effective polyhedral"></a>
+<h2> Approximate polyhedral curvature with effective area.
+</h2>
+<a href="#polyhedral curvature">Polyhedral curvature</a>
+does not make any distinction between motion
+parallel and perpendicular to the surface. A better approximation
+is to count only motion perpendicular to the surface.  This can be
+done by projecting the interpolated vectorfields normal to the
+facets before integrating their scalar product.  Now the rate of 
+area decrease is equal to the rate geometric volume is swept out,
+as opposed to the slightly flaky way one had to calculate volume
+sweeping in the previous paragraph.
+Again S is a sparse matrix with entries corresponding
+to each pair of vertices joined by an edge, and M is its
+dense inverse.  The effective area option may be toggled with
+<a href="toggle.htm#effective_area">effective_area</a>.
+<hr>
+<a name="user-defined mobility"></a><h2>User-defined mobility</h2>
+
+The user may define a 
+<a href="#mobility">mobility</a> tensor in the 
+<a href="datafile.htm#mobility decl">datafile</a>.
+There is a scalar form with the keyword MOBILITY and a tensor
+form with MOBILITY_TENSOR.  When in effect, this mobility is 
+multiplied times the velocity to give a new velocity.  This happens
+after any of the previous mobilities of this section have been
+applied and before projection to constraints.  The formulas defining
+the mobility may include adjustable parameters, permitting the 
+mobility to be adjusted during runtime.
+The formulas are evaluated at each vertex at each iteration, and 
+so formulas may depend on vertex position and any vertex attributes.
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html> 

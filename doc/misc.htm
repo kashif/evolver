@@ -1,0 +1,524 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation: miscellaneous
+</title></head>
+
+<BODY>
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<h1> Miscellaneous terms</h1>
+This file provides some entries for various keywords that are not
+used as name pointers elsewhere for ambiguity, incredible obscurity,
+ or some other reason.
+<hr>
+<a name="alice"></a>   <h3>Alice</h3>
+A keyword for a special purpose command not documented.
+<hr>
+
+<a name="area"></a><h3>Area</h3>
+As a keyword, area is a read-only attribute of a facet.
+<hr>
+
+<a name="area_fixed"></a><a name="fixed_area"></a><h3>Area_fixed</h3>
+An obsolete way of declaring the total area of the surface fixed in the
+datafile.  Synonym: fixed_area. The preferred way of doing this now is to define a fixed
+<a href="quants.htm#named quantities">named quantity</a> in the datafile, 
+such as<br>
+<tt>quantity the_area fixed = 2.3 global_method facet_area</tt><br>
+This permits all the named quantity features to be used.
+
+<hr>
+
+<a name="attribute"></a><h3>Attribute</h3>
+As a keyword, "attribute" is used in the <a href="commands.htm#define">
+define</a> command for element
+<a href="elements.htm#extra attributes">extra attributes</a>. 
+<hr>
+
+<a name="bare"></a><h3>Bare</h3>
+As a keyword, "bare" is a 
+<a href="elements.htm#bare vertex">vertex attribute</a> or an 
+<a href="elements.htm#bare edge">edge attribute</a> set by
+the user that tells the Evolver not to expect the vertex or edge to
+be attached to a facet.
+<hr>
+
+<a name="body"></a><h3>Body</h3>
+A <a href="elements.htm#bodies">body</a> is a three dimensional geometric
+element.
+As a command keyword, "body" is an element name in 
+<a href="commands.htm#generators">element generators</a>,
+either as the main element type, or as a subelement of a facet.
+
+
+<hr>
+<a name="burchard"></a><h3>Burchard</h3>
+A keyword for a special purpose command not documented.
+
+<hr>
+
+<a name="color"></a><h3>Color</h3>
+As a keyword, "color" is an attribute of edges and facets.
+For the permitted values, see <a href="syntax.htm#colors">colors</a>.
+<hr>
+
+<a name="conducting_knot_energy"></a><h3>Conducting_knot_energy</h3>
+Datafile keyword that automatically creates an energy named quantity
+using the method 
+<a href="quants.htm#knot_energy">knot_energy</a> as a global method.  
+May be followed in the datafile with a modulus value.  
+<hr>
+
+<a name="insulating_knot_energy"></a><h3>Insulating_knot_energy</h3>
+Datafile keyword that automatically creates an energy named quantity
+using the method 
+<a href="quants.htm#uniform_knot_energy">uniform_knot_energy</a> as a global method.  
+May be followed in the datafile with a modulus value.  
+<hr>
+
+<a name="constraint"></a>
+<a name="constraints"></a><h3>Constraint</h3>
+"Constraint" can be used in a 
+<a href="constrnt.htm#general constraints"> general</a> sense, 
+but as a keyword it refers to 
+<a href="constrnt.htm#level set constraints">level set constraints</a>.
+"Constraint" and "constraints" are interchangeable.
+<hr>
+
+<a name="content"></a> <h3>Content</h3>
+"Content" is used to mean volume (or area, in the string model)
+in <a href="datafile.htm#constraint decl">constraint integrals</a>.
+<hr>
+
+<a name="convex"></a><h3>Convex</h3>
+A keyword used in declaring a
+<a href="datafile.htm#constraint decl">constraint</a>
+ in the datafile that causes
+a <a href="energies.htm#gap energy">gap energy</a> to be included.
+The idea is to prevent straight edges and facets from 
+short-cutting curved constraints with big gaps.
+<hr>
+
+<a name="density"></a><h3>Density</h3>
+A keyword referring either to the gravitational density of a body, or
+to the surface tension of a facet, or to the linear tension of an edge.  
+In the latter two cases, "density" is synonymous with "tension".
+<hr>
+
+<a name="edge"></a><h3>Edge</h3>
+In general, one of the basic geometric elements.  As a keyword, it
+is used in <a href="commands.htm#generators">element generators</a>.
+Synonym: edges.
+<hr>
+
+<a name="efixed"></a><h3>Efixed</h3>
+Obsolete datafile attribute to make an edge fixed without fixing its endpoints.
+Keyword retained just for compatibility with old dump files.
+<hr>
+
+<a name="eprint"></a><h3>Eprint</h3>
+Function that prints an expression and returns the value. Syntax: eprint expr.
+Meant for debugging; probably an archaic leftover from when the command
+language was not as developed.  Example: <tt>print sum(facet, eprint area)</tt>
+will print out all the facet areas and then the sum.
+<hr>
+
+<a name="facet"></a><h3>Facet</h3>><h3>Fixed</h3>
+Attribute that can be applied to 
+<a href="elements.htm#fixed vertex">vertices</a>, 
+<a href="elements.htm#fixed edge">edges</a>, 
+<a href="elements.htm#fixed facet">facets</a>, or 
+<a href="quants.htm#fixed quantity">named quantities</a>.
+<hr>
+
+<a name="function"></a>
+<a name="formula"></a><h3>Formula</h3>
+Datafile keyword used in 
+<a href="datafile.htm#constraint decl">level set constraints</a>
+ to introduce the function formula. Synonym: function
+<hr>
+
+
+<a name="gauss_curvature"></a><h3>Gauss_curvature</h3>
+Datafile keyword that automatically creates an energy named quantity
+using the method 
+<a href="quants.htm#gauss_curvature_integral">gauss_curvature_integral</a>
+ as a global method.  
+May be followed in the datafile with a modulus value.  
+<hr>
+
+<a name="tolerance"></a><h3>Tolerance</h3>
+As a keyword, "tolerance" refers to a
+<a href="quants.htm#quantity tolerance">fixed quantity attribute</a>
+that is used as the criterion for convergence.  Uses
+<a href="syntax.htm#target_tolerance">target_tolerance</a> as the
+default value. 
+
+<hr>
+<a name="div_normal_curvature"></a><h3>Div_normal_curvature</h3>
+Toggle to make sq_mean_curvature energy calculate the mean curvature
+by the divergence of the normal vectors at the vertices of a facet.
+
+<hr>
+<a name="force_pos_def"></a><h3>Force_pos_def</h3>
+Toggle. If this is on during YSMP factoring of Hessian and the Hessian
+turns up indefinite, something will be added to the diagonal element
+to make it positive definite.  Left over from some experiment probably.
+
+<hr>
+<a name="h_inverse_metric"></a><h3>H_inverse_metric</h3>
+Toggle. Replaces force by Laplacian of force.  For doing motion
+by Laplacian of mean curvature.
+
+<hr>
+<a name="modulus"></a><h3>Modulus</h3>
+A keyword that is an attribute of a
+<a href="quants.htm#named quantities">named quantity</a>
+or a <a href="quants.htm#method instances">method instance</a>, which
+is a multiplier for the calculated value.
+
+<hr>
+<a name="opacity"></a><h3>Opacity</h3>
+Facet attribute for transparency on some geomview systems.
+Syntax: <tt>set facet opacity </tt><i> value</i> where value
+is between 0 and 1.  Actually, this just sets a global variable
+for all facets simultaneously. The value is passed to geomview in
+the alpha slot of the color.
+<hr>
+<a name="parameters"></a>
+<a name="parameter"></a><h3>Parameter</h3>
+Refers to either a 
+<a href="constrnt.htm#parametric boundaries">parametric boundary</a>
+parameter, or a user-defined <a href="syntax.htm#variables">variable</a>.
+
+<hr>
+<a name="parameter_file"></a><h3>Parameter_file</h3>
+In the top section of the datafile, a variable can be initialized
+with a set of values in a file with the syntax
+<pre>
+PARAMETER name PARAMETER_FILE string
+</pre>
+I forget exactly how it is all supposed to work.
+<hr>
+
+<a name="pressure"></a>
+<h3>Pressure</h3>
+Usually means an attribute of 
+<a href="elements.htm#body pressure">fixed-volume bodies</a> or 
+<a href="quants.htm#quantity pressure">fixed named
+quantities</a> that is actually the Lagrange multiplier for the constraint.
+As body attribute in the datafile, establishes 
+<a href="energies.htm#pressure energy">fixed pressure</a> for the
+body.
+Also used rarely in the top section of the datafile to establish the
+<a href="toggle.htm#ambient_pressure">ideal gas model</a>.
+
+<hr>
+<a name="surface_energy"></a><h3>Surface_energy</h3>
+An obsolete way of including vector surface energy integrals in the
+datafile.  The present method is to use 
+a <a href="quants.htm#named quantities">named quantity</a>
+with the <a href="quants.htm#facet_vector_integral">facet_vector_integral</a>
+method.
+<hr>
+
+<a name="total"></a><h3>Total</h3>
+An obsolete syntax for the value of a named quantity (e.g. my_quant) is
+"total my_quant".  The present syntax is "my_quant.value".
+<hr>
+
+<a name="valence"></a><h3>Valence</h3>
+An attribute of a vertex, which is the number of incident edges,
+or an attribute of an edge, which is the number of incident facets,
+or an attribute of a facet, which is the number of edges on the facet.
+<hr>
+
+<a name="vertex"></a><h3>Vertex</h3>
+One of the basic <a href="elements.htm#vertices">geometric elements</a>. 
+As a keyword, it is used
+in <a href="commands.htm#generators">element generators</a>.
+
+<hr>
+<a name="utest"></a><h3>Utest</h3>
+Runs a test to see if triangulation is Delaunay. Meant for higher
+dimensions and simplex model.
+<hr>
+<a name="stability_test"></a><h3>Stability_test</h3>
+Command to find largest eigenvalue of 
+<a href="model.htm#mobility">mobility</a> matrix. Don't really
+recall what this was for.
+<hr>
+<a name="tag"></a><h3>Tag</h3>
+An obsolete facet attribute, once used to associate an arbitrary
+value with a facet.  Now superseded by 
+<a href="elements.htm#extra attributes">extra attributes</a>.
+
+
+<hr>
+<a name="dynamic load library"></a><h2>Dynamic load libraries.</h2>
+
+This feature hasn't been used much, but documentation is included here
+for completeness.
+
+Many Evolver features, such as <a href="constrnt.htm#level set constraints">
+level set constraints</a>, <a href="constrnt.htm#parametric boundaries">
+parametric boundaries</a>,  <a href="quants.htm#named methods">
+named method</a> integrands, and <a href="model.htm#metric"> Riemannian
+metrics</a> require user-defined functions of a set of arguments.
+The expressions for these functions are ordinarily stored as a parse tree
+and interpreted each time needed, which can be much slower that evaluating
+compiled expressions.  There is a way to use a set of compiled functions
+specific to a datafile through a mechanism known as dynamic loading.
+Here a library of functions for a datafile is separately compiled,
+and then loaded at runtime when a the datafile is loaded.  Currently,
+the Evolver only implements a dynamic loading mechanism found on
+many unix systems, whose presence can be tested by looking for the
+existence of the file /usr/include/dlfcn.h.  If it exists, you can
+enable dynamic loading by including -DENABLE_DLL in the CFLAGS line
+in the Makefile.  On some systems, you may need to include -ldl on
+the GRAPHLIB line also, to link Evolver with functions such as
+dlopen().
+
+To create the library for a datafile, write a source file containing
+C code for the desired functions, compile it, and link it into a 
+shared library.  The function should be able to compute the value
+and the partial derivatives of the function, and its second partials
+if you are going to use any <a href="eigentut.htm">Hessian</a> features.
+A sample source file for a 2-dimensional datafile:
+<pre>
+
+#define FUNC_VALUE  1
+#define FUNC_DERIV  2
+#define FUNC_SECOND 3
+#define MAXCOORD 4   /* must be same as in Evolver!! */
+#define REAL double  /* long double if Evolver compiled with -DLONGDOUBLE */ 
+struct dstack { REAL value; 
+		REAL deriv[2*MAXCOORD];
+                REAL second[2*MAXCOORD][2*MAXCOORD]; };
+
+
+void func1 ( mode, x, s )
+int mode; /* FUNC_VALUE, FUNC_DERIV, FUNC_SECOND */
+REAL *x;  /* pointer to list of arguments */
+struct dstack *s;  /* for return values */
+{ REAL value;
+
+  s-&gt;value = x[0] + x[1]*x[1];
+
+  if ( mode == FUNC_VALUE ) return;
+
+  /* first partials */
+  s-&gt;deriv[0] = 1.0;
+  s-&gt;deriv[1] = 2*x[1];
+
+  if ( mode == FUNC_DERIV ) return;
+
+  /* second partials */
+  s-&gt;second[0][0] = 0.0;
+  s-&gt;second[0][1] = 0.0;
+  s-&gt;second[1][0] = 0.0;
+  s-&gt;second[1][1] = 2.0;
+   
+  return;
+}
+</pre>
+
+Supposing the sourcefile name to be foo.c,
+compile and link on SGI systems (IRIX 5.0.1 or above) with
+<pre>
+cc -c foo.c
+ld -shared foo.o -o foo.so
+</pre>
+Sun systems are the same, but with -s in place of -shared.  For
+other systems, consult the ld documentation for the option to
+make a shared library or dynamic load library.
+<p>
+To use the functions in a datafile, include a line at the top
+of the datafile before any of the functions are used:
+<pre>
+load_library "foo.so"
+</pre>
+The current directory and the <a href="install.htm#EVOLVERPATH">EVOLVERPATH</a>
+will be searched for the library.
+Up to 10 libraries may be loaded.
+Afterwards, any of the functions may be invoked just by using
+their name, without an explicit argument list because the argument
+list is always implicit where these functions are legal. Examples,
+supposing func2 is also defined with one argument:
+<pre>
+constraint 1
+formula: func1
+
+boundary 1 parameters 2
+x1: func2
+x2: 3*func2 + sin(p1)
+</pre>
+It is up to you to make sure the number of arguments your function
+expects is the same as the number implicit in the use of the function.
+You do not need to explicitly declare your functions in the datafile.
+Any undefined identifier is checked to see if it is a dynamically
+loaded function.
+<p>
+NOTE: This implementation of dynamic loading is experimental, and the
+interface described here may change in the future.
+
+<hr>
+<a name="__bhead_index"></a><h3>__bhead_index</h3>
+A body attribute used internally by Hessian routines.
+
+<hr>
+<a name="__vhead_index"></a><h3>__vhead_index</h3>
+A vertex attribute used internally by Hessian routines.
+
+<hr>
+<a name="form_factors"></a><h3>form_factors</h3>
+A facet extra attribute vector used by several elastic energy named
+methods: <a href="quants.htm#linear_elastic">linear_elastic</a>, 
+<a href="quants.htm#neo_hookean">neo_hookean</a>, 
+<a href="quants.htm#relaxed_elastic">relaxed_elastic</a>, 
+<a href="quants.htm#relaxed_elastic_A">relaxed_elastic_A</a>,
+<a href="quants.htm#SVK_elastic">SVK_elastic</a>, and 
+<a href="quants.htm#dirichlet_elastic">dirichlet_elastic</a>.  
+The entries are the dot products of
+the sides of the relaxed facet. Due to symmetry, there are only three
+distinct dot products, so form_factors just has length 3.  The entries
+are {s11,s12,s22}, where s11 = dot(v2-v1,v2-v1), s12 = dot(v2-v1,v3-v1),
+and s22 = dot(v3-v1,v3-v1).  If form_factor is not defined by the user,
+it will be created by Evolver, and the initial facet shape will be assumed
+to be unstrained.
+
+<hr>
+<a name="poisson_ratio"></a><h3>poisson_ratio</h3>
+Facet extra attribute used by various elastic named methods:
+<a href="quants.htm#linear_elastic">linear_elastic</a>, 
+<a href="quants.htm#linear_elastic_B">linear_elastic_B</a>, 
+<a href="quants.htm#neo_hookean">neo_hookean</a>, 
+<a href="quants.htm#relaxed_elastic">relaxed_elastic</a>, 
+<a href="quants.htm#relaxed_elastic_A">relaxed_elastic_A</a>,
+<a href="quants.htm#SVK_elastic">SVK_elastic</a>, and 
+<a href="quants.htm#dirichlet_elastic">dirichlet_elastic</a>.  
+
+This is the two-dimensional isotropic poisson ratio.
+
+
+<a name="h_zero"></a>
+<hr>
+Some physical surfaces have their lowest energy state when their
+mean curvature is some nonzero value.  An example is a membrane
+made of parallel stacked molecules which have one end bigger than
+the other.  Their curvature energy is thus proportional to (h-h0)^2,
+where h is the actual mean curvature and h0 is the equilibrium or
+intrinsic mean curvature. Several of the squared mean curvature
+named methods can use h0, either in the form of a variable h_zero
+or a real-valued vertex attribute h_zero.  If the vertex attribute
+exists, it takes precedence.
+
+Methods using h_zero:
+<ul>
+<li><a href="quants.htm#sq_mean_curv_cyl">
+  sq_mean_curv_cyl</a>
+<li><a href="quants.htm#sq_mean_curvature">
+  sq_mean_curvature</a>
+<li><a href="quants.htm#eff_area_sq_mean_curvature">
+  eff_area_sq_mean_curvature</a>
+<li><a href="quants.htm#normal_sq_mean_curvature">
+  normal_sq_mean_curvature</a>
+<li><a href="quants.htm#star_normal_sq_mean_curvature">
+  star_normal_sq_mean_curvature</a>
+<li><a href="quants.htm#star_perp_sq_mean_curvature">
+  star_perp_sq_mean_curvature</a>
+<li><a href="quants.htm#sqcurve2_string">
+  sqcurve2_string</a>
+</ul>
+
+Methods not using h_zero:
+<ul>
+<li><a href="quants.htm#star_sq_mean_curvature">
+  star_sq_mean_curvature</a>
+<li><a href="quants.htm#star_eff_area_sq_mean_curvature">
+  star_eff_area_sq_mean_curvature</a>
+<li><a href="quants.htm#sqcurve_string">
+  sqcurve_string</a>
+<li><a href="quants.htm#sqcurve_string_marked">
+  sqcurve_string_marked</a>
+<li><a href="quants.htm#sqcurve3_string">
+  sqcurve3_string</a>
+<li><a href="quants.htm#circle_willmore">
+  circle_willmore</a>
+</ul>
+
+
+<a name="knot_power"></a>
+<hr>
+<h3>knot_power</h3>
+Internal read-write variable used as exponent on some term in
+various knot energies.  Named methods using knot_power are:
+
+<ul>
+<a href="quants.htm#buck_knot_energy">
+buck_knot_energy</a>
+<a href="quants.htm#charge_gradient">
+charge_gradient</a>
+<a href="quants.htm#facet_knot_energy">
+facet_knot_energy</a>
+<a href="quants.htm#facet_knot_energy_fix">
+facet_knot_energy_fix</a>
+<a href="quants.htm#knot_energy">
+knot_energy</a>
+<a href="quants.htm#knot_thickness_0">
+knot_thickness_0</a>
+<a href="quants.htm#knot_thickness_p">
+knot_thickness_p</a>
+<a href="quants.htm#knot_thickness_p2">
+knot_thickness_p2</a>
+<a href="quants.htm#proj_knot_energy">
+proj_knot_energy</a>
+<a href="quants.htm#sphere_knot_energy">
+sphere_knot_energy</a>
+<a href="quants.htm#uniform_knot_energy">
+uniform_knot_energy</a>
+<a href="quants.htm#uniform_knot_energy_normalizer">
+uniform_knot_energy_normalizer</a>
+<a href="quants.htm#uniform_knot_normalizer1">
+uniform_knot_normalizer1</a>
+<a href="quants.htm#uniform_knot_normalizer2">
+uniform_knot_normalizer2</a>
+</ul>
+
+
+<a name="surface_knot_power"></a>
+<hr>
+<h3>surface_knot_power</h3.
+
+Internal read-write variable used in the 
+<a href="quants.htm#facet_knot_energy">facet_knot_energy</a>  and
+<a href="quants.htm#sphere_knot_energy">sphere_knot_energy</a>
+named methods
+as the exponent of the denominator.
+
+<hr>
+<a name="LEBweight"></a>
+<h3>LEBweight></h3>
+Facet extra attribute used to weight individual facets in the
+named methods <a href="quants.htm#linear_elastic_B">linear_elastic_B</a>,
+named methods <a href="quants.htm#relaxed_elastic">relaxed_elastic</a>,
+named methods <a href="quants.htm#relaxed_elastic_A">relaxed_elastic_A</a>,
+
+<hr>
+<a name="old_force_ribiere"></a>
+<h3>old_force_ribiere</h3>
+Vertex extra attribute used internally by conjugate gradient mode.
+
+<hr>
+<a name="parameter_1"></a><h3>parameter_1</a>
+A generic parameter used by a couple of named methods.
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+</body>
+</html>

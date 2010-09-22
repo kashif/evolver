@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 12</title></head>
+
+<BODY>
+<a name="newsletter 13"></a>
+<h1>Surface Evolver Newsletter no. 13</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+
+
+                    Surface Evolver Newsletter Number 13
+                              April 30, 1996
+
+                   Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents
+  Version 2.00 released
+  New Features
+  Minor backward compatibilities
+  Request for web links
+  Bibliography
+
+Version 2.00 released
+
+  Version 2.00 is now available from geom.umn.edu by ftp, or from
+  http://www.geom.umn.edu/software/download/evolver/evolver.html, or from 
+  my own home page, http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm.
+  The version number is 2.00 mostly because the last version was 1.99.
+  No big rewrite, but there are some major new features.
+
+  Anybody who happened to get a pre-release version 2.00, dated before
+  April 30, should get the official release, as there have been a few
+  bug fixes.
+
+New features
+
+  There are now versions for Windows-95 and Windows-NT.
+
+  Much of the manual has been translated into HTML form, which
+  can be browsed with standard Web browsers.  I've only tested
+  it with Netscape, and I don't make any guarantees about how
+  other browsers will do. But it's mostly just basic text.  No
+  pictures or fancy graphics yet.
+
+  The Evolver has a "help" command which will print extracts
+  from the HTML files, based on keyword.
+
+  Error and warning messages are numbered.  Someday there may be
+  helpful documentation of all the error messages, but for now the
+  numbers are useful to me to pinpoint the exact error.
+  
+  For precision freaks, higher-order Lagrange elements have been
+  added (LINEAR is Lagrange order 1, QUADRATIC is Lagrange order 2).
+
+  Also for precision freaks, if you compile with -DLONGDOUBLE then
+  all floating point calculations will be in your system's
+  long double type, which may provide up to 30 significant digits.
+
+  There is a "postscript" command that prints postscript files 
+  without asking you any questions.  Various toggles control the
+  options.
+
+  The distribution has a bunch of sample command files.  One is
+  "vrml.cmd", which writes a VRML file suitable for your web site.
+
+  The "interp_bdry_param" toggle causes boundary parameters to be
+  interpolated rather than extrapolated when refining an edge.
+
+  The 'X' command shows the dictionary of extra attributes, including
+  those used internally.
+
+  There is a "return" command for exiting the current command, or causing
+  a subcommand to return to its parent command.
+
+  When using the -q option (which converts everything to named quantities),
+  only the user's explicitly defined quantities are shown by the 'A' and
+  'v' commands.  The "show_all_quantities" toggle will cause those commands
+  to list all quantities.
+  
+Minor backward compatibilities
+
+  Fixed facets, edges, and vertices are now included when calculating 
+  energies and areas.
+
+  Evolver now enforces in the datafile the rule that all variable names 
+  must be at least two characters.
+
+  The term "variable_parameter", introduced in version 1.99, has been
+  replaced by the more descriptive term "optimizing_parameter".
+
+  There have been some changes in the internal workings of the 'g'
+  command that might cause slightly different numerical values. 
+
+Request for web links
+
+  If you have web pages relevant to the Surface Evolver, please let
+  me know.  One site with several Evolver examples involving liquid
+  solder is http://www.ctcms.nist.gov/programs/solder/.
+
+Bibliography
+
+  Xavier Michalet and David Bensimon, "Observation of stable
+  shapes and conformal diffusion in genus 2 vesicles",
+  Science, vol. 269 (4 Aug 1995), 666-668.
+  Tests hypothesis that some cell membranes are shaped by
+  an elastic bending energy (i.e. squared mean curvature)
+  by comparing Evolver surfaces to actual vesicles.
+
+  R. Phelan, D. Weaire, and K. Brakke, "Computation of equilibrium
+  foam structures using the Surface Evolver", Experimental Mathematics,
+  vol. 4 no. 3 (1995), 181-192.  Discusses foam structures that beat
+  Kelvin's tetrakaidecahedral foam, including the now-famous
+  Weaire-Phelan structure.  Also describes the stability of the 
+  structures as liquid is added to form Plateau borders.  Color pictures.
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

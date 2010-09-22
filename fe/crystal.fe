@@ -1,0 +1,62 @@
+// crystal.fe
+// Evolver data for cube of prescribed volume with
+//   crystalline surface energy.  Evolves into an octahedron.
+
+Wulff "octa.wlf"    // Wulff vectors for octahedral crystal
+
+vertices
+1  0.0 0.0 0.0 
+2  1.0 0.0 0.0
+3  1.0 1.0 0.0
+4  0.0 1.0 0.0
+5  0.0 0.0 1.0
+6  1.0 0.0 1.0
+7  1.0 1.0 1.0
+8  0.0 1.0 1.0
+9  0.0 0.0 0.5
+10 1.0 0.0 0.5
+11 1.0 1.0 0.5
+12 0.0 1.0 0.5
+
+edges  /* given by endpoints and attribute */
+1   1 2   
+2   2 3   
+3   3 4  
+4   4 1 
+5   5 6
+6   6 7  
+7   7 8 
+8   8 5
+9   1 9   
+10  2 10  
+11  3 11 
+12  4 12
+13  9 5
+14  10 6
+15  11 7
+16  12 8
+17   9 10
+18  10 11
+19  11 12
+20  12  9
+
+faces  /* given by oriented edge loop */
+1   1 10 -17  -9
+2   2 11 -18 -10
+3   3 12 -19 -11
+4   4  9 -20 -12
+5   5  6  7   8
+6  -4 -3 -2  -1
+7  17 14 -5 -13
+8  18 15 -6 -14
+9  19 16 -7 -15
+10 20 13 -8 -16 
+
+bodies  /* one body, defined by its oriented faces */
+1   1 2 3 4 5 6 7 8 9 10  volume 1
+ 
+
+read
+
+// Sample evolution
+gogo := { g 10; }

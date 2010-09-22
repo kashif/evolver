@@ -1,0 +1,177 @@
+// mylarcube.fe
+// By Kenneth Brakke, Feb. 17, 2002
+// Evolver data for mylar cube.  Idea is to deform cube
+// without stretching to maximize volume.  Implemented with
+// relaxed_elastic_A method, which permits a little stretching, but
+// shrinks freely.  Can crank up the elastic modulus to get 
+// effective no stretching.  The relaxed_elastic_A method calculates
+// the Cauchy-Green strain tensor of a facet, and then uses
+// Poisson's ratio to get the stress tensor.  Then it calculates
+// the stress eigenvalues, and assigns energy proportional to the
+// square of positive eigenvalues, but zero energy for negative
+// eigenvalues.  So it permits effective wrinkling.  The original
+// unstretched shape of a facet is remembered in an extra facet
+// attribute named form_factors, which has the components of the
+// Gram matrix of the unstretched facet.  This datafile assumes the
+// initial surface is unstretched, and sets the form_factors in
+// the "read" section below.  To recompute form factors after refining,
+// there is also a vertex attribute that holds the unstretched 
+// vertex coordinates.  The "r" command has been redefined in the
+// "read" section to properly adjust the form factors. DO NOT refine
+// or modify the triangulation in any other way than using the "r"
+// command, unless you want to take responsibility for fixing up
+// the form factors.
+
+// The Poisson ratio in this datafile is set to be 0.80 in the "read"
+// section.  This was the Poisson ratio used in the project that 
+// relaxed_elastic_A was originally developed for: modeling high-altitude
+// balloons.  A couple of test runs with lower Poisson ratio led to 
+// indefinite hessians at the end, so I am leaving the ratio as 0.80.
+
+// Evolving hints: See the sample evolution "gogo" below.  The idea is
+// to ramp up the elastic modulus as you refine and approach the final
+// shape.  For final convergence, use "hessian_seek" instead of "hessian",
+// since "hessian" has a tendency to blow up the surface here, and
+// "hessian_seek" prevents that by doing a minimum-energy search along
+// the direction to the putative hessian minimum.  Note that the energy
+// contribution of the elastic is inversely proportional to the elastic
+// modulus.  I'm not sure how high you can get the modulus effectively;
+// at least 1000000.  Extrapolate to infinite modulus for unstretchable
+// mylar.
+
+// If you want confirmation at the end that there is little stretching 
+// going on, the command "echeck" below will print out a histogram of
+// edge stretch factors.
+
+// Do not try to do quadratic or lagrange models; relaxed_elastic_A is
+// defined only for the linear model.
+
+/***************************************************************************/
+
+// Set volume to be maximized.  Do this by setting energy to negative
+// volume, since Evolver minimizes energy.
+quantity cube_volume energy modulus -1 method facet_volume global
+
+// Elastic energy.
+// Stuff to do relaxed_elastic_A method
+
+define facet attribute poisson_ratio real
+
+// For defining unstretched facet shape
+define facet attribute form_factors real[3] 
+
+// For resetting form_factors in refining
+define vertex attribute ref_coord real[3]
+define vertex attribute old_vid  integer
+define edge   attribute old_eid  integer
+
+// This is the key energy to permit wrinkling but discourage stretching.
+quantity stretch energy modulus 10 method relaxed_elastic_A global
+
+// For components of stress
+quantity stretch1 info_only method relaxed_elastic1_A global
+quantity stretch2 info_only method relaxed_elastic2_A global
+
+vertices
+1  0.0 0.0 0.0 
+2  1.0 0.0 0.0
+3  1.0 1.0 0.0
+4  0.0 1.0 0.0
+5  0.0 0.0 1.0
+6  1.0 0.0 1.0
+7  1.0 1.0 1.0
+8  0.0 1.0 1.0
+
+edges  /* given by endpoints and attribute */
+1   1 2   
+2   2 3   
+3   3 4  
+4   4 1 
+5   5 6
+6   6 7  
+7   7 8 
+8   8 5
+9   1 5   
+10  2 6  
+11  3 7 
+12  4 8
+
+faces  /* given by oriented edge loop */
+1   1 10 -5  -9  tension 0
+2   2 11 -6 -10  tension 0
+3   3 12 -7 -11  tension 0
+4   4  9 -8 -12  tension 0
+5   5  6  7   8  tension 0
+6  -4 -3 -2  -1  tension 0
+
+bodies  /* one body, defined by its oriented faces */
+1   1 2 3 4 5 6 
+
+
+read
+
+// refine original edges so better suited to detect creases
+refine edge where id >= 1 and id <=12
+
+set facet poisson_ratio 0.80
+set vertex ref_coord[1] x;
+set vertex ref_coord[2] y;
+set vertex ref_coord[3] z;
+
+// Set form factors so initial cube is unstretched.
+set_form_factors := {
+foreach facet ff do 
+{ set ff.form_factors[1]  
+          (ff.vertex[2].ref_coord[1] - ff.vertex[1].ref_coord[1])^2
+        + (ff.vertex[2].ref_coord[2] - ff.vertex[1].ref_coord[2])^2
+        + (ff.vertex[2].ref_coord[3] - ff.vertex[1].ref_coord[3])^2;
+  set ff.form_factors[2]  
+          (ff.vertex[2].ref_coord[1] - ff.vertex[1].ref_coord[1])
+         *(ff.vertex[3].ref_coord[1] - ff.vertex[1].ref_coord[1])
+        + (ff.vertex[2].ref_coord[2] - ff.vertex[1].ref_coord[2])
+         *(ff.vertex[3].ref_coord[2] - ff.vertex[1].ref_coord[2])
+        + (ff.vertex[2].ref_coord[3] - ff.vertex[1].ref_coord[3])
+         *(ff.vertex[3].ref_coord[3] - ff.vertex[1].ref_coord[3]);
+  set ff.form_factors[3]  
+          (ff.vertex[3].ref_coord[1] - ff.vertex[1].ref_coord[1])^2
+        + (ff.vertex[3].ref_coord[2] - ff.vertex[1].ref_coord[2])^2
+        + (ff.vertex[3].ref_coord[3] - ff.vertex[1].ref_coord[3])^2;
+}
+}
+set_form_factors;
+
+// redefine the "r" command to adjust form factors.
+r :::= { 
+     set vertex old_vid id;
+     set edge old_eid id;
+     'r'; 
+     foreach vertex vv where old_vid == 0 do
+     { vv.ref_coord[1] := 
+          avg(vv.edge ee where old_eid != 0,sum(ee.vertex where old_vid != 0,
+                    ref_coord[1]));
+       vv.ref_coord[2] := 
+          avg(vv.edge ee where old_eid != 0,sum(ee.vertex where old_vid != 0,
+                    ref_coord[2]));
+       vv.ref_coord[3] := 
+          avg(vv.edge ee where old_eid != 0,sum(ee.vertex where old_vid != 0,
+                    ref_coord[3]));
+     };
+     set_form_factors;
+     recalc;
+}
+
+// check of how edge lengths stretched
+echeck :=  { histogram(edge ee, ee.length/sqrt(
+    (ee.vertex[2].ref_coord[1] - ee.vertex[1].ref_coord[1])^2
+  + (ee.vertex[2].ref_coord[2] - ee.vertex[1].ref_coord[2])^2
+  + (ee.vertex[2].ref_coord[3] - ee.vertex[1].ref_coord[3])^2));
+}
+
+
+// Typical evolution
+gogo := { g 10; r; g 10; stretch.modulus := 100; g 10; r; g 10;
+          conj_grad; g 20; r; g 50;  
+          stretch.modulus := 1000; g 50; 
+          stretch.modulus := 10000; g 150;
+          g 200; hessian_seek; hessian_seek; hessian_seek; hessian_seek;
+}

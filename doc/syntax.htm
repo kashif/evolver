@@ -1,0 +1,1507 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><TITLE>Surface Evolver Documentation - general syntax</title></head>
+
+<BODY>
+<!--NewPage-->
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<h1>Surface  Evolver syntax </h1>
+Both the datafile and user commands follow a common general syntax
+described in this file, with a few differences as noted.
+<table><tr><td valign=top><ul>
+<li><a href="#lexical format">Lexical format</a>
+<li><a href="#comments">Comments</a>
+<li><a href="#line splicing">Line splicing</a>
+<li><a href="#case">Case</a>
+<li><a href="#whitespace">Whitespace</a>
+<li><a href="#identifiers">Identifiers</a>
+<li><a href="#numbers">Numbers</a>
+<li><a href="#colors">Colors</a>
+<li><a href="#atomic values">Atomic values</a>
+<li><a href="#internal variables">Internal variables</a>
+<li><a href="#variables">User-defined variables</a> 
+</ul></td><td valign=top><ul>
+<li><a href="#attr values">Element attributes</a>
+<li><a href="#arrays">Arrays</a>
+<li><a href="#expressions">Arithmetic expressions</a>
+<li><a href="#constexpr">Constant expressions</a>
+<li><a href="#operators">Arithmetic operators</a>
+<li><a href="#boolean ops">Boolean operators</a>
+<li><a href="#precedence">Operator precedences</a>
+<li><a href="#functions">Math functions</a>
+<li><a href="#stringexpr">String expressions</a>
+<li><a href="#misc functions">Miscellaneous functions</a>
+
+</ul></td></tr>
+</table>
+<hr><a name="lexical format"></a><h2>Lexical format</h2>
+
+         For those who know about such things,
+         the datafile and commands are read with a lexical analyzer generated
+         by the lex program.  The specification is in datafile.lex.  Commands
+         are further parsed by a yacc-generated parser.
+<p>
+          In parsing an expression, the longest legal expression
+          is used.  This permits coordinates to be specified by
+          several consecutive expressions  with no special 
+          separators.
+<hr>
+<a name="comments"></a><h2>Comments</h2>
+
+         Comments may be enclosed in /* */ pairs (as in C) and
+         may span lines. // indicates the rest of the line is a comment,
+         as in C++.
+
+<hr><a name="line splicing"></a><h2>Lines and line splicing</h2>
+
+         The file is made up of lines.  Line breaks are significant.
+         The next physical line can be spliced onto the current 
+         line by having \ be the last character of the current line.
+         Line splicing is not effective in // comments.
+         Blank lines and comment lines may be placed freely anywhere.
+	 The various combinations of CR and NL that
+         various computer systems use are all recognized
+
+<hr><a name="case"></a><h2>Case</h2>
+
+     Case is not significant in the datafile.  In commands, case is only 
+     significant
+     for <a href="single.htm#single letter">single-letter commands</a>.
+
+<hr><a name="whitespace"></a><h2>Whitespace</h2>
+
+         In the datafile, whitespace consists of spaces, tabs, commas, colons,
+         and semicolons.  So it's fine if you want to use commas to 
+         separate coordinate values, and colons to prettify constraint
+         definitions.  In commands, whitespace consists of spaces and tabs.
+	 CTRL-Z is also whitespace, for the benefit of files imported from
+	 DOS.
+
+<hr>
+<a name="identifiers"></a><h2>Identifiers</h2>
+
+         Identifiers follow standard
+         C rules (composed of alphanumeric characters and '_'
+         with the leading character not a digit) and must not
+         be keywords.  Identifiers are used for macro names 
+         (in the datafile) and user-defined 
+<a href="#variables">variables</a> and 
+<a href="commands.htm#command definition">commands</a>.
+         Identifiers must have at least two characters,
+	 since single characters can be confused with commands.
+         To find out if a name is already in use as a keyword or
+         user-defined name interactively, use 
+       <a href="commands.htm#help">help</a> command.  In scripts, one
+       can use the is_defined function, which has the syntax
+<pre> is_defined(<em>stringexpr</em>)
+</pre>
+The <em>stringexpr</em> must be a quoted string or other string expression.
+The return value is 0 if the name is undefined, 1 if defined.
+This function is evaluated at run-time, but variables in the whole
+command are parsed before the command is executed, so a command
+ like <tt> if is_defined("newvar") then newvar := 1 else newvar := 2</tt>
+  will give <tt> newvar</tt> the value 1 even if this is its first appearance.
+A better way in scripts to test is to use the <a href="commands.htm">define</a>
+command to define the variable without initialization, and then test to
+see if it has the default value, i.e. 0 for a numeric variable and a
+<a href="#sizeof">sizeof</a> 0 for a string variable.
+
+<hr><a name="numbers"></a><a name="hexadecimal numbers"></a>
+<a name="binary numbers"></a>
+<h2>Numbers</h2>
+
+         Constant values may be in any of the usual forms.  This
+         includes integers, fixed point, and scientific notation
+         such as
+<pre>      2    -3    .5    23.    5e-10    +0.7D2
+</pre>
+Hexadecimal integers starting with 0x, as in 0x12Af, are also accepted,
+as are binary numbers such as 11001b, indicated by a trailing 'b'.
+<a href="#colors">Color</a> names are interpreted as integers.
+<hr>
+
+<a name="clear"></a>
+<a name="black"></a>
+<a name="blue"></a>
+<a name="green"></a>
+<a name="cyan"></a>
+<a name="red"></a>
+<a name="magenta"></a>
+<a name="brown"></a>
+<a name="lightgray"></a>
+<a name="lightgrey"></a>
+<a name="darkgray"></a>	  
+<a name="darkgrey"></a>	  
+<a name="gray"></a>	  
+<a name="grey"></a>	  
+<a name="lightblue"></a>
+<a name="lightgreen"></a>
+<a name="lightcyan"></a>
+<a name="lightred"></a>
+<a name="lightmagenta"></a>
+<a name="yellow"></a>
+<a name="white"></a>
+<a name="transparent"></a>
+<a name="colors"></a><h2>Colors</h2>
+
+ The colors of <a href="elements.htm#edge color">edges</a>
+ and <a href="elements.htm#facet color">facets</a>
+ are recorded as integers in the
+range -1 through 15.  How these
+ integers translate to colors on the screen is determined by how
+ Evolver's graphics drivers are written.  The following synonyms are
+ supplied, and it is hoped that the
+ graphics drivers will be written to display these correctly:<br>
+<table><tr valign=top><td>
+-1  CLEAR <br>
+0  BLACK  <br>
+1 BLUE <br>
+2 GREEN <br>
+3 CYAN <br>
+4 RED <br></td>
+<td>
+5 MAGENTA <br>
+6 BROWN <br>
+7 LIGHTGRAY <br>
+8 DARKGRAY	 	  <br>
+9 LIGHTBLUE <br>
+10 LIGHTGREEN <br></td>
+<td>
+11 LIGHTCYAN <br>
+12 LIGHTRED <br>
+13 LIGHTMAGENTA <br>
+14 YELLOW <br>
+15 WHITE <br></td></tr>
+</table>
+The special color value CLEAR (-1) makes a facet transparent.
+"Transparent" is a synonym for clear.
+<p>
+These tokens are simply translated to integer values wherever they
+occur, so these are reserved words. Edge and facet colors may be
+set in the datafile or by the <a href="commands.htm#set">set</a> command.
+
+<hr>
+<a name="expr"></a>
+<a name="expressions"></a><h2>Arithmetic expressions</h2>
+
+ Arithmetic expressions evaluate to real numbers.  Boolean expressions
+ are a subclass, with zero as false and nonzero as true; true results
+ evaluate as 1.  Ordinary algebraic notation is used.
+
+<ul>
+<li> <a href="#atomic values">atomic values</a>
+<li> <a href="#operators">arithmetic operators</a>
+<li> <a href="#boolean ops">boolean operators</a>
+<li> <a href="#precedence">operator precedences</a>
+<li> <a href="#functions">math functions</a>
+<li> <a href="#aggregate functions">aggregate functions</a>
+</ul>
+
+<hr>
+<a name="constant expressions"></a><h2>Constant expressions</h2>
+<a name="constexpr"></a>
+Constant expressions are evaluated when parsed.  They are denoted
+by <em>constexpr</em> in various syntax definitions. They occur
+mostly in the datafile.  Although they may contain variables, 
+changing the variable value after parsing has no effect.
+<a name="var expr">Variable expressions</a> (denoted by <em>expr</em>
+in syntax definitions) are recorded as parse trees and are re-evaluated
+each time needed. 
+<hr>
+<a name="pi"></a>
+<a name="atomic values"></a> <h2>Atomic values</h2>
+The following evaluate to single numbers in expressions:
+<dl>
+<dt><b>number</b></dt>
+   <dd>  An integer, real, or hexadecimal <a href="#numbers">constant</a>.
+         Hex numbers begin with <tt>0x</tt>. </dd>
+<dt><b> pi</b></dt>
+   <dd> Mathematical constant, ratio of circle circumference to  radius.</dd>
+<dt> <b>x1,x2,...; x,y,z,w </b></dt>
+    <dd>   Depending on context, space coordinates, vertex coordinates,
+    edge vector components, or facet normal components.</dd>
+<dt><b>p1,p2,...</b></dt>
+    <dd>Parameters of vertices on 
+      <a href="constrnt.htm#parametric boundaries">boundaries</a>.</dd>
+<dt> <a name="G value"><b>G</b></a></dt>
+  <dd>Current gravitational constant
+for calculating <a href="energies.htm#gravity energy">gravitational energy</a>.
+</dd>
+
+<dt><b> <a href="#variables">user-defined variables</a> </b></dt>
+  <dd> Arbitrary variables defined in the datafile or at runtime.</dd>
+<dt><b> Indexed <a href="#arrays">array</a> variables.</b></dt>
+  <dd> User-defined multidimensional arrays of reals or integers, and some internally defined arrays.</dd>
+<dt> <a href="#internal variables"><b>internal variables</b></a></dt>
+ <dd> Special pre-defined variables.</dd>
+<dt> <a href="#attr values"><b>element attributes</b></a></dt>
+<dd>   Things like vertex coordinates, edge length facet area, colors.</dd>
+<dt> <a href="quants.htm#named quantities"><b>named quantity</b></a> attributes
+  </dt><dd> Including modulus, target, value, pressure.</dd>
+<dt> <a href="quants.htm#method instances"><b>method instance</b></a> attributes
+  </dt><dd> Including modulus, value.</dd>
+<dt><b> toggle name</b></dt> <dd>
+Any <a href="toggle.htm">toggle command</a> 
+name may be used as a Boolean variable in an
+expression (full word toggles, not single letters).  But beware the
+ambiguity in interpreting a toggle as a command or a value.
+You may have to force the toggle to be interpreted as a value.
+"<tt>ad := autodisplay</tt>" sets ad as a command synonym for
+autodisplay, while "<tt>ad := (autodisplay)</tt>" records the
+current boolean value. </dd>
+</dl>
+<hr>
+<a name="stringexpr"></a><h2>String expressions</h2>
+A string expression evaluates to a string of characters.  At present,
+the only ways to produce strings are:
+<ul>
+<li> double-quoted string literals, e.g. <tt>"this is a string"</tt>.
+The following standard C escape sequences are recognized:
+  <ul>
+  <li> \n   newline
+  <li> \r   carriage return
+  <li> \t   tab
+  <li> \b   backspace
+  <li> \q   double-quote mark
+  <li> \<em>c</em>   the character <em>c</em> elsewise
+  </ul>
+In DOS, MS-Windows, or Windows NT paths, use / as the directory separator,
+since \ is an escape character.  DOS and Windows have always accepted
+/ as a directory separator.
+<li> successive double-quoted strings, which are concatenated into
+one string when read.
+<li> string variables, either internal like <a href="#datafilename">
+<tt>datafilename</tt></a>, or user-defined. 
+<li> output from <a href="commands.htm#sprintf"><tt>sprintf</tt></a>.
+</ul>
+<hr>
+<a name="operators"></a><h2>Arithmetic operators</h2>
+<a name="idiv"></a>
+<a name="imod"></a>
+<a name="mod"></a>
+<a name="conditional"></a>
+These are the arithmetic operators that may appear in 
+<a href="#expressions">expressions</a>:
+<dl>
+<dt> +,-,*,/</dt><dd>Usual real arithmetic.
+          NOTE: A '+' or '-' preceded by <a href="syntax.htm#whitespace">
+whitespace</a> and followed
+          by a number is taken to be a signed number. Thus
+          "3 - 5" and "3-5" are single expressions, but
+          "3 -5" is not.   This is for convenience in separating
+          multiple expressions listed on the same line for 
+	  vertex coordinates, metric components, etc. in the datafile.<p></dd>
+
+<dt> idiv </dt><dd>Integer divide. Rounds toward zero, then does
+integer division.  Ex:  7 idiv 2 is 3; -3.5 idiv 2.1 is -1;  -3 idiv 2 is -1.
+<p></dd> 
+<dt>%, mod</dt><dd>Real arithmetic modulus, x % y = x - floor(x/y)*y.<p></dd>
+<dt> imod</dt><dd> Integer arithmetic modulus,
+x imod y = floor(x) - floor(floor(x)/floor(y))*floor(y). <p></dd>
+<dt> =</dt><dd> NOT an assignment operator.  Treated as low-precedence '-'
+  so level-set constraint formulas like x^2 + y^2 - R^2 may be written
+  naturally as x^2 + y^2 = R^2.<p></dd>
+<dt> (,)</dt><dd>  Parentheses for grouping and functional notation.<p></dd>
+<dt> ^,**</dt><dd> Raise to  real power.<p></dd>
+<dt> ? : </dt><dd> Conditional expression, as in the C language.
+    x ? y : z evaluates to y if x is nonzero and to z if x is zero.<p></dd>
+</dl>
+
+<hr>
+<a name="and"></a>
+<a name="or"></a>
+<a name="not"></a>
+<a name="boolean ops"></a><h2>Boolean operators</h2>
+ Boolean expressions
+ are a subclass of arithmetic expressions, 
+with zero as false and nonzero as true; true results
+ evaluate as 1. 
+<table border>
+<tr><td> ==,&gt;,&lt;,&gt;=,&lt;=,!= </td>
+  <td> Numerical or boolean comparison.</td></tr>
+<tr><td> NOT, !</td><td>  Boolean NOT</td></tr>
+<tr><td> AND, &amp;&amp;</td><td>  Boolean AND, with short-circuit evaluation.</td></tr>
+<tr><td> OR, || </td><td> Boolean OR, with short-circuit evaluation. </td></tr>
+</table>
+<hr>
+<a name="precedence"></a><h2>Operator precedences</h2>
+Here is the order of operator precedence, listed from high to
+low with equal precedence on same line, with associativity.
+<table border>
+<tr><th>Operator</th><th>  Associativity</th></tr>
+<tr><td>^,**</td><td>  left associative </td></tr>
+<tr><td>unary -</td><td>  right associative </td></tr>
+<tr><td>*,/,%,IMOD,IDIV </td><td>  left associative </td></tr>
+<tr><td>+,- </td><td>  left associative </td></tr>
+<tr><td>   <a href="elements.htm#on_boundary">on_boundary</a>
+<br><a href="elements.htm#on_constraint">on_constraint</a>
+<br><a href="elements.htm#hit_constraint">hit_constraint</a>
+<br><a href="elements.htm#on_quantity">on_quantity</a>
+<br><a href="elements.htm#on_method_instance">on_method_instance</a>
+</td><td>  nonassociative </td></tr>
+<tr><td>==,&gt;,&lt;,&gt;=,&lt;=,!= </td><td>  right associative </td></tr>
+<tr><td>NOT, ! </td><td>  right associative </td></tr>
+<tr><td>AND, &amp;&amp; </td><td>  left associative </td></tr>
+<tr><td>OR, || </td><td>  left associative </td></tr>
+<tr><td>? : </td><td>  left associative </td></tr>
+<tr><td>=   </td><td>  left associative </td></tr>
+</table>
+ <hr>
+<a name="functions"></a> <h2>Math functions</h2>
+These are the math functions available in expressions.  They take
+one argument in parentheses, except where noted.
+<dl>
+<dt><a name="abs"></a>
+ abs(x) </dt><dd>      Absolute value. </dd>
+<!--EndName-->
+<dt><a name="sqr"></a>
+ sqr(x) </dt><dd>          Square. </dd>
+<!--EndName-->
+<dt><a name="sqrt"></a>
+ sqrt(x)   </dt><dd>        Square root.  Argument must be nonnegative.</dd>
+<!--EndName-->
+<dt><a name="sin"></a>
+<a name="cos"></a>
+<a name="tan"></a>
+ sin(x),cos(x),tan(x)</dt><dd>   Trig functions, argument in radians. </dd>
+<!--EndName-->
+<dt><a name="acos"></a>
+<a name="asin"></a>
+<a name="atan"></a>
+ acos(x),asin(x),atan(x)</dt><dd> Inverse trig functions (acos, asin arguments clamped to [-1,1]). </dd>
+<!--EndName-->
+<dt><a name="atan2"></a>
+ atan2(y,x)</dt><dd>          Inverse tangent, range -pi to pi. </dd>
+<!--EndName-->
+<dt><a name="log"></a>
+<a name="exp"></a>
+ log(x) ,exp(x)</dt> <dd>       Natural log, exponentiation base e.</dd>
+<!--EndName-->
+<dt><a name="sinh"></a>
+<a name="cosh"></a>
+<a name="tanh"></a>
+ sinh(x),cosh(x),tanh(x)</dt><dd>      Hyperbolic functions.</dd>
+<!--EndName-->
+<dt><a name="asinh"></a>
+<a name="acosh"></a>
+<a name="atanh"></a>
+ asinh(x),acosh(x),atanh(x)</dt><dd>   Inverse hyperbolic functions.</dd>
+<!--EndName-->
+<dt><a name="pow"></a>
+ pow(x,y)    </dt><dd>        Raise x to real power y; x may be negative if y is an integer.</dd>
+<!--EndName-->
+<dt><a name="ceil"></a>
+<a name="floor"></a>
+ ceil(x),floor(x)</dt><dd>     Round up or down to integer. </dd>
+<!--EndName-->
+<dt><a name="minimum"></a>
+<a name="maximum"></a>
+ minimum(a,b),maximum(a,b)</dt><dd> Extreme of two arguments. </dd>
+<!--EndName-->
+<dt><a name="ellipticK"></a>
+<a name="ellipticE"></a>
+ ellipticE(x),ellipticK(x)</dt><dd> Complete elliptic functions.</dd>
+<!--EndName-->
+<dt><a name="incompleteEllipticF"></a>
+<a name="incompleteEllipticE"></a>
+ incompleteEllipticE(phi,m),incompleteEllipticF(phi,m)</dt><dd> Incomplete elliptic functions
+ of parameters (phi,m); agrees with Mathematica definition.</dd>
+<!--EndName-->
+
+<dt><a name="matrix_multiply"></a>
+ matrix_multiply(A,B,C)</dt><dd>
+    Built-in matrix multiplication of arrays.  Stores A*B in C.  A, B, and
+C must be stand-alone 1 or 2 dimensional array variables with appropriately
+matching dimensions; in particular, you cannot get a scalar product of
+vectors with this, unless you declare A to be 1xN, B to be Nx1, and C to
+be 1x1.  C must be different from A and B.  Does not return a value.
+  Also doesn't work with array attributes yet.</dd>
+<!--EndName-->
+
+<dt><a name="matrix_inverse"></a>
+ matrix_inverse(A,B)</dt><dd>
+  Built-in matrix inversion of an array.  Stores the inverse of A in B.  A and
+B must be stand-alone  2 dimensional array variables with 
+matching dimensions. B can be the same as A.  Does not return a value.
+ Doesn't work with array attributes yet.</dd>
+<!--EndName-->
+
+<dt><a name="matrix_determinant"></a>
+ matrix_determinant(A)</dt><dd>
+  Built-in matrix determinant of a square array.
+Has function syntax, so it returns the value of the determinant. 
+ Doesn't work with array attributes yet.</dd>
+<!--EndName-->
+
+<dt><a name="wrap_inverse"></a>
+ wrap_inverse(w) </dt><dd>Inverse of symmetry group element w, in numerical 
+representation.  Useful only if a <a href="model.htm#symmetry groups">symmetry 
+group</a> has been declared in the datafile.</dd>
+<!--EndName-->
+<dt>
+<a name="wrap_compose"></a>
+ wrap_compose(w1,w2) </dt><dd> Composition of symmetry group elements w1, w2, in
+ numerical
+representation.  Useful only if a <a href="model.htm#symmetry groups">symmetry 
+group</a> has been declared in the datafile.</dd>
+<!--EndName-->
+<dt><a name="usr"></a>
+ usr<em>n</em>  </dt><dd>  
+<a href="#user funcs">user-defined functions</a></dd>
+<!--EndName-->
+</dl>
+
+<hr><a name="misc functions"></a><h2>Miscellaneous functions</h2>
+<ul>
+<li><a href="#is_defined">IS_DEFINED</a>
+<li><a href="#sizeof">SIZEOF</a>
+<li><a href="#valid_boundary">VALID_BOUNDARY</a>
+<li><a href="#valid_constraint">VALID_CONSTRAINT</a>
+<li><a href="#valid_element">VALID_ELEMENT</a>
+</ul>
+
+<p> <a name="is_defined"></a> <h3>IS_DEFINED</h3>
+         To find out if a name is already in use as a keyword or
+         user-defined name, use the is_defined function, which
+has the syntax
+<pre> IS_DEFINED(<em>stringexpr</em>)
+</pre>
+The <em>stringexpr</em> must be a quoted string or other string expression.
+The return value is 0 if the name is undefined, 1 if defined.
+This function is evaluated at run-time, but variables in the whole
+command are parsed before the command is executed, so a command
+ like <tt> if is_defined("newvar") then newvar := 1 else newvar := 2</tt>
+  will give <tt> newvar</tt> the value 1 even if this is its first appearance.
+A better way in scripts to test is to use the <a href="commands.htm">define</a>
+command to define the variable without initialization, and then test to
+see if it has the default value, i.e. 0 for a numeric variable and a
+<a href="#sizeof">sizeof</a> 0 for a string variable.  
+
+<hr>
+
+<a name="sizeof"></a><h3>SIZEOF</h3>
+Returns the number of entries in an <a href="#arrays">array</a> or array 
+<a href="elements.htm#extra attributes">extra attribute</a>.
+Can also be applied to a string or string variable to get the number
+of characters in the string.
+ Syntax:
+<pre>
+  SIZEOF(name)
+  SIZEOF(string)
+</pre>
+In the first form, name is the name of the array or extra attribute, 
+not in quotes.
+
+   
+<hr>
+<a name="valid_boundary"></a><h3>VALID_BOUNDARY</h3>
+
+Boolean function.  Returns 1 or 0 depending on whether a parametric
+boundary with the given number exists (note that the name of a
+named boundary is internally interpreted as a number).  Syntax:
+<pre> VALID_BOUNDARY(expression)
+</pre>
+One use is in looping through all parametric boundaries, in conjunction
+with the high_boundary internal variable.  For example,
+<pre>
+  for ( bnum := 1 ; bnum <= high_boundary ; bnum += 1 )
+    if valid_boundary(bnum) then
+       printf "Boundary %d has %d vertices on it\n",bnum,
+          sum(vertex,on_boundary bnum);
+</pre>
+
+
+<hr>
+<a name="valid_constraint"></a><h3>VALID_CONSTRAINT</h3>
+Boolean function.  Returns 1 or 0 depending on whether a level-set
+constraint with the given number exists (note that the name of a
+named constraint is internally interpreted as a number).  Syntax:
+<pre> VALID_CONSTRAINT(expression)
+</pre>
+One use is in looping through all level-set constraints, in conjunction
+with the high_constraint internal variable.  For example,
+<pre>
+  for ( cnum := 1 ; cnum <= high_constraint ; cnum += 1 )
+    if valid_constraint(cnum) then
+       printf "Constraint %d has %d vertices on it\n",cnum,
+          sum(vertex,on_constraint cnum);
+</pre>
+
+
+
+<hr>
+<a name="valid_element"></a><h3>VALID_ELEMENT</h3>
+Boolean function.
+Returns 1 or 0 depending on whether an element of a given index 
+exists. Syntax:
+<pre> VALID_ELEMENT(indexed_element)
+</pre>
+Examples:
+<pre>
+   if valid_element(edge[12]) then refine edge[12]
+   if valid_element(body[2]) then set body[2].facet color red
+</pre>
+
+<hr>
+<a name="user funcs"></a><h2>User-defined built-in  functions</h2>
+	  User-defined functions can be defined in C in  userfunc.c, so
+      you have to be compiling your own Evolver if you want to use these.
+	  They are meant for situations where expression interpretation
+	  is too slow, or functions such as elliptic integrals are
+	  wanted.  Currently, they are automatically functions of
+	  the coordinates.  Do not give any arguments in the expression;
+	  for example "(usr1 + usr3)/usr10".
+<hr>
+<a name="max"></a>
+<a name="min"></a>
+<a name="sum"></a>
+<a name="avg"></a>
+<a name="count"></a>
+<a name="aggregate functions"></a><h2>Aggregate functions</h2>
+The maximum, minimum, sum, or average of an expression over a set
+of elements may be done with aggregate functions.  The syntax is
+<pre>
+   <i>aggregate(generator,expr)</i>
+</pre>
+where <i>aggregate</i> is <tt>max, min, sum, </tt> or <tt>avg</tt>,
+and <i>generator</i> is an 
+<a href="commands.htm#generators">element generator</a>.  Example: this
+prints the total area of all green facets: <pre>
+   print sum(facet where color == green, area)
+</pre>
+"Count" is an aggregate function that gives the number of elements 
+generated, regardless of the expression.
+<hr>
+
+<a name="attr values"></a><h2>Element attribute values in expressions</h2>
+The value of any 
+<a href="elements.htm#geometric elements">element attribute</a>
+ may be used in an expression.
+The attribute name alone may be used if there is a default element active.
+Example:<pre>
+   foreach facet do print area
+</pre>
+Otherwise the attribute is referred to as a field of the element:
+<pre>
+   foreach facet ff do print ff.area
+</pre>
+Indexed 
+<a href="elements.htm#extra attributes">extra attributes</a>
+ need an index in square brackets:
+<pre>
+   foreach facet ff do print ff.something[3]
+</pre>
+Index values are rounded down to integer values.  Indexing starts with 1.
+<p>
+Most attributes are numerical or boolean, but some are 
+<a href="commands.htm#generators">element generators</a>.
+<p>
+The following  attributes are available (for details, see
+<a href="elements.htm#geometric elements">elements</a>):
+<dl>
+          <dt> X1,X2,...,X,Y,Z,W</dt><dd>Coordinates of vertices, components of
+		  edge vector or facet normal</dd>
+          <dt> P1,P2  </dt><dd>Parameters for 
+<a href="constrnt.htm#parametric boundaries">boundaries</a> </dd>
+          <dt> ID</dt><dd> Element identifying number </dd>
+          <dt> OID</dt><dd> Oriented element identifying number </dd>
+          <dt> ORIGINAL</dt><dd>Number of parent datafile element</dd>
+<dt> COLOR</dt><dd> Integer representing color of facet
+		   (color of front if back different) or edge</dd>
+          <dt> FRONTCOLOR</dt><dd> Color of front of facet </dd>
+          <dt> BACKCOLOR</dt><dd> Color of back of facet </dd>
+          <dt> VALENCE</dt><dd>Number of edges on a vertex,  facets on edge, edges on a facet, or facets, or on a body </dd>
+          <dt> AREA</dt><dd>Area of facet </dd>
+          <dt> LENGTH</dt><dd>Length of edge </dd>
+          <dt> VOLUME</dt><dd>Actual volume of body </dd>
+          <dt> TARGET</dt><dd>Target fixed volume of body </dd>
+          <dt> VOLCONST</dt><dd>Constant added to calculated volume of body </dd>
+          <dt> DENSITY</dt><dd>Density of edge, facet, or body</dd>
+          <dt> DIHEDRAL</dt><dd>Dihedral angle of facets on an edge</dd>
+          <dt> ORIENTATION</dt><dd>Sign for oriented integrals of edges or facets</dd> 
+<dt> ON_CONSTRAINT <em>n</em> </dt><dd>True if element on given 
+<a href="constrnt.htm#level set constraints">constraint</a></dd>
+<dt> HIT_CONSTRAINT <em>n</em> </dt><dd>True if element is exacty on a constraint.
+Useful for 
+<a href="constrnt.htm#one-sided constraints">one-sided constraints</a>.</dd>
+<dt> ON_BOUNDARY <em>n</em></dt><dd>True if element on given 
+<a href="constrnt.htm#parametric boundaries">boundary</a></dd>
+<dt> ON_QUANTITY <em>quantityname</em></dt><dd> True if the
+  given named quantity applies to the element.</dd>
+<dt> ON_METHOD_INSTANCE <em>instancename</em></dt><dd> True if the
+  given method instance applies to the element.</dd>
+          <dt> WRAP</dt><dd>numerical edge wrap in 
+<a href="model.htm#torus model">torus model</a> or other  
+<a href="model.htm#quotient spaces">quotient space</a> </dd>
+	<dt>	quantity_name</dt><dd> contribution of an element to a 
+<a href="quants.htm#named quantities">named quantity</a></dd>
+	<dt>	instance_name</dt><dd> contribution of an element to a 
+<a href="quants.htm#method instances">named method instance</a></dd>
+	<dt>	 extra_attribute[expr]</dt><dd> name of user-defined 
+<a href="elements.htm#extra attributes">extra attribute</a>,
+ with subscript if needed. </dd>
+   <dt> VERTEX</dt><dd> 
+<a href="commands.htm#generators">Generator</a> of edge or facet vertices. </dd>
+   <dt> MIDV</dt><dd> Id of edge midpoint in quadratic model. </dd>
+   <dt> EDGE</dt><dd> 
+<a href="commands.htm#generators">Generator</a> of edges attached to vertex, or edges around a facet. </dd>
+   <dt> FACET</dt><dd> 
+<a href="commands.htm#generators">Generator</a> of facets around a vertex or an edge. </dd>
+   <dt> BODY</dt><dd> 
+<a href="commands.htm#generators">Generator</a> of bodies that a facet is on.</dd> 
+</dl>
+
+<hr>
+<a name="variables"></a><h2>Variables</h2>
+The Evolver command language has its own version of the user-defined variables
+common to most programming languages.  Variables are typed according to
+the types of the values assigned to them: numeric or string.
+Users may define numeric variables either by <a href="datafile.htm#datafile variables">
+variable declarations</a> in the datafile, or both types by 
+<a href="commands.htm#variable assignment">assigning</a> a value
+to an identifier in a command.   A variable may be subjected to optimization
+by declaring it an <a href="datafile.htm#optimizing_parameter">
+optimizing_parameter</a> in the datafile.
+
+<hr>
+<p><a name="arrays"></a>
+<h2>Arrays</h2>
+It is possible to define multidimensional arrays of integers or reals
+with the syntax
+<pre>
+   DEFINE <em>variablename</em>  REAL|INTEGER [<em>expr</em>]...
+</pre>
+This syntax works both in the datafile header and at the command prompt.
+If the array already exists, it will be resized, with old elements
+kept as far as possible.  Do not resize with a different number of
+dimensions. Note that array indexing starts at 1.  A size of 0 is legal,
+and useful if you are not using an array at the moment and want to
+free storage space.  There is runtime checking of array bounds. Example:
+<pre>
+  define fvalues integer[10][4]
+  define basecoord real[10][space_dimension]
+</pre>
+Identifier names declared <a href="commands.htm#local">local</a>
+can be used in array declarations in procedures and functions; 
+dynamic sizes can be used, but static sizes may be a bit faster
+since memory doesn't need to be dynamically allocated.
+<p>
+
+In the top of the datafile, arrays may be initialized with
+nested bracket initializers following the definition.  For example:
+<pre>
+  define qwerty integer[4] = { 23, 45, 12, 2 }
+  define vmat real[3][2] = {{1,2},{3,4},{5,6}}
+</pre>
+Initializers need not be complete; missing values will be zero.
+<p>
+
+Array elements may be used and assigned as is usual for programming
+languages:
+<pre>  fvalues[3][4] := 234;
+  if basecoord[3][1] &gt; 2 then print "hello world!\n";</pre>
+
+The <a href="commands.htm#print">print</a> command
+ may be used to print whole arrays or array slices
+in bracketed form. Example:
+<pre>
+   print fvalues
+   print fvalues[4]
+</pre>
+
+There are some basic whole-array operations that permit arrays on
+the left side of an assignment statement:
+<pre>
+   array := scalar
+   array := array 
+   array := scalar * array
+   array := array + array
+   array := array - array
+   array := array * array
+</pre>
+Here "array" on both sides of the assignment means a single whole array;
+ not an array-producing expression  or array slice.
+But "scalar" can be any expression that evaluates to a single value.
+For multiplication, the arrays must be two-dimensional with properly
+matching sizes.  These operations also apply to element attributes 
+that are arrays.
+
+<p>
+There is also a <a href="#matrix_inverse">matrix_inverse</a> procedure. 
+<p>
+<a name="dot_product"></a>
+For one-dimensional arrays, the infix operator dot_product gives the
+sum of the product of corresponding entries.  Example:
+<pre>
+   print vertex[1].__velocity dot_product facet[3].__facet_normal
+</pre>
+
+<hr>
+<a name="internal variables"></a><h2>Internal variables</h2>
+These are pre-defined names for some of Evolver's internal variables.
+They may be used in the same way as user-defined variables, except
+the values of read-only variables may not be changed by the user.
+
+<table><tr><td valign=top><ul>
+<li><a href="#ambient_pressure_value"> ambient_pressure_value</a>
+<li><a href="#background"> background</a>
+<li><a href="#body_count"> body_count</a>
+<li><a href="#breakflag"> breakflag</a>
+<li><a href="#body_dissolve_count"> body_dissolve_count</a>
+<li><a href="#brightness"> brightness</a>
+<li><a href="#check_count"> check_count</a>
+<li><a href="#clock">clock</a>
+<li><a href="#constraint_tolerance"> constraint_tolerance</a>
+<li><a href="#cpu_counter">cpu_counter</a>
+<li><a href="#datafilename"> datafilename</a>
+<li><a href="#date_and_time"> date_and_time</a>
+<li><a href="#delete_count"> delete_count</a>
+<li><a href="model.htm#display_origin"> display_origin</a>
+<li><a href="#dissolve_count"> dissolve_count</a>
+<li><a href="#edge_count"> edge_count</a>
+<li><a href="#edge_delete_count"> edge_delete_count</a>
+<li><a href="#edge_dissolve_count"> edge_dissolve_count</a>
+<li><a href="#edge_refine_count"> edge_refine_count</a>
+<li><a href="#edge_pop_count"> edge_pop_count</a>
+<li><a href="#edgeswap_count"> edgeswap_count</a>
+<li><a href="#eigenneg">eigenneg</a>
+<li><a href="#eigenpos">eigenpos</a>
+<li><a href="#eigenvalues">eigenvalues</a>
+<li><a href="#eigenzero">eigenzero</a>
+</ul></td><td valign=top><ul>
+<li><a href="#equi_count"> equi_count</a>
+<li><a href="#estimated_change"> estimated_change</a>
+<li><a href="#facet_count"> facet_count</a>
+<li><a href="#facetedge_count"> facetedge_count</a>
+<li><a href="#facet_delete_count"> facet_delete_count</a>
+<li><a href="#facet_dissolve_count"> facet_dissolve_count</a>
+<li><a href="#fix_count"> fix_count</a>
+<li><a href="#gravity_constant"> gravity_constant</a>
+<li><a href="#hessian_epsilon"> hessian_epsilon</a>
+<li><a href="#hessian_slant_cutoff"> hessian_slant_cutoff</a>
+<li><a href="#high_boundary"> high_boundary</a>
+<li><a href="#high_constraint"> high_constraint</a>
+<li><a href="#instance_name modulus"><em>instance_name</em>.modulus</a>
+<li><a href="#instance_name value"> <em>instance_name</em>.value</a>
+<li><a href="#inverse_periods"> inverse_periods</a>
+<li><a href="#integral_order">integral_order</a>
+<li><a href="#integral_order_1d">integral_order_1d</a>
+<li><a href="#integration_order_2d">integral_order_2d</a>
+<li><a href="#iteration_counter"> iteration_counter </a>
+<li><a href="#jiggle_temperature"> jiggle_temperature</a>
+<li><a href="#lagrange_order"> lagrange_order </a>
+<li><a href="#last_eigenvalue"> last_eigenvalue</a>
+<li><a href="#last_error">last_error</a>
+<li><a href="#last_hessian_scale"> last_hessian_scale</a>
+</ul></td><td valign=top><ul>
+<li><a href="#linear_metric_mix">  linear_metric_mix </a>
+<li><a href="#memory_arena"> memory_arena</a>
+<li><a href="#memory_used"> memory_used</a>
+<li><a href="#notch_count"> notch_count</a>
+<li><a href="#pickvnum">  pickvnum </a>
+<li><a href="#pickenum">  pickenum </a>
+<li><a href="#pickfnum">  pickfnum </a>
+<li><a href="#pop_count"> pop_count</a>
+<li><a href="#pop_edge_to_tri_count"> pop_edge_to_tri_count</a>
+<li><a href="#pop_quad_to_quad_count"> pop_quad_to_quad_count</a>
+<li><a href="#pop_tri_to_edge_count"> pop_tri_to_edge_count</a>
+<li><a href="#quadratic_metric_mix">  quadratic_metric_mix </a>
+<li><a href="#quantity_name modulus"><em>quantity_name</em>.modulus</a>
+<li><a href="#quantity_name pressure"> <em>quantity_name</em>.pressure</a>
+<li><a href="#quantity_name target"> <em>quantity_name</em>.target</a>
+<li><a href="#quantity_name value"> <em>quantity_name</em>.value</a>
+<li><a href="#random">random </a>
+<li><a href="#random_seed"> random_seed</a>
+<li><a href="#refine_count"> refine_count </a>
+<li><a href="#rotation_order"> rotation_order</a>
+<li><a href="#scale"> scale</a>
+<li><a href="#scale_scale"> scale_scale</a>
+<li><a href="#scrollbuffersize"> scrollbuffersize</a>
+<li><a href="#scrollbuffersize"> scrollbuffersize</a>
+</ul></td><td valign=top><ul>
+<li><a href="#self_sim_coeff"> self_sim_coeff</a>
+<li><a href="#simplex_representation"> simplex_representation</a>
+<li><a href="#space_dimension"> space_dimension</a>
+<li><a href="#string_curve_tolerance"> string_curve_tolerance</a>
+<li><a href="#surface_dimension"> surface_dimension</a>
+<li><a href="#symmetry_group"> symmetry_group</a>
+<li><a href="#t1_edgeswap_count"> t1_edgeswap_count</a>
+<li><a href="#target_tolerance"> target_tolerance</a>
+<li><a href="#temperature"> temperature</a>
+<li><a href="#thickness"> thickness</a>
+<li><a href="#torus"> torus </a>
+<li><a href="#torus_periods"> torus_periods</a>
+<li><a href="#total_area"> total_area</a>
+<li><a href="#total_energy"> total_energy</a>
+<li><a href="#total_length"> total_length</a>
+<li><a href="#total_time"> total_time</a>
+<li><a href="#transform_count"> transform_count</a>
+<li><a href="#unfix_count"> unfix_count</a>
+<li><a href="#vertex_count"> vertex_count</a>
+<li><a href="#vertex_dissolve_count"> vertex_dissolve_count</a>
+<li><a href="#vertex_pop_count"> vertex_pop_count</a>
+<li><a href="#where_count"> where_count</a>
+<li><a href="#window_aspect_ratio"> window_aspect_ratio</a>
+</ul>
+</td></tr>
+</table>
+<dl>
+
+<dt><a name="ambient_pressure_value"> ambient_pressure_value</a></dt>
+<dd> Internal read-write variable. Value of the external pressure in the ideal gas model.</dd>
+
+<dt><a name="background"> background </a></dt>
+   <dd> Internal read-write variable. Background color used 
+   in certain screen graphics (xgraph and Windows, at the moment).
+   </dd>
+<dt><a name="body_count"> body_count </a></dt>
+		    <dd>Internal read-only variable.  Number of bodies. 
+		    </dd>
+<dt><a name="breakflag"> breakflag </a></dt>
+		    <dd>Internal read-write variable. 
+            When set to a non-zero value, causes the command interpreter
+         to abort and return to the command prompt.  Software equivalent
+          of hitting the keyboard interrupt (typically CTRL-C).  The
+          break doesn't happen immediately, but at a certain point  in
+           the interpreter loop when it periodically checks for user 
+        interrupt.  Meant for bailing out of nested commands, since 
+        <a href="commands.htm#return">return</a> only breaks out
+        of the current procedure.
+
+<dt><a name="body_dissolve_count"> body_dissolve_count</a> </dt>
+	<dd>Internal read-only variable.  Number of bodies dissolved by 
+		     <a href="commands.htm#dissolve">dissolve</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="brightness"> brightness </a></dt>
+		    <dd>Internal read-only variable. Median gray level used
+                  in PostScript output and screen graphics. 
+		  </dd>
+<dt><a name="check_count"> check_count </a></dt>
+		    <dd>Internal read-only variable.  
+    Number of errors found by the most recent <a href="single.htm#C">C</a>
+  command.
+		    </dd>
+
+<dt><a name="clock">clock </a></dt>
+    <dd> Internal read-only variable.  Total elapsed Evolver execution
+time in seconds.  Reads system process elapsed time, which often has
+a fairly coarse resolution of 0.01 seconds.  For nanosecond timing,
+see <a href="#cpu_counter">cpu_counter</a>.
+</dd>
+
+<dt><a name="constraint_tolerance"> constraint_tolerance </a></dt>
+		<dd>  Internal read-write variable. When vertices are
+projected to 
+<a href="constrnt.htm#level set constraints">level-set constraints</a>,
+ projection by Newton's method
+is repeated until the level-set function is smaller than constraint_tolerance.
+Default value 1e-12.
+</dd>
+
+<dt><a name="cpu_counter">cpu_counter </a></dt>
+    <dd> Internal read-only variable.  Processor cycle counter, available
+only on systems I know how to access this (x86 for now).   Gives the number
+of CPU cycles since the system booted.  Note that this is wall clock time,
+not process time.  Also note that it resets to zero when a computer
+hibernates, so it is not guaranteed to be monotone increasing during the
+life of a process!  Also, multiple processors in a machine may not have
+identical CPU counters, so the Evolver process should be assigned to
+a particular processor (in Windows, this may be done in Task Manager
+by setting the process "affinity" in its properties). 
+For process elapsed time,
+see <a href="#clock">clock</a>.
+</dd>
+
+
+<dt><a name="datafilename"> datafilename </a></dt>
+   <dd>Internal read-only variable. String containing name of current datafile. 
+    </dd>
+
+<dt><a name="delete_count"> delete_count </a></dt>
+		    <dd>Internal read-only variable. 
+   Sum of <a href="#edge_delete_count">edge_delete_count</a>
+and <a href="#facet_delete_count">facet_delete_count</a>. 
+Kept for backwards compatibility.
+		    </dd>
+
+
+<dt><a name="display_origin vector"> display_origin </a></dt>
+   <dd>Internal read-write vector.  For a torus mode surface,
+if clipped mode is in effect, the center of the clip box is
+set with this array, whose dimension is the dimension of 
+the ambient space.  This array does not exist by default,
+it has to be created by the user. 
+<a href="model.htm#display_origin">Details.</a>
+
+    </dd>
+
+<dt><a name="delete_count"> delete_count </a></dt>
+		    <dd>Internal read-only variable. 
+   Sum of <a href="#edge_delete_count">edge_delete_count</a>
+and <a href="#facet_delete_count">facet_delete_count</a>. 
+Kept for backwards compatibility.
+		    </dd>
+
+
+
+
+<dt><a name="dissolve_count"> dissolve_count </a></dt>
+		    <dd>Internal read-only variable. 
+   Sum of <a href="#vertex_dissolve_count">vertex_dissolve_count</a>
+<a href="#edge_dissolve_count">edge_dissolve_count</a>, 
+ <a href="#facet_dissolve_count">facet_dissolve_count</a>, 
+and <a href="#body_dissolve_count">body_dissolve_count</a>. 
+Kept for backwards compatibility.
+		    </dd>
+
+<dt><a name="date_and_time"> date_and_time </a></dt>
+   <dd>Internal read-only variable. String containing current date and time. 
+    </dd>
+
+<dt><a name="edge_count"> edge_count </a></dt>
+		    <dd>Internal read-only variable.  Number of 
+		    <a href="elements.htm#edges">edges</a>. 
+		    </dd>
+
+<dt><a name="edge_delete_count"> edge_delete_count </a></dt>
+	<dd>Internal read-only variable.  Number of edges deleted by 
+		     <a href="commands.htm#delete">delete</a> command.
+This does not count the secondary edge deletions caused by deleting
+an edge. 
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="edge_dissolve_count"> edge_dissolve_count </a></dt>
+	<dd>Internal read-only variable.  Number of edges dissolved by 
+		     <a href="commands.htm#dissolve">dissolve</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="edge_refine_count"> edge_refine_count </a></dt>
+	<dd>Internal read-only variable.  Number of edges refined by 
+		     <a href="commands.htm#refine">refine edges</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="edge_pop_count"> edge_pop_count </a></dt>
+	<dd>Internal read-only variable.  Number of edges popd by 
+		     <a href="commands.htm#pop">pop edges</a>,
+		     <a href="single.htm#o">o</a>, or
+		     <a href="single.htm#O">O</a>,
+ commands.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="edgeswap_count"> edgeswap_count </a></dt>
+	<dd>Internal read-only variable.  Number of edges swapped by 
+		     <a href="commands.htm#edgeswap">edgeswap</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+
+<dt><a name="eigenneg"> </a><a name="eigen_neg"> eigenneg </a></dt>
+	<dd>Internal read-only variable. Number of negative eigenvalues in last
+<a href="eigentut.htm">Hessian</a>
+		       factoring. 
+		       </dd>
+
+<dt><a name="eigenpos"> </a><a name="eigen_pos"> eigenpos</a> </dt>
+	<dd>Internal read-only variable. Number of positive eigenvalues in last
+<a href="eigentut.htm">Hessian</a>
+	    factoring.  
+	    </dd>
+
+<dt><a name="eigenvalues"> </a><a name="eigenvalues"> eigenvalues[]</a> </dt>
+	<dd>Internal read-only array. Contains the list of eigenvalues
+produced by the <a href="commands.htm#ritz">ritz</a> command.  Example:
+<tt>print eigenvalues[2]</tt>
+</dd>
+
+<dt><a name="eigenzero"> </a><a name="eigen_zero"> eigenzero </a></dt>
+	<dd>Internal read-only variable. Number of zero eigenvalues in last 
+<a href="eigentut.htm">Hessian</a> factoring.
+</dd>
+
+<dt><a name="equi_count"> equi_count </a></dt>
+      <dd>Internal read-only variable. Number of edges flipped  by 
+<a href="single.htm#u">equiangulation</a>.  
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+</dd>
+
+<dt><a name="estimated_change"> estimated_change </a></dt>
+                     <dd> Internal read-only variable.  Estimated 
+                  change of energy during last iteration with
+                  <a href="toggle.htm#estimate">estimate</a> option in effect.
+                     </dd>
+
+<dt><a name="facet_count"> facet_count </a></dt>
+		    <dd>Internal read-only variable.  Number of 
+		    <a href="elements.htm#facets">facets</a>. 
+		    </dd>
+
+<dt><a name="facetedge_count"> facetedge_count </a></dt>
+		    <dd>Internal read-only variable.  Number of
+		    <a href="elements.htm#facetedge">facetedges</a>. 
+		    </dd>
+
+<dt><a name="facet_delete_count"> facet_delete_count </a></dt>
+	<dd>Internal read-only variable.  Number of facets deleted by 
+		     <a href="commands.htm#delete">delete</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="facet_dissolve_count"> facet_dissolve_count </a></dt>
+	<dd>Internal read-only variable.  Number of facets dissolved by 
+		     <a href="commands.htm#dissolve">dissolve</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="facet_refine_count"> facet_refine_count </a></dt>
+	<dd>Internal read-only variable.  Number of facets refined by 
+		     <a href="commands.htm#refine">refine facets</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="fix_count"> fix_count </a></dt>
+	<dd>Internal read-only variable.  Number of elements fixed by 
+		     <a href="commands.htm#pop">fix</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+
+<dt><a name="gravity_constant"> gravity_constant </a></dt>
+	<dd>Internal read-write variable. Value of the gravitational 
+	constant, which can also be set by the <a href="single.htm#G">G</a>
+	command. 
+	</dd>
+
+<dt><a name="hessian_epsilon"> hessian_epsilon </a></dt>
+<dd>  Internal read-write variable. Magnitude regarded as zero by 
+<a href="commands.htm#hessian command">hessian command</a> when factoring
+the Hessian matrix.  If a zero appears on the diagonal at the pivot
+during factoring, a check is made to see if the rest of the row is zero.
+If it is, then a 1 is placed on the diagonal; else an error is reported. 
+</dd>
+
+<dt><a name="hessian_slant_cutoff"> hessian_slant_cutoff </a></dt>
+<dd>  Internal read-write variable. 
+Hessian commands treat vertices whose normal 
+vector is nearly perpendicular
+to constraints as fixed.  hessian_slant_cutoff is the cosine
+of angle.  Works on vertices with one degree of freedom in
+hessian_normal mode. Default value 0.
+
+</dd>
+
+<dt><a name="high_boundary"> high_boundary </a></dt>
+<dd>  
+Internal read-only variable giving the number of the highest
+parametric boundary defined.  Remember that the name of a named
+boundary is internally interpreted as a number, and that boundary
+may be referred to by that number.   Useful in iterating through
+all boundaries, for example
+<pre>
+  for ( bnum := 1 ; bnum <= high_boundary ; bnum += 1 )
+    if valid_boundary(bnum) then
+       printf "Boundary %d has %d vertices on it\n",bnum,
+          sum(vertex,on_boundary bnum);
+</pre>
+</dd>
+
+<dt><a name="high_constraint"> high_constraint </a></dt>
+<dd>  
+Internal read-only variable giving the number of the highest
+level-set constraint.  Remember that the name of a named
+constraint is internally interpreted as a number, and that constraint
+may be referred to by that number.   Useful in iterating through
+all constraints, for example
+<pre>
+  for ( cnum := 1 ; cnum <= high_constraint ; cnum += 1 )
+    if valid_constraint(cnum) then
+       printf "Constraint %d has %d vertices on it\n",cnum,
+          sum(vertex,on_constraint cnum);
+</pre>
+
+<dt><a name="instance_name modulus"><em>instance_name</em>.modulus </a></dt>
+		<dd> Internal read-write variable.  
+<a href="quants.htm#instance modulus">Modulus</a> of a 
+<a href="quants.htm#method instances">named method instance</a>. 
+</dd>
+<dt><a name="instance_name value"> <em>instance_name</em>.value</a></dt>
+	<dd> Internal read-only variable. Value of a 
+<a href="quants.htm#method instances">named method instance</a>. 
+</dd>
+<dt><a name="inverse_periods"> inverse_periods[<i>expr</i>][<i>expr</i>] </a></dt> <dd>
+Internal read-only variable.  Inverse matrix of the
+<a href="#torus_periods">torus_periods</a> matrix. Uses 1-based indexes.
+Useful for normalizing vertex coordinates to period basis.
+</dd>
+
+<dt><a name="integral_order"></a><a name="integration_order"></a>integral_order </dt>
+		 <dd> Internal read-write variable. 
+		    Order of polynomial done by 1D and 2D Gaussian integration.
+                      Much better to set 1D and 2D separately.
+                    Synonym: integration_order
+		    </dd>
+<dt><a name="integral_order_1d"></a>
+<a name="integration_order_1d"> integral_order_1d </a> </dt>
+		 <dd> Internal read-write variable. 
+		    Order of polynomial done by 1D Gaussian integration.
+                    Synonym: integration_order_1D
+		    </dd>
+<dt><a name="integration_order_2d"></a>
+ <a name="integral_order_2d"> integral_order_2d </a> </dt>
+		 <dd> Internal read-write variable. 
+		    Order of polynomial done by 2D Gaussian integration.
+                    Synonym: integration_order_2D
+		    </dd>
+
+<dt><a name="iteration_counter"> iteration_counter  </a></dt><dd>
+       Internal read-only variable. Loop count of last loop in a command. 
+       </dd>
+<dt><a name="jiggle_temperature"> jiggle_temperature </a></dt>
+	<dd> Internal read-only variable. Current temperature for 
+<a href="single.htm#j">jiggling</a>. 
+</dd>
+
+<dt><a name="lagrange_order"> lagrange_order </a> </dt>
+		 <dd> Internal read-only variable. 
+    Order of <a href="model.htm#Lagrange model">Lagrange model</a>.
+    Set with the <a href="commands.htm#lagrange command">lagrange 
+    <em>n</em></a> command.
+    </dd>
+<dt><a name="last_eigenvalue"> last_eigenvalue </a></dt>
+	<dd>Internal read-only variable. Eigenvalue from last 
+<a href="commands.htm#saddle">saddle</a> or
+	     <a href="commands.htm#ritz">ritz</a> command.  
+</dd>
+<dt><a name="last_error">last_error </a></dt><dd>Internal read-write
+variable.  Has error number of last error message.</dd>
+
+<dt><a name="last_hessian_scale"> last_hessian_scale </a></dt>
+	<dd> Internal read-only variable. Stepsize from last 
+<a href="commands.htm#saddle">saddle</a> or 
+      <a href="commands.htm#hessian_seek">hessian_seek</a> command.
+      </dd>
+<dt><a name="linear_metric_mix">  linear_metric_mix </a></dt>
+                 <dd>  Internal read-write variable. 
+		       Fraction of linear interpolation in 
+<a href="eigentut.htm#hessian metric">Hessian metric</a>. 
+</dd>
+
+<dt><a name="memory_arena"> memory_arena </a></dt>
+  <dd> Internal read-only variable. 
+  Total memory allocated to the program's heap.  Available only
+  on SGI and Win32 versions. 
+  </dd>
+
+<dt><a name="memory_used"> memory_used </a></dt>
+  <dd> Internal read-only variable. 
+  Total memory used in the program's heap.  Available only
+  on SGI and Win32 versions. 
+  </dd>
+
+<dt><a name="notch_count"> notch_count </a></dt>
+	<dd>Internal read-only variable. Number of edges notched in last 
+		      <a href="single.htm#n">notch</a> command.
+		      </dd>
+<dt><a name="pickvnum">  pickvnum  </a></dt>
+                <dd>  Internal read-write variable. Number of last vertex 
+<a href="graphics.htm#picking">picked</a>
+		       in geomview. 
+		       </dd>
+<dt><a name="pickenum">  pickenum  </a></dt>
+                <dd>  Internal read-write variable. Number of last edge 
+<a href="graphics.htm#picking">picked</a>
+		       in geomview. 
+		       </dd>
+<dt><a name="pickfnum">  pickfnum  </a></dt>
+                <dd>  Internal read-write variable. Number of last facet 
+<a href="graphics.htm#picking">picked</a>
+		       in geomview. 
+		       </dd>
+
+<dt><a name="pop_count"> pop_count </a></dt>
+	<dd>Internal read-only variable.
+Sum of <a href="#vertex_pop_count">vertex_pop_count</a> and
+<a href="#edge_pop_count">edge_pop_count</a>. Kept for 
+backwards compatibility.
+		       </dd>
+
+<dt><a name="pop_edge_to_tri_count"> pop_edge_to_tri_count </a></dt>
+	<dd>Internal read-only variable.  Number of edges flipped to triangles by 
+the	 <a href="commands.htm#pop_edge_to_tri">pop_edge_to_tri</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="pop_quad_to_quad_count"> pop_quad_to_quad_count </a></dt>
+	<dd>Internal read-only variable.  Number of quadrilaterals flipped  by 
+the	 <a href="commands.htm#pop_quad_to_quad">pop_quad_to_quad</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="pop_tri_to_edge_count"> pop_tri_to_edge_count</a> </dt>
+	<dd>Internal read-only variable.  Number of triangles flipped to edges by 
+the	 <a href="commands.htm#pop_tri_to_edge">pop_tri_to_edge</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+
+<dt><a name="quadratic_metric_mix">  quadratic_metric_mix  </a></dt>
+                 <dd>  Internal read-write variable. 
+		       Fraction of linear interpolation in 
+<a href="eigentut.htm#hessian metric">Hessian metric</a> in the
+quadratic model. Not very useful.
+</dd>
+
+<dt><a name="quantity_name modulus"><em>quantity_name</em>.modulus</a> </dt>
+		<dd> Internal read-write variable.  
+<a href="quants.htm#quantity modulus">Modulus</a> of a 
+<a href="quants.htm#named quantities">named quantity</a>.
+</dd>
+<dt><a name="quantity_name pressure"> <em>quantity_name</em>.pressure </a></dt>
+	<dd> Internal read-only variable. 
+<a href="quants.htm#quantity pressure">Lagrange multiplier</a> for
+      a <a href="quants.htm#fixed quantity">constrained named quantity</a>.
+      </dd>
+<dt><a name="quantity_name target"> <em>quantity_name</em>.target </a></dt>
+	<dd> Internal read-write variable.  Constrained value of a 
+<a href="quants.htm#fixed quantity">named quantity</a>.
+</dd>
+<dt><a name="quantity_name value"> <em>quantity_name</em>.value </a></dt>
+	<dd> Internal read-only variable. Value of a 
+<a href="quants.htm#named quantities">named quantity</a>.
+</dd>
+<dt><a name="random">random  </a></dt><dd> Internal read-only variable.
+  Random number between 0 and 1.
+  </dd>
+<dt><a name="random_seed"> random_seed </a></dt>
+            <dd> Internal read-write variable.  Seed for random number
+	    generator, used for example in <a href="single.htm#j">jiggling</a>
+or in finding random initial vectors in various 
+<a href="eigentut.htm">Hessian</a> eigenvector algorithms.
+  Defaults to 1 at start of datafile. 
+  </dd>
+<dt><a name="refine_count"> refine_count </a> </dt><dd>
+        Internal read-only variable. Number of elements refined in last refine command.
+	</dd>
+<dt><a name="rotation_order"> rotation_order </a></dt>
+            <dd> Internal read-write variable.  Order of rotation group
+for symmetry groups <a href="model.htm#rotate symmetry group">rotate</a> and
+<a href="model.htm#flip-rotate symmetry group">flip_rotate</a>.
+</dd>
+<dt><a name="scale"> scale </a></dt>
+		<dd> Internal read-write variable.  Current scale factor for
+		multiplying the force to get the motion in the 
+		'<tt><a href="single.htm#g">g</a></tt>' command. 
+		</dd>
+<dt><a name="scale_scale"> scale_scale </a></dt>
+		<dd> Internal read-write variable.  Multiplier for the
+		scale factor used in the 
+		'<tt><a href="single.htm#g">g</a></tt>' command. Default 
+		value 1.
+		</dd>
+
+<dt><a name="scrollbuffersize"> scrollbuffersize </a></dt>
+		<dd> Internal read-write variable. 
+    The command window scroll buffer size on Windows
+machines.  Meant for non-NT Windows that don't
+have menu properties option for this. 
+  </dd>
+
+<dt><a name="self_sim_coeff"> self_sim_coeff </a></dt>
+		<dd> Internal read-write variable. 
+Used as magnitude coefficent when
+<a href=}toggle.htm#self_similar">self_similar</a> is toggled on.
+
+<dt><a name="simplex_representation"> simplex_representation </a></dt>
+		<dd>Internal read-only variable.  Whether 
+the <a href="model.htm#simplex model">simplex model</a> is in effect.
+</dd>
+<dt><a name="space_dimension"> space_dimension </a></dt>
+		<dd>Internal read-only variable.     
+<a href="model.htm#space dimension">Dimension</a> of ambient space. 
+</dd>
+
+<dt><a name="sq_curvature_modulus"> sq_curvature_modulus </a></dt>
+		<dd>Internal read-write variable.     
+Multiplier for the <a href="datafile.htm#squared_curvature">
+squared_curvature</a> energy when it is declared the old way
+in the top of the datafile.
+</dd>
+
+<dt><a name="string_curve_tolerance">string_curve_tolerance</a></dt>
+		<dd>Internal read-write variable.  
+<p> In the <a href="model.htm#quadratic model">quadratic model</a>,
+the smoothness of graphing of curved quadratic edges can be
+controlled with the internal variable
+<tt>string_curve_tolerance</tt>,
+which is the desired angle in degrees between successive graphed segments
+making up the edge.
+		</dd>
+
+
+<dt><a name="surface_dimension"> surface_dimension </a></dt>
+		<dd>Internal read-only variable.  Dimension of surface. 
+		</dd>
+<dt><a name="symmetry_group"> symmetry_group </a></dt>
+		<dd>Internal read-only variable.  Whether  any 
+<a href="model.htm#symmetry groups">symmetry group</a> is active  (Boolean).
+</dd>
+<dt><a name="t1_edgeswap_count"> t1_edgeswap_count </a></dt>
+	<dd>Internal read-only variable.  Number of edges swapped by 
+		     <a href="commands.htm#t1_edgeswap">t1_edgeswap</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="target_tolerance"> target_tolerance </a></dt>
+		<dd>  Internal read-write variable.
+When <a href="elements.htm#target volume">volume constraints</a>
+ or <a href="constrnt.htm#named quantity constraints">named quantity 
+constraints</a> are enforced,
+Newton's method is repeated until the total deviation from target values
+is less than <tt>target_tolerance</tt>.  Default value 1e-4.
+</dd>
+<dt><a name="temperature"> temperature </a></dt>
+  <dd> Internal read-only variable.
+  Amplitude for <a href="toggle.htm#jiggle">jigglinge</a>.
+  </dd>
+<dt><a name="thickness"> thickness </a></dt>
+  <dd> Internal read-only variable.
+  Thickness for thickened surfaces in graphics output in 
+<a href="single.htm#P">P</a> command.  Used when facet
+<a href="elements.htm#frontcolor">frontcolor</a> and 
+<a href="elements.htm#backcolor">backcolor</a> are different.
+Default value 0.001 times the maximum linear dimension of the surface.
+If you get backside color showing through,
+increase the thickness.
+</dd>
+<dt><a name="torus"> torus </a> </dt><dd>Internal read-only variable.  Whether 
+the <a href="model.htm#torus model">torus model</a> is in effect. (Boolean).
+</dd>
+<dt><a name="torus_periods"> torus_periods[<i>expr</i>][<i>expr</i>]  </a></dt><dd>
+Internal read-only variable.  Current values of the period vectors in the
+<a href="model.htm#torus model">torus model</a>.  Torus_periods[i][j]
+is component j of vector i.  Uses 1 based indexes.
+For changing the torus_periods, define the
+periods in the datafile with variables, and alter the variables.
+</dd>
+<dt><a name="total_area"> total_area </a></dt>
+    <dd>Internal read-only variable.  Total area of the surface
+in <a href="model.htm#soapfilm model">soapfilm</a> or 
+<a href="model.htm#simplex model">simplex</a> models. 
+</dd>
+<dt><a name="total_energy"> total_energy</a> </dt>
+    <dd>Internal read-only variable.  Total energy of the surface. 
+    </dd>
+<dt><a name="total_length"> total_length </a></dt>
+    <dd>Internal read-only variable.  Total length of the surface 
+in the <a href="model.htm#string model">string model</a>. 
+</dd>
+<dt><a name="total_time"> total_time </a></dt>
+    <dd>Internal read-only variable.  Elapsed evolution time in the form of 
+total <a href="iterate.htm#scale factor">scale factors</a>. 
+</dd>
+
+<dt><a name="transform_count"> transform_count </a></dt>
+    <dd>Internal read-only variable.  Number of image transforms
+    active, as generated by the <a href="commands.htm#transform_expr">
+    <tt>transform_expr</tt></a> command.
+    </dd>
+
+
+<dt><a name="unfix_count"> fix_count </a></dt>
+	<dd>Internal read-only variable.  Number of elements unfixed by 
+		     <a href="commands.htm#pop">unfix</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="vertex_count"> vertex_count </a></dt>
+    <dd>Internal read-only variable.  Number of vertices.
+    </dd>
+
+<dt><a name="vertex_dissolve_count"> vertex_dissolve_count </a></dt>
+	<dd>Internal read-only variable.  Number of vertices dissolved by 
+		     <a href="commands.htm#dissolve">dissolve</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+<dt><a name="vertex_pop_count"> vertex_pop_count </a></dt>
+	<dd>Internal read-only variable.  Number of vertices popped by 
+		     <a href="commands.htm#pop">pop</a> or
+<a href="single.htm#o">o</a> command.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+		     </dd>
+
+
+<dt><a name="where_count"> where_count </a></dt>
+<dd>Internal read-only variable. Number of items satisfying  last 
+	       <tt>where</tt> condition.
+Prints and resets to 0 at the end of a command execution, or when 
+<a href="commands.htm#flush_counts">flush_counts</a> is done.  
+Also reset by <a href="commands.htm#reset_counts">reset_counts</a>.
+	       </dd>
+
+
+<dt><a name="window_aspect_ratio"> window_aspect_ratio </a></dt>
+<dd>Internal read-write variable.  The ratio of the the vertical to
+horizontal dimensions of the display window.  If set, this locks the
+aspect ratio to the given value.  The window may be resized with the
+mouse, but the aspect ratio will stay the same.  The unset value of
+window_aspect_ratio is 0; setting window_aspect_ratio to 0 will 
+unlock the aspect ratio.  Applies also to the PostScript bounding box,
+if <a href="toggle.htm#full_bounding_box">full_bounding_box</a> is on.
+Currently implemented only in Evolver with GLUT graphics.
+Caveat: the window doesn't always fully follow the mouse; just keep trying. 
+	       </dd>
+
+</dl>
+<hr>
+
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>

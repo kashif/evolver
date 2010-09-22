@@ -1,0 +1,704 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation: single letter main commands
+</title></head>
+
+<BODY>
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<hr><a name="single letter"> </a>
+<h2>Single letter main commands</h2>
+
+The oldest and most commonly used Surface Evolver
+ commands are just single letters.
+Case is significant for these. Single letters are always interpreted
+as commands, so you may not use single letters for variable names. 
+Single letter commands may be <a href="#redefinition">redefined</a>.<p>
+
+Single letter commands may be summarized in five groups:
+<ul><li>             Reporting:
+<ul>  <li><a href="#C"> C</a> Run consistency checks.
+  <li><a href="#c"> c</a> Report count of elements.
+  <li><a href="#e"> e</a> Extrapolate.
+  <li><a href="#i"> i</a> Information on status.
+  <li><a href="#v"> v</a> Report volumes.
+  <li><a href="#X"> v</a> List extra attributes.
+  <li><a href="#z"> z</a> Do curvature test.
+</ul><li>             Model characteristics: 
+<ul>  <li><a href="#A"> A</a> Display and set variables and various parameters.
+  <li><a href="#a"> a</a> Toggle area normalization
+  <li><a href="#b"> b</a> Set body pressures.
+  <li><a href="#f"> f</a> Set diffusion constant.
+  <li><a href="#G"> G</a> Set gravity.
+  <li><a href="#J"> J</a> Toggle jiggling on every move.
+  <li><a href="#k"> k</a> Set boundary gap constant.
+  <li><a href="#M"> M</a> Toggle linear/quadratic model.
+  <li><a href="#m"> m</a> Toggle fixed motion scale.
+  <li><a href="#p"> p</a> Set ambient pressure.
+  <li><a href="#Q"> Q</a> Report or set quantities.
+ <li><a href="#U"> U</a>  Toggle conjugate gradient method.
+  <li><a href="#W"> W</a> Homothety toggle.
+</ul><li>               Surface modification
+<ul>  <li><a href="#g"> g</a> Go one iteration step. Often followed by a repetition count.
+  <li><a href="#j"> j</a> Jiggle once.
+  <li><a href="#K"> K</a> Skinny triangle long edge divide.
+  <li><a href="#l"> l</a> Subdivide long edges.
+  <li><a href="#N"> N</a> Set target volumes to actual.
+  <li><a href="#n"> n</a> Notch ridges and valleys.
+  <li><a href="#O"> O</a> Pop non-minimal edges.
+  <li><a href="#o"> o</a> Pop non-minimal vertices.
+  <li><a href="#r"> r</a> Refine triangulation.
+  <li><a href="#t"> t</a> Remove tiny edges.
+  <li><a href="#u"> u</a> Equiangulate.
+  <li><a href="#V"> V</a> Vertex averaging.
+  <li><a href="#w"> w</a> Weed out small triangles.
+  <li><a href="#y"> y</a> Torus duplication.
+  <li><a href="#Z"> Z</a> Zoom in on vertex.
+</ul><li>            Output: 
+<ul><li><a href="#D"> D</a>  Toggle display every iteration.
+  <li><a href="#d"> d</a> Dump surface to datafile.
+  <li><a href="#P"> P</a> Graphics output (geomview, Postscript, etc.).
+  <li><a href="#s"> s</a> Screen display (native graphics).
+</ul><li>               Miscellaneous: 
+<ul>  <li><a href="#F"> F</a>  Toggle command logging.
+  <li><a href="#H"> H,h,?</a> Help screen.
+  <li><a href="#q"> q,x</a>   Exit.
+</ul></ul><P>
+
+<hr><a name="redefinition"></a><h2>Single letter redefinition</h2>
+It is possible to reassign a single letter to your own command
+by the syntax
+<pre> <i>letter</i> :::= <i>command</i>
+</pre>
+but this should only be used in special circumstances, such as
+redefining  'r' to do additional actions along with refinement.
+The standard meaning can be restored with a null assignment:
+<pre> <i>letter</i> :::=
+</pre>
+Use single quotes around the letter to get the standard meaning, i.e. 'r'
+will do a standard refine when r has been redefined.
+Redefinitions are cleared when a new surface is loaded.  Be careful
+when using redefined commands in defining other commands.
+Redefinition is effective on execution of the redefinition command,
+not on parsing. Redefinition is not retroactive to uses in previously
+defined commands, but restoring the standard meaning is retroactive.
+Examples:
+<pre>
+   V :::= { fix vertex[5]; 'V'; unfix vertex[5] }
+   r :::= { divisions := divisions * 2; 
+            hooke_length := hooke_length/2; 'r' }
+</pre>
+<hr><a name="A"> </a>
+<h2>A</h2>
+<a href="#single letter">Single letter</a> main command.
+  Lists the current values of 
+<a href="syntax.htm#variables">variables</a> and 
+<a href="quants.htm#named quantities">named quantity</a> values, moduli,
+and targets.  Only explicitly user-defined named quantities are
+shown unless <a href="toggle.htm#show_all_quantities">
+show_all_quantities</a> is toggled on.
+  You are allowed you to enter new values (except quantity values). 
+ The new value is entered as the
+  number of the variable (from the list) and the new value.  
+   Exit by hitting RETURN on a blank line.  All changes that
+  can be made here can also be made with 
+  <a href="commands.htm#assignment">assignment</a>
+  commands.
+
+<hr><a name="a"> </a>
+<h2>a</h2>
+<a href="#single letter">Single letter</a> main command.
+  Toggles <a href="model.htm#area normalization">area normalization</a>
+   of vertex forces and other gradients, to model motion by mean
+   curvature.  Meant to be used with a fixed 
+   <a href="iterate.htm#scale factor">scale factor</a>.
+    Be sure you have a small enough scale factor or else things tend to
+  blow up.  Reduce the scale factor temporarily after refinement, since
+  triangle areas are cut by a factor of 4 but the old creases remain. 
+  When this option is ON, there is an optional check that can be made
+  for facets that move too much.  This is done by computing the ratio
+  of the length of the normal change to the length of the old normal. 
+  If this exceeds the user-specified value, then all vertices are
+  restored to their previous position.  The user should reduce the
+  motion scale factor and iterate again.<P>
+
+<hr><a name="b"> </a>
+<h2>b</h2>
+<a href="#single letter">Single letter</a> main command.
+ Permits user to interactively change body 
+ <a href="elements.htm#target volume">prescribed volumes</a> or
+ <a href="elements.htm#body pressure">pressures</a>.  
+ Prints old value for each body and prompts for new.  <P>
+
+<hr><a name="C"> </a>
+<a name="check"></a>
+<h2>C</h2>
+<a href="#single letter">Single letter</a> main command.
+ Runs various internal consistency checks. Synonym: check.
+ If no problems, just prints "Checks completed."
+ The number of errors found is stored in the variable check_count.
+ The checks are: <ul>
+ <li>  Element list integrity - checks that
+       data structures are intact.
+ <li>  Facet-edge check - that if a facet adjoins
+       an edge, then the edge adjoins the facet,
+       and that the three edges around a facet
+       link up.
+ <li>  Facet-body check - whether adjacent facets
+       have the same body on the same side.
+ <li>  Collapsed elements - check if endpoints of
+       an edge are the same, and whether
+       neighboring facets share more than one
+       edge and two vertices.
+</ul>
+
+<hr><a name="c"> </a> <a name="counts"></a>
+<h2>c</h2>
+<a href="#single letter">Single letter</a> main command.
+ Prints count of elements and memory used.
+ The memory is just the total of the element structures.
+ On some systems, enabling "<a href="toggle.htm#memdebug">memdebug</a>" 
+ will print more
+ complete statistics on total memory usage.  Synonym: counts.
+
+<hr><a name="D"> </a>
+<h2>D</h2>
+<a href="#single letter">Single letter</a> main command.
+   Toggles updating graphics every iteration or other surface change.  
+    Default is to display.  Status can also be changed or 
+    queried with the <a href="toggle.htm#autodisplay">autodisplay</a>
+    toggle.
+
+<hr><a name="d"> </a>
+<h2>d</h2>
+<a href="#single letter">Single letter</a> main command.
+ Dumps data to ASCII file in same format as initial data file.  You
+ will be prompted for a filename.  An empty reponse will use the
+ default dump name, which is the datafile name with a ".dmp"
+ extension.  Same as the <a href="commands.htm#dump">dump</a>
+ command, except the dump command requires the filename as part
+ of the command.  Useful for checking your input is being read correctly,
+ for saving current configuration, and for debugging.<P>
+
+<hr><a name="e"> </a> <a name="extrapolate"></a>
+<h2>e</h2>
+<a href="#single letter">Single letter</a> main command.
+   Extrapolates total energy to infinite refinement if at least two
+   <a href="single.htm#r">r</a> commands have been done.  
+   Uses last energy values at three
+   successive levels of refinement, and uses a power law fit for the
+   error.  For best results, use only the
+   r command to refine, and iterate to complete convergence at each
+   level of refinement. Synonym: extrapolate.
+
+<hr><a name="F"> </a>
+<h2>F</h2>
+<a href="#single letter">Single letter</a> main command.
+ Toggle logging of commands in file.  If starting logging, you will be
+ prompted for the name of a log file.  Any existing file of that name
+ will be appended to.  Logging stops automatically when the surface is
+ exited.  Only correctly parsed commands are logged.  Output resulting
+from commands is not logged.  Responses to interactive single-letter
+commands are logged, but not responses to other interactive commands.
+
+
+<hr><a name="f"> </a>
+<h2>f</h2>
+<a href="#single letter">Single letter</a> main command.
+Sets <a href="iterate.htm#diffusion">diffusion constant</a>.  
+Prints old and prompts for new.<P>
+
+<hr><a name="G"> </a>
+<h2>G</h2>
+<a href="#single letter">Single letter</a> main command.
+ Toggles <a href="energies.htm#gravity energy">gravity</a>
+ on or off.  Gravity starts ON if any body has a
+ nonzero density; otherwise OFF.  If followed by a value, sets gravity
+ to that value.  Otherwise prints old value of gravitational constant
+ and prompts for new.  
+
+<hr><a name="go"></a>
+<a name="g"> </a>
+<h2>g</h2>
+<a href="#single letter">Single letter</a> main command.
+ Do one <a href="iterate.htm#iteration step">iteration step</a>.  
+ The output consists of the number of iterations left (for people who
+ wonder how close their 1000 iterations are to ending), the area and
+ energy, and the <a href="iterate.htm#scale factor">scale factor</a>.  
+<tt>g</tt> is commonly used with an iteration count, as in "<tt>g 100</tt>".
+The user can abort repeated iterations
+ by sending an interrupt to the process (SIGINT, to be precise; CTRL-C
+ or whatever on your keyboard).  As a special dispensation to lazy users,
+the syntax "<tt>g</tt><i>n</i>" is equivalent to "<tt>g</tt> <i>n</i>".
+Synonym: go
+
+<hr><a name="H"> </a>
+<h2>H,h,?</h2>
+<a href="#single letter">Single letter</a> main command.
+ Prints a very primitive help message listing common commands.
+ <a href="commands.htm#help">help</a> is much better, as it
+ accesses the full HTML documentation.  Or best, use a separate
+ HTML browser on this documentation.<P>
+
+<hr><a name="i"> </a>
+<h2>i</h2>
+<a href="#single letter">Single letter</a> main command.
+  Prints miscellaneous information:
+<ul>
+<li>  Name of datafile
+<li>  Total energy
+<li>  Total area of facets
+<li>  Count of elements and memory usage
+<li>  Area normalization, if on
+<li>  LINEAR or QUADRATIC model
+<li>  Whether conjugate gradient on
+<li>  Order of numerical integration
+<li>  Scale factor value and option (fixed or optimizing)
+<li>  Diffusion option and diffusion constant value
+<li>  Gravity option and gravitational constant value
+<li>  Jiggling status and temperature
+<li>  Gap constant (for gap energy, if active)
+<li>  Ambient pressure (if ideal gas model in effect)
+</ul><P>
+
+<hr><a name="J"> </a>
+<h2>J</h2>
+<a href="#single letter">Single letter</a> main command.
+ Toggles <a href="#j">jiggling</a>
+ on every iteration of the <a href="single.htm#g">g</a>
+ command.  If jiggling gets turned on,
+ prompts for temperature value.
+Default temperature is the value of the 
+<a href="syntax.htm#jiggle_temperature">temperature</a> internal variable.<P>
+
+<hr><a name="j"> </a>
+<h2>j</h2>
+<a href="#single letter">Single letter</a> main command.
+ Jiggles all vertices once.  Meant to be used for simulated annealing.
+ Useful for shaking up surfaces that get in
+ a rut, especially crystalline integrands.  You will be prompted for a
+ "temperature" which is used as a scaling factor, if you don't give a
+ temperature with the command.  
+Default temperature is the value of the 
+<a href="syntax.htm#jiggle_temperature">jiggle_temperature</a>
+ internal variable, which starts as 0.05.
+The actual jiggle is a random
+ displacement of each vertex independently with a Gaussian
+ distribution with deviation being the temperature times the mean
+ edge length.  See the 
+<a href="commands.htm#longj">longj</a> command for a user-definable
+ perturbation.  <P>
+
+<hr><a name="K"> </a>
+<h2>K</h2>
+<a href="#single letter">Single letter</a> main command.
+ Finds skinny triangles whose smallest angle is less than a specified
+ cutoff.  You will be prompted for a value if you don't give a value
+on the command line.  Such triangles will have
+ their longest edge subdivided.  Should be followed with tiny edge
+ removal (<a href="single.htm#t">t</a>) and equiangulation 
+ (<a href="single.htm#u">u</a>).  <P>
+
+<hr><a name="k"> </a>
+<h2>k</h2>
+<a href="#single letter">Single letter</a> main command.
+ Sets "gap constant" for <a href="energies.htm#gap energy">gap energy</a>
+ for <a href="constrnt.htm#convex constraint">convex constraints</a>.  Adds
+ energy roughly proportional to area between edge and boundary.  You
+ will be prompted for a value if you don't give a value
+on the command line.  Normal values are on the order of
+ magnitude of unity.  Value k = 1 is closest to true area.  Use 0 to
+ eliminate the energy.  <P>
+
+<hr><a name="l"> </a>
+<a name="edge_divide"></a>
+<h2>l  (lower case L)</h2>
+<a href="#single letter">Single letter</a> main command.
+ Subdivides long edges, creating new facets as necessary.  You will be
+ prompted for a cutoff edge length, if you don't give a value with the
+ command.  Existing edges longer than the cutoff will be divided once
+ only.  Newly created edges will not be divided.  Hence there may be
+ some long edges left afterward.  If you enter h, you will get a
+ histogram of edge lengths.  If you hit RETURN with no value, nothing
+ will be done.  It is much better to use the refine command
+<a href="single.htm#r">r</a>  than to subdivide all
+ edges.  A synonym for "<tt>l</tt> <i>value</i>" is "<tt>edge_divide</tt> <i>value</i>".  This command does not respect the <a href="elements.htm#no_refine">
+no_refine</a> attribute.
+ <P>
+
+<hr><a name="M"> </a>
+<h2>M</h2>
+<a href="#single letter">Single letter</a> main command.
+ Sets model type to 
+ <a href="model.htm#linear model">linear</a> , 
+ <a href="model.htm#quadratic model">quadratic</a>, or
+<a href="model.htm#Lagrange model">Lagrange</a>.  Changing from LINEAR to
+ QUADRATIC adds vertices at the midpoints of each edge.  Changing from
+ QUADRATIC to LINEAR deletes the midpoints.  Optionally takes new model
+ type ( 1 for LINEAR,  2 for QUADRATIC, &gt; 2 for Lagrange.  )
+ on command line.  Otherwise will prompt you.<P>
+
+<hr><a name="m"> </a>
+<h2>m</h2>
+<a href="#single letter">Single letter</a> main command.
+ Toggles quadratic search for  
+<a href="iterate.htm#optimizing scale">optimal</a> global motion 
+ <a href="#g">scale factor</a>.  If
+ search is toggled OFF, you will be prompted for a fixed scale factor.  If
+ you give a value with the command, then you are setting a fixed scale
+ factor.
+
+
+<hr><a name="N"> </a>
+<h2>N</h2>
+<a href="#single letter">Single letter</a> main command.
+ Set body <a href="elements.htm#target volume">target volumes</a>
+ to current actual <a href="elements.htm#body volume">volumes</a>.  <P>
+
+<hr><a name="n"> </a>
+<h2>n</h2>
+<a href="#single letter">Single letter</a> main command.
+  Notching ridges and valleys.  Finds edges that have two adjacent
+  facets, and those facets' normals make an angle greater than some
+  cutoff angle.  You will be prompted for the cutoff angle (radians) if
+  you don't give a value with the command.  Qualifying edges will have
+  the adjacent facets subdivided by putting a new vertex in the center. 
+  Should follow with 
+<a href="#u">equiangulation</a>.  In the 
+<a href="model.htm#string model">string model</a>, it will
+  refine edges next to vertices with angle between edges (parallel
+  orientation) exceeding the given value.  Optionally takes cutoff
+  angle on command line.  <P>
+
+<hr><a name="O"> </a>
+<h2>O</h2>
+<a href="#single letter">Single letter</a> main command.
+ 
+  Pop non-minimal edges.  Scans for edges with more than three facets
+  attached.  Splits such edges into triple-facet edges.  Splits
+  propagate along a multiple edge until they run into some obstacle. 
+  This command is meant for surfaces that have equal tension on all
+  facets.  Also tries to pop edges on walls properly.  For finer
+  control on which edges to try, use the <a href="commands.htm#pop">pop</a>
+  command.
+  Try octa.fe for an example.  <P>
+
+<hr><a name="o"> </a>
+<h2>o</h2>
+<a href="#single letter">Single letter</a> main command.
+ Pop non-minimal vertices.  This command scans the surface for vertices
+ that don't have the topologies of one of the three minimal tangent
+ cones that are legal in soap films (plane, triple edge, tetrahedral point).
+  These are "popped" to proper local topologies.  
+The algorithm is to replace the vertex with a sphere.  The facets into the
+original vertex are truncated at the sphere surface.  The sphere is divided
+into cells by those facets, and the largest cell is deleted, which preserves
+the topology of the complement of the surface.
+A special case is two cones meeting at a vertex; if the cones are broad
+enough, they will be merged, otherwise they will be split.  In case of
+merging cones, if both cone interiors are defined to be part of the same
+body, then no facet is placed across the neck created by the merger; if they
+are different bodies or no bodies, a facet will be placed across the neck.
+Only vertices in the interior of a surface, not
+ fixed or on constraints or boundaries, are tested.
+   Try popstr.fe and octa.fe
+ for examples.<P>
+
+<hr><a name="P"> </a>
+<h2>P</h2>
+<a href="#single letter">Single letter</a> main command.
+ Produce graphics output files.  "P" is for "picture".
+  This brings up a menu, unless you give the menu option on the command line.
+ For the 2D graphics options, the view is the same as seen with the 
+<a href="#s">s</a> command. 
+ For options that output to a file, you will be prompted for a filename.
+ Some other possible options you may be asked:
+<dl>
+<dt><tt>Display raw cells, connected bodies or clipped cells? (0,1,2)</tt></dt>
+<dd>  If you are doing <a href="model.htm#torus model">torus model</a>,
+ you will be asked for a <a href="model.htm#torus display">display option</a>,
+unless you have already set one. </dd>
+<dt><tt>Do normal interpolation?</tt></dt>
+<dd>
+  Some formats are capable of doing
+interpolation between vertex normals for smoother shading, and you will
+be asked if you want to do that.</dd>
+<dt><tt>Do inner, outer, or all surfaces? (i,o,a)</tt></dt>
+<dd> When bodies are present, there is an
+option to plot the inner surfaces(adjacent to two bodies), outer surfaces
+(adjacent to 0 or 1 bodies), or all surfaces
+of the bodies.</dd>
+<dt><tt>Do body colors?</tt> </dt>
+<dd> This gives you a chance to
+color the bodies differently.  If you do, the current colormap
+file will be used to color the bodies according to id number.
+  This scheme is a relict
+of early days of the Evolver, and it is suggested that you use the
+<a href="elements.htm#facet color">color</a>, 
+<a href="elements.htm#frontcolor">frontcolor</a>
+ and <a href="elements.htm#backcolor">backcolor</a> facet attributes instead. </dd>
+<dt><tt>Enter name of colormap file: </tt></dt>
+<dd>  If there is no
+current colormap file, you will be prompted. 
+ The colormap file has the format of
+ RGB values, one set per line, values between 0 and 1.  (This map may
+ not be effective on all devices.)</dd>
+<dt><tt> Thicken? (n | y [thickness(0.001)])</tt></dt>
+<dd>
+ You may also be asked if you want thickening.  If you do, each facet
+ will be recorded twice, with opposite orientations, with vertices
+ moved from their original positions by the thickening distance (which
+ the option lets you enter) in the normal direction.  The normal used
+ at each vertex is the same as used for normal interpolation, so all
+ the facets around a planar vertex will have that vertex moved the same
+ amount.  Triple junctions will be separated.  Thickening is good for
+ rendering programs that insist on consistently oriented surfaces, or
+ that have problems with show-through of
+ the backside of a surface.
+ Choosing 'y' or 'n'
+will  reset the thicken toggle.  If you answer 'y', you can optionally
+specify the thickness, which defaults to the value of the 
+<a href="syntax.htm#thickness">thickness</a> internal variable.</dd>
+
+</dl>
+The menu choices for types of output are:
+<dl>
+<dt><tt>1. Pixar file</tt></dt>
+<dd>  For Pixar format.  Actually same format as option 2.</dd>
+<dt><tt>2. OOGL file</tt></dt>
+<dd>This is a file in a file format used by
+<a href="graphics.htm#geomview">geomview</a>, which is Object Oriented
+Graphics Language.  Suitable for direct input into geomview.</dd>
+<dt><tt>3. PostScript file</tt></dt>
+<dd> Generates a <a href="graphics.htm#postscript">PostScript file</a>.</dd>
+<dt><tt>4. Triangle file</tt></dt>
+<dd>A private format file, just listing data.  Not much use any more.</dd>
+<dt><tt>5. Softimage file</tt></dt>
+<dd>Output file in Softimage format.</dd>
+<dt><tt>8. Start simultaneous geomview</tt></dt>
+<dd>If you have the <a href="graphics.htm#geomview">geomview</a> package installed,
+this command will start geomview and display the current surface.
+Changes to the surface are automatically displayed unless
+<a href="toggle.htm#autodisplay">autodisplay</a> is toggled off.</dd>
+<dt><tt>9. End simultaneous geomview</tt></dt>
+<dd>Terminates any <a href="graphics.htm#geomview">geomview</a> program or
+pipe.</dd>
+<dt><tt>A. Start OOGL pipe.</tt></dt>
+<dd> Geomview uses a pipe interface at the moment.  
+ This starts a named pipe with geomview output, but
+ without invoking geomview.  You will be told the
+ name of the pipe, and it is up to you to start a pipe reader.  Evolver
+ blocks until a pipe reader is started.  This is useful for having a
+ second instance of Evolver feed a second surface to geomview by having
+ geomview load the pipe.  Also good for checking exactly what Evolver
+is sending to geomview.  The <a href="commands.htm#geompipe">geompipe</a>
+command does the same thing.  Terminate the pipe with "P 9".
+Note that only one geomview output at a time is possible, so you
+can't have a geomview display and separate pipe active at the same time.</dd>
+<dt><tt>B. End OOGL pipe.</tt></dt>
+<dd>Same as option 9.</dd>
+</dl>
+<hr><a name="p"> </a>
+<h2>p</h2>
+<a href="#single letter">Single letter</a> main command.
+ Sets ambient pressure in 
+<a href="datafile.htm#ideal gas decl">ideal gas model</a>. 
+If you don't give a value
+ with the command, you will be prompted. A large value gives more
+ incompressible bodies.<P>
+
+<hr><a name="Q"> </a>
+<h2>Q</h2>
+<a href="#single letter">Single letter</a> main command.
+Report current values of user-defined
+method instances and named quantities.  If the show_all_quantities toggle
+is on, then internal quantities and method instances are also shown.
+This is particularly informative if convert_to_quantities has been done
+(same as -q command line option), since then internal values such as
+constraint integrals are in the form of method instances.
+  <P>
+
+<hr><a name="q"> </a>
+<h2>q</h2>
+<a href="#single letter">Single letter</a> main command.
+ Exit program.  You will be given a chance to have second thoughts. 
+ You may also load a new datafile.  Automatically closes graphics if
+ you really quit.  Does not save anything.  <P>
+
+<hr><a name="r"> </a>
+<h2>r</h2>
+<a href="#single letter">Single letter</a> main command.
+ Refines the triangulation.  Edges are divided in two, and facets are
+ divided into four facets with inherited attributes. 
+Edges and facets with the no_refine attribute set are not refined.
+  Reports the
+ number of element structures and amount of memory used by those structures.  <P>
+
+<hr><a name="s"> </a>
+<h2>s</h2>
+<a href="#single letter">Single letter</a> main command.
+ Shows the surface with <a href="graphics.htm#screen graphics">screen
+ graphics</a>. Goes into the
+ graphics command mode.  <a href="model.htm#torus model">Torus model</a>
+ surfaces have 
+<a href="model.htm#torus display">display options</a>
+ you will be asked for the first time.
+  The graphics window may be closed with the 
+<a href="commands.htm#close_show">close_show</a>
+ command.<P>
+
+<hr><a name="t"> </a>
+<h2>t</h2>
+<a href="#single letter">Single letter</a> main command.
+  Eliminates tiny edges and their adjacent facets.  You will be
+  prompted for a cutoff edge length if you don't give a value with the
+  command.  If you enter h, you will get an edge length histogram.  If
+  you hit RETURN without a value, nothing will happen.  Some edges may
+  not be eliminable due to being FIXED or endpoints having different
+  attrtibutes from the edge.<P>
+
+<hr><a name="U"> </a>
+<h2>U</h2>
+<a href="#single letter">Single letter</a> main command.
+  This toggles 
+<a href="iterate.htm#conjugate gradient">conjugate gradient</a>
+ mode, which will usually give faster
+  convergence to the minimum energy than the default gradient descent
+  mode.  The only difference is that motion is along the conjugate
+  gradient direction.  The 
+<a href="iterate.htm#scale factor">scale factor</a>
+ should be in optimizing mode. 
+  The conjugate gradient 
+history vector is reset after every surface modification, such as
+  refinement or equiangulation.  After large changes (say, to volume),
+  run without conjugate gradient a few steps to restore sanity.<P>
+
+<hr><a name="u"> </a>
+<a name="equiangulation"></a>
+<h2>u</h2>
+<a href="#single letter">Single letter</a> main command.
+  This command, called "equiangulation", tries to polish up the
+  triangulation.  In the <a href="model.htm#soapfilm model">
+  soapfilm model</a>, each edge that has two neighboring facets (and hence
+  is the diagonal of a quadrilateral) is tested to see if switching the
+  quadrilateral diagonal would make the triangles more equiangular. 
+  For a plane triangulation, a fully equiangulated triangulation is a
+  Delaunay triangulation, but the test makes sense for skew
+  quadrilaterals in 3-space also.  It may be necessary to repeat the
+  command several times to get complete equiangulation.  The 
+  <a href="commands.htm#edgeswap">edgeswap</a>
+   command can force flipping of prescribed edges.<P>
+   In the <a href="model.htm#simplex model">simplex model</a>,
+   equiangulation works only for surface dimension 3.  There, two
+   types of move are available when a face of a tetrahedron violates
+   the Delaunay void condition: replacing two tetrahedra with a common
+   face by three, or the reverse operation of 
+   replacing three tetrahedra around a common edge by two, 
+   depending on how the condition is violated.
+  This command is inoperative in the string model.
+<hr><a name="V"> </a>
+<h2>V</h2>
+<a href="#single letter">Single letter</a> main command.
+ Vertex averaging.  For each vertex, computes new position as
+ area-weighted average of centroids of adjacent facets.  Only adjacent
+ facets with the same constraints and boundaries are used.  Preserves
+ volumes, at least to first order.  See the 
+ <a href="commands.htm#rawv">rawv</a> command for vertex
+ averaging without volume preservation, and 
+ <a href="commands.htm#rawestv">rawestv</a> for ignoring
+ likeness of constraints.  Vertices on triple edges are averaged
+ only with adjacent vertices on the triple edge, and then only if 
+there are exactly two neighboring triple edge vertices. 
+ Fixed vertices do not move. 
+ Vertices on constraints are projected back onto their
+ constraints.  The computation of new vertex positions are all
+done before any vertex is moved.  For sequential movement
+applied to a subset of vertices, see the
+<a href="commands.htm#vertex_average">vertex_average</a> command.<P>
+
+<hr><a name="v"></a>
+<a name="show_vol"></a>
+<h2>v</h2>
+<a href="#single letter">Single letter</a> main command.
+ Shows target volume, actual volume, and pressure of each body. 
+ Also shows named quantities.  Pressures are really the Lagrange
+ multipliers.  Pressures are computed before an iteration, so the
+ reported values are essentially are one iteration behind.
+ Synonym: show_vol <P>
+
+<hr><a name="W"> </a>
+<h2>W</h2>
+<a href="#single letter">Single letter</a> main command.
+  Toggles homothety.  If homothety ON, then after every iteration, the
+  surface is scaled up so that the total volume of all bodies is 1. 
+  Meant to be used on surfaces without any blowup constraints of any
+  kind, to see the limiting shape as surface collapses to a point.  <P>
+
+<hr><a name="w"> </a>
+<h2>w</h2>
+<a href="#single letter">Single letter</a> main command.
+ Tries to weed out small triangles.  You will be prompted for the
+ cutoff area value if you don't give a value with the command.  If you
+ enter h, you will get a histogram of areas to guide you.  If you hit
+ RETURN with no value, nothing will be done.  Some small triangles may
+ not be eliminable due to constraints or other such obstacles.  The
+ action is to eliminate an edge on the triangle, eliminating several
+ facets in the process.  Edges will be tried for elimination in
+ shortest to longest order.  WARNING: Although checks are made to see
+ if it is reasonable to eliminate an edge, it is predicated on facets
+ being relatively small.  If you tell it to eliminate all below area 5,
+ Evolver may eliminate your entire surface without compunction.<P>
+
+<hr><a name="X"> </a>
+<h2>X</h2>
+<a href="#single letter">Single letter</a> main command.
+List the current <a href="elements.htm#extra attributes">extra attributes</a>,
+including name, dimension, type, size in bytes, and offset within the
+element structure.  Some internal attributes are also listed, whose names
+begin with a double underscore.
+
+<hr><a name="x"> </a>
+<h2>x</h2>
+<a href="#single letter">Single letter</a> main command.
+Same as q.   Exit Evolver, or start new surface. <P>
+
+<hr><a name="y"> </a>
+<h2>y</h2>
+<a href="#single letter">Single letter</a> main command.
+ Torus duplication.  In 
+<a href="model.htm#torus model">torus model</a>,
+ prompts for a period number (1,2,
+ or 3) and then doubles the torus unit cell in that direction.  Useful
+ for extending simple configurations into more extensive ones.<P>
+
+<hr><a name="Z"> </a>
+<h2>Z</h2>
+<a href="#single letter">Single letter</a> main command.
+  Zooms in on a vertex.  Asks for vertex number and radius.  Number is
+  as given in vertex list in datafile.  Beware that vertex numbers
+  change in a dump (but correct current zoom vertex number will be
+  recorded in dump).  Eliminates all elements outside radius distance
+  from vertex 1.  New edges at the radius are made FIXED.  Meant to
+  investigate tangent cones and intricate behavior, for example, where
+  wire goes through surface in the overhand knot surface.  Zooming is
+  only implemented for surfaces without bodies.  <P>
+
+<hr><a name="z"> </a>
+<h2>z</h2>
+<a href="#single letter">Single letter</a> main command.
+ Do curvature test on QUADRATIC model.  Supposed to be useful if you're
+ seeking a surface with monotone mean curvature.  Currently checks
+ angle of creases along edges and samples curvature on facet interiors. 
+ Orientation is with respect the way facets were originally defined.
+ Deprecated.<P>
+
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>
+

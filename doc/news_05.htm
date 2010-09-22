@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 5</title></head>
+
+<BODY>
+<a name="newsletter 5"></a>
+<h1>Surface Evolver Newsletter no. 5</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+		      Surface Evolver Newsletter Number 5
+			      July 28, 1993
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+  Positions available
+  New features of version 1.92
+  Parallelizing Evolver
+  New printed manual
+
+Positions available.
+
+Two PhD research assistant positions available. Positions are NSF-funded and
+will eventually contribute to a consortium between several national labs/
+universities/microelectronics corporations. Looking for (1) Theoretically-
+oriented student to do combined analytical/computational research on menisci
+stability. Experience with Surface Evolver desirable (2) Experimentalist
+to conduct research in reactive wetting involving liquid metals. Candidates
+with applied mathematics, physics, engineering science backrounds encouraged to
+submit resume/vita to Professor Timothy Singler, Dept. of Mechanical
+Engineering, State University of New York at Binghamton, Binghamton, NY 13902-
+6000, phone (607)-777-4330, E-mail Singler@bingvmb.cc.binghamton.edu.
+
+New features
+
+  New named quantity syntax.  See below.
+
+  New named quantity methods:
+    Edge, facet scalar integrands. Method names are "edge_scalar_integrand"
+    and "facet_scalar_integrand". Both need scalar functions specified.
+    Example for using a string model to simulate a surface of revolution:
+
+    quantity rev_area energy global_method edge_scalar_integrand
+    scalar_integrand: 2*pi*x
+
+  "INFO_ONLY" quantities are not calculated until their values are
+  needed.  This should speed up some calculations.
+
+  "Fix" and "unfix" can be used as verbs, like list, delete, etc.
+  I kept writing commands like 
+     fix vertices where on_constraint 1
+  instead of 
+     set vertices fixed where on_constraint 1
+  so I made it legal.
+
+  The verbs set, unset, list, delete, refine, fix, unfix, dissolve
+  can be used on single named elements inside an iteration construct.
+  Example:
+    foreach edge ee where ee.length &lt; .01 do {
+       printf "Refining edge %g.\",ee.id; refine ee; }
+
+  All toggle command words (not single letters) can be used as Boolean 
+  variables in expressions.  Example: 
+    if conj_grad then {g10; u; g10} else {g30; u; g30}
+
+  There are more internal variables available as read-only
+  values: space_dimension, surface_dimension, torus (Boolean),
+  torus_filled (Boolean), symmetry_group (Boolean), 
+  simplex_representation (Boolean), integration_order.
+
+  Mac version repeated commands interruptable with control-'.'.
+
+  Macintosh and Dos versions pipe to a file instead of a command:
+    Enter command: list vertices | "filename"
+
+  For a torus domain, the torus periods may be specified using
+  expressions with parameters, so the fundamental cell may
+  be changed interactively.  Do a "recalc" after changing
+  such a parameter to update the torus periods.
+
+  gv_binary toggle for binary/ascii data to geomview. Default ON
+  for binary, which is faster.  Ascii mode useful for debugging.
+
+Named quantities.
+
+  As the Evolver has accumulated more and more types of energies,
+it has become very obvious that adding each one in as a special
+calculation is not a good way to go.  The system I've been
+experimenting with I call "named quantities", and the energies
+I've added lately have been in this system.  Gradually, all
+energies, volumes, etc. will be converted internally, but
+existing datafile and command syntax will remain valid (where
+possible).  The system has changed somewhat since its inception,
+necessitating a slight change of datafile syntax.  The system
+has three components:
+1) Methods: A method is a way of calculating a scalar value.
+Each method is implemented as functions calculating its value
+and gradient.  Methods are described in the manual, and have names.
+2) Method instances: A method instance is a particular application
+of a method, with any particular data such as scalar integrands
+or parameters.  Method instances may be explicitly created, or 
+may be implicitly created inside quantity definitions.
+Explicitly created instances are given names by the user.
+3) Quantities.  A quantity is the sum of method instances.
+Quantities are given names by the user, and referred to that way.
+A quantity may be part of the total energy, it may have a
+fixed value, or it may be computed for information only.
+Usually quantities have only one method instance, but there
+are occasions where several might be used.  For example, in calculating
+the volume of a body with free boundary on a wall, one might
+combine a surface integral and an edge integral.
+
+See the 1.92 manual for full details on methods, instances, and
+quantities.  The syntax change mentioned above applies only to
+quantities being applied to individual elements, not globally.
+Now the method must be included in the quantity definition, and it
+is sufficient to just list the quantity name on the lines of the
+desired elements in the datafile.  For example, to sum the lengths 
+of triple junction lines in a soap film,
+
+   quantity triple_length energy method edge_length
+
+and then each triple junction edge would look like
+
+   edges
+   1   1 2  triple_length
+
+Adding the layer of method instances between methods and quantities
+necessitated the change.
+
+
+Parallelizing Evolver.
+
+  Everybody knows that parallel computers are the wave of the future!
+The past couple of months, I have started to dabble in parallelizing
+the Evolver.  The only feature ready to announce is for multi-processor
+Silicon Graphics systems.  If you compile with -DSGI_MULTI in CFLAGS
+in the Makefile, then named quantity calculations will be farmed out
+among the processors.  Note this only for named quantities, such
+as edge_length and the knot energies, and not for ordinary length,
+area, constraints, etc.  For knot energies, I have gotten a factor
+of 3 speed-up on a 4-processor machine.  
+  SGI parallelization is fairly simple, since all the processors
+share the same memory.  On a more distributed machine like the
+Connection Machine CM-5, each processor has its own memory, and
+message passing has to be used to keep all the nodes updated.
+So it looks like a port to the CM-5 will have to parcel out the
+surface in patches to nodes, and each node will have to keep its
+neighbors updated.  I am a neophyte at parallelization, and I would
+like to hear from anybody who has a good algorithm for splitting
+an Evolver-type mesh among nodes, maybe with load-balancing to take
+into account that some nodes (such as those on constraints) take
+more processing than others.
+
+
+New printed manual.
+
+  The Version 1.92 Manual is being printed up in hardcopy 
+as Research Report GCG 55 of The Geometry Center. 
+The last hardcopy version was 1.87.  Of course, the version
+distributed with the ftp archive is always current.
+
+End of Evolver Newsletter 5
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

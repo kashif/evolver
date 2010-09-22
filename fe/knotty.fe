@@ -1,0 +1,113 @@
+// knotty.fe
+// Evolver data for 3,2 torus knot (trefoil) with various knot energies.
+
+// You need to set one type of energy and one type of length constraint;
+// see the set_* commands in the "read" section of the datafile.
+// Not all combinations are workable.
+
+string  // this is a 1D surface
+parameter maj_r = 2   // torus major radius
+parameter min_r = 0.5 // torus minor radius
+
+boundary 1 parameter 1   // parametric curve around torus
+x1:  cos(2*p1)*(maj_r + min_r*cos(3*p1))
+x2:  sin(2*p1)*(maj_r + min_r*cos(3*p1))
+x3:  min_r*sin(3*p1)
+
+// Here follow six different types of energy.  Switch between them
+// with the set_* commands in the bottom section of this datafile.
+
+// elastic bending energy, i.e. squared curvature
+quantity bending_energy ENERGY modulus 0 method sqcurve_string global
+
+// conducting wire vertex energy 
+quantity conduct_energy ENERGY modulus 1  method knot_energy global
+
+// insulating wire vertex energy 
+quantity insul_energy ENERGY modulus 0  method edge_knot_energy global
+
+// Greg Buck's 1/(d1+d2+d3+d4-2(L1+L2)) energy 
+quantity buck_energy ENERGY modulus 0  method buck_knot_energy global
+// have to start with modulus 0 since edges too long at start */
+
+// Greg Buck's normal projection energy 
+quantity proj_energy ENERGY modulus 0  method proj_knot_energy global
+
+// Peter Doyle's conformal circle energy 
+quantity circle_energy ENERGY modulus 0  method circle_knot_energy global
+
+// Here follow three ways to control the length of edges.
+// Switch between them with the set_* commands below.
+
+// Elastic stretching energy to encourage edges to all have the same length.
+// Use "hooke_length := value" command to set hooke_length to desired
+// edge length 
+quantity hooke  ENERGY modulus 0 method hooke_energy global
+
+// Individually set edge equilibrium lengths.
+// Use "set edge hooke_size expr" to set desired edge lengths 
+// When used, the modulus needs to be set high, like 1000 or 10000, 
+// to provide decent stiffness.
+define edge attribute hooke_size real
+quantity hooke2  ENERGY modulus 0 method hooke2_energy global
+
+// to keep total length fixed 
+quantity knot_length FIXED = 24  modulus 1 method edge_tension global
+ 
+vertices
+1    0.0*pi  boundary 1   
+2    0.2*pi  boundary 1   
+3    0.4*pi  boundary 1   
+4    0.6*pi  boundary 1   
+5    0.8*pi  boundary 1   
+6    1.0*pi  boundary 1   
+7    1.2*pi  boundary 1   
+8    1.4*pi  boundary 1   
+9    1.6*pi  boundary 1   
+10   1.8*pi  boundary 1   
+edges
+1     1 2 boundary 1  
+2     2 3 boundary 1   
+3     3 4 boundary 1   
+4     4 5 boundary 1   
+5     5 6 boundary 1   
+6     6 7 boundary 1   
+7     7 8 boundary 1   
+8     8 9 boundary 1   
+9     9 10 boundary 1   
+10    10 1 boundary 1   
+
+read // some initialization commands 
+r 2     // refining twice produces 40 vertices
+unset vertices boundary 1   // release from parametric curve
+unset edges boundary 1 
+set edge tension 0    // get rid of default tension energy
+set edge color white where id <= edge_count/2  // dashed coloring
+
+// Set all quantity moduli to zero
+zero_moduli := {
+  bending_energy.modulus := 0;
+  conduct_energy.modulus := 0;
+  insul_energy.modulus := 0;
+  buck_energy.modulus := 0;
+  proj_energy.modulus := 0;
+  circle_energy.modulus := 0;
+}
+
+// Set up individual types of energy
+set_bending := { zero_moduli; bending_energy.modulus := 1; }
+set_conduct := { zero_moduli; conduct_energy.modulus := 1; }
+set_insul := { zero_moduli; insul_energy.modulus := 1; }
+set_buck := { zero_moduli; buck_energy.modulus := 1; }
+set_proj := { zero_moduli; proj_energy.modulus := 1; }
+set_circle := { zero_moduli; circle_energy.modulus := 1; }
+
+// Set up type of length constraint
+hooke_length := total_length/edge_count;
+set edge hooke_size total_length/edge_count;
+set_length := { fix knot_length; hooke.modulus := 0; hooke2.modulus := 0; }
+set_hooke := { unfix knot_length; hooke.modulus := 1000; hooke2.modulus := 0; }
+set_hooke2 := { unfix knot_length; hooke.modulus := 0; hooke2.modulus := 1000; }
+
+// Sample evolution
+gogo := { g 50; U; g 50;  }

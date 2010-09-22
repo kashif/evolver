@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 10)</title></head>
+
+<BODY>
+<a name="newsletter 10"></a>
+<h1>Surface Evolver Newsletter no. 10</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+
+                      Surface Evolver Newsletter Number 10
+                              December 16, 1994
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+  Query on curvature.
+  Version 1.97
+
+
+Query on curvature.
+  From Christian Burger &lt;burger@pc1442.phys-chemie.uni-marburg.de&gt;:
+
+     I am interested in the investigation of physical systems which are
+     usually highly symmetric two-phase systems separated by an interface
+     which should be some kind of minimal surface. Very often, the systems
+     are bicontinuous, i.e., two unconnected 3D network domains live in a
+     common matrix of surrounding matter (I'm speaking in physical terms
+     here, not mathematical). Naturally, I'm using the evolver with the
+     torus model. The domains have defined volumes and are incompressible.
+     Physical examples for such systems are micro-emulsions,
+     polyelectrolyte-surfactant complexes, block copolymers, etc. It is
+     likely that curvature plays an important role for these systems. If the
+     structure unit building up the interface is not symmetric this leads to
+     a `spontaneous curvature', i.e., a finite H_ZERO in terms of evolver
+     nomenclature.  If you are aware of any work in this direction people 
+     have done so far using the evolver, I'd like to get some references on it.
+
+Version 1.97:
+
+ Version 1.97 is now available for ftp (except Mac version hasn't
+ been updated yet.)
+
+ Changes from 1.96 are mostly a lot of obscure bug fixes.  But
+ there are some new features of general interest.
+
+ New Hessian commands: "eigenprobe value" will print the number of
+ eigenvalues of the energy Hessian that are less than, equal to, and
+ greater than the given value.  It is OK to use an exact eigenvalue
+ (like 0, often) for the value.   Useful for probing stability.
+ "lanczos value" will do a little Lanczos algorithm and report
+ the 15 nearest approximate eigenvalues to the given value.  Do not
+ use an eigenvalue for the value! Not real polished yet.
+
+ The default way of factoring the Hessian is with routines from the
+ Yale Sparse Matrix Package (YSMP), patched a bit to cope with zeroes
+ on the diagonal.  I've been tinkering around with my own version
+ of minimal degree factoring that is a little more aware of the
+ surface structure.  It can be activated by "ysmp off" and deactivated
+ by "ysmp on".  My version seems to have 10-20% less fill, and so
+ be a little faster.  It also seems to not have as many spurious
+ zeroes on the diagonal.  Further, in an attempt to cope with
+ indefinite Hessians, there is a toggle "bunch_kauffman" that enables
+ a version of Bunch-Kauffman factoring in my version.
+
+ Certain named quantity attributes can now be referred to in expressions.
+ For quantity qqq, qqq.value is the current value, qqq.target is 
+ the constrained value, qqq.modulus is the same as the modulus in the
+ datafile definition, and qqq.pressure is the Lagrange multiplier
+ for a constrained quantity.  You can assign values to qqq.modulus
+ and qqq.target.
+
+ The dump command 'd' now saves almost all toggle states (except some
+ debugging toggles) if not the default values.
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

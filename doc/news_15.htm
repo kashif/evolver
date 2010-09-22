@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 12</title></head>
+
+<BODY>
+<a name="newsletter 15"></a>
+<h1>Surface Evolver Newsletter no. 15</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+                    Surface Evolver Newsletter Number 15
+                              August 10, 1998
+
+                   Editor: Ken Brakke, brakke@susqu.edu
+
+Contents
+  Version 2.10b
+  New features and changes
+  Geometry Center shutdown
+  Evolver web page
+  Geomview bug
+
+
+Version 2.10b
+  Surface Evolver Version 2.10 is now available.  It's been a while
+since the last version, 2.01, so I bumped the version number up to
+2.10; actually a few more changes in the last month bring the version
+number to 2.10b.  No major changes, just bug fixes and some minor new features.
+The Windows NT/95/98 version has much improved OpenGL graphics.
+The Mac version is still 2.01, since I don't have access to a Mac
+with a compiler.
+
+New features and changes
+
+   Most of the changes have been bug fixes, tweaks, and special purpse
+   features for various users.  Here are general interest updates:
+
+   In the datafile, making an edge FIXED no longer fixes its endpoints.
+   This is compatible with how fixed facets and run-time fixing edges 
+   have always worked.  If you relied on fixed edges making their
+   endpoints fixed in any datafiles, and didn't explicitly fix the
+   endpoints, you should revise your datafiles.  One cheap way to
+   do that is to put a command "foreach edge ee where fixed do fix
+   ee.vertex" in the READ section at the end of the datafile.  Dump
+   files do not need to be fixed.
+
+   The "load" command now terminates the command containing it, since
+   technically the command was wiped out along with the old surface.
+   "Load" is useful as the last command in a script, or in a script
+   used as stdin by redirection.
+
+   Window NT/95/98 version using OpenGL has much better graphics.
+   Can rotate, translate, or zoom with left mouse button, pick elements
+   with right button, even do cross-eyed stereo.
+   Type 'h' in the graphics window for a command summary.
+   Also made catenoid icon for the program.
+
+   C-style assignment operators +=, -=, *=, /= work where reasonable.
+
+   Level set constraint formulas and parameterized boundary formulas
+   may contain vertex extra attributes, which can be very useful
+   in customizing formulas to vertices, for example keeping each
+   vertex at its own z level.
+
+   Parameterized boundaries can have energy and content integrals,
+   in the same way level set constraints have had.
+
+   Command output redirection to a file using &gt;&gt; for append, &gt;&gt;&gt;
+    for overwrite.
+
+   A variable can be toggled between optimizing or non-optimizing at run
+   time with "unfix varname" and "fix varname" respectively.
+
+   "keep_macros" in datafile header keeps macros active after datafile.
+
+   Command line option -i will keep element ids the same as in the
+   datafile, rather than renumbering consecutively as is the default.
+
+   If you want to reorder elements in the internal lists (the way
+   elements are listed by, say, 'list vertices', you can define
+   the extra attributes vertex_order_key, edge_order_key,
+   facet_order_key, body_order_key, facetedge_order_key, give them
+   all appropriate values, and then give the command reorder_storage.
+   See reorder.cmd in the distribution fe directory.
+
+   'renumber_all' renumbers elements in internal list order.
+
+   Read-only internal variable 'random' for random numbers
+   uniformly distributed between 0 and 1.
+
+   Added warnings about using keywords as identifiers in the datafile.
+   The datafile will still run, but your commands will misinterpret
+   those identifiers.
+
+   All keywords are in the on-line help.  Do 'help "keyword"' if you
+   want to check on a potential keyword.  'help' also recognizes
+   identifiers defined by the user in the current surface.  For
+   testing in scripts, there is a function is_defined(stringexpr)
+   that returns 1 if a name is already in use, 0 if not.
+
+   In the datafile, making an edge FIXED no longer fixes its endpoints.
+   This is compatible with how fixed facets and fixing edges at run
+   time have always worked.
+
+   For named methods that logically depend on the orientation of the
+   element (i.e. facet_vector_integral, etc.), the relative orientation
+   of the element when the method is applied is recorded. Default is
+   positive in the datafile, unless a '-' is added after the name of
+   a method or quantity applied to an individual element.
+
+
+Geometry Center shutdown
+  The Geometry Center, which has sponsored much of my Surface Evolver
+work, will be shutting down in August.  The Geometry Center web site
+and ftp site should continue to exist for at least a year.  My email
+address brakke@geom.umn.edu should continue to work.  However, my
+preferred email address is now brakke@susqu.edu, and the home Evolver
+web site is http://www.susqu.edu/facstaff/b/brakke/evolver.
+
+Evolver web page
+  My Evolver home page http://www.susqu.edu/facstaff/b/brakke/evolver
+has downloads, papers, and many example datafiles.  The examples have
+various degrees of commentary, but they generally have at least a
+sample evolution script.
+
+Geomview bug
+  Geomview version 1.6 has a bug in picking that prevents it from
+reporting the correct elements to Evolver.  This bug has been 
+fixed in geomview patch 1.6p7, which unfortunately hasn't been
+posted to the geomview site.  See the Evolver home page
+http://www.susqu.edu/facstaff/b/brakke/evolver for more.
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

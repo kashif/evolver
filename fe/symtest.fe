@@ -1,0 +1,75 @@
+// symtest.fe
+// test of quotient space mechanism
+// same surface as in twointor.fe
+
+// Two Kelvin tetrakaidecahedra in a torus.
+
+SYMMETRY_GROUP "torus"     // same name as in quotient.c
+
+vertices
+1  0.50 0.00 0.75
+2  0.25 0.00 0.50
+3  0.00 0.25 0.50
+4  0.75 0.00 0.50
+5  0.00 0.50 0.75
+6  0.50 0.00 0.25
+7  0.00 0.75 0.50
+8  0.50 0.25 0.00
+9  0.25 0.50 0.00
+10 0.00 0.50 0.25
+11 0.50 0.75 0.00
+12 0.75 0.50 0.00
+
+// wrap codes for group elements using scheme in quotient.c
+#define XWRAP 1
+#define XWRAPNEG 31
+#define YWRAP 64
+#define YWRAPNEG 31*64
+#define ZWRAP 64*64
+#define ZWRAPNEG 31*64*64
+edges  /* with torus wrap symbols */
+1     1  2 
+2     2  3
+3     1  4
+4     3  5
+5     2  6
+6     2  7 wrap YWRAPNEG
+7     1  8 wrap ZWRAP
+8     4  6 
+9     5  9 wrap ZWRAP
+10    3 10 
+11    3  4 wrap XWRAPNEG
+12    6  8 
+13    6 11 wrap YWRAPNEG
+14    7  4 wrap XWRAPNEG+YWRAP
+15    8 12 
+16    9  8
+17    9 11
+18   10  7 
+19   11  1 wrap YWRAP+ZWRAPNEG
+20   12  5 wrap XWRAP+ZWRAPNEG
+21    5  7 
+22   11 12 
+23   10 12 wrap XWRAPNEG
+24    9 10 
+
+faces
+1      1   2   4   9  16  -7 
+2     -2   5  12 -16  24 -10 
+3     -4  10  18 -21 
+4      7  15  20  -4  11  -3 
+5     -1   3   8  -5 
+6      6  14 -11  -2 
+7      5  13 -17  24  18  -6 
+8    -12  13  19   7 
+9    -16  17  22 -15 
+10   -10  11   8  12  15 -23 
+11   -21   9  17  19   1   6 
+12   -14 -18  23 -22 -13  -8 
+13   -24  -9 -20 -23 
+14   -19  22  20  21  14  -3 
+
+bodies
+1    -1 -2 -3 -4  -5   9   7  11 -9 10  12 5 14  3 // volume 0.500
+2     2 -6 -7  8 -10 -12 -11 -13  1 13 -14 6  4 -8 // volume 0.500
+

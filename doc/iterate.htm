@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation: iteration
+</title></head>
+
+<BODY>
+<!--NewPage-->
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+
+<hr><a name="gradient descent iteration"> </a>
+<h2>Gradient Descent Iteration</h2>
+
+Basic surface evolution is done by gradient descent iteration.
+Relevant topics are:
+<ul>
+<li><a href="#iteration step">Iteration step</a>
+<li><a href="#scale factor">Scale factor</a>
+<li><a href="#optimizing scale">Optimizing scale factor</a>
+<li><a href="#conjugate gradient">Conjugate gradient</a>
+<li><a href="#diffusion">Diffusion</a>
+<li><a href="#stability">Stability</a>
+</ul>
+<hr>
+<a name="iteration step"></a><h2>Gradient descent iteration step</h2>
+Each <a href="single.htm#g">g</a> command iteration does the following:
+<ul>
+<li> Calculates the force vector at each vertex as the gradient
+of the total <a href="energies.htm">energy</a>.
+<li> Calculates the gradients at each vertex of constrained 
+<a href="elements.htm#body volume">body
+volumes</a> and 
+<a href="quants.htm#fixed quantity">named quantities</a>.  
+Also calculates the multiple of
+gradient motion needed to restore target values of the constraints.
+<li> Projects the forces to be tangent to 
+<a href="constrnt.htm#level set constraints">level set constraints</a>,
+volume constraints (pressure is calculated here), 
+and fixed quantity constraints.
+<li> If any <a href="model.htm#mobility">mobility</a> options are in effect,
+the proper force to velocity conversion is done.
+<li> If the <a href="toggle.htm#normal_motion">normal_motion</a> toggle is
+on, then velocities are projected to the surface normal.
+<li> Does the 
+<a href="#conjugate gradient">conjugate gradient</a>
+ projection, if conjugate gradient is in effect.
+<li> The current vertex positions are saved.
+<li> If the optimizing mode is on, then trial motions are made to
+find the optimal scale factor.
+<li> The scale factor is multiplied by the value of the 
+<a href="syntax.htm#scale_scale">scale_scale</a> internal variable.
+(Useful only if you want to muck around with modifying the optimal
+scale factor for some strange reason.)
+<li> Each vertex is moved by the scale factor times the velocity,
+plus the volume and fixed quantity restoring motions.  If 
+<a href="toggle.htm#runge_kutta">runge_kutta</a>
+is in effect, then a fourth-order Runge-Kutta step is done instead of
+a simple Euler step.
+<li>  All level set constraints are enforced.  
+	 Vertices 
+         violating an inequality or equality constraint are
+         projected to the constraint (Newton's method).  Several
+         projection steps may be needed, until the violation
+         is less that a certain tolerance or a certain number
+         of steps are done (which generates a warning message).
+         The default constraint tolerance is 1e-12, but it can
+         be set with the  
+<a href="datafile.htm#constraint_tolerance decl">CONSTRAINT_TOLERANCE</a>
+ option in the datafile,
+	 or setting the 
+<a href="syntax.htm#constraint_tolerance">constraint_tolerance</a> variable. 
+<li> If <a href="toggle.htm#jiggle">jiggling</a> is on, the
+surface is randomly perturbed.
+<li> If <a href="toggle.htm#autopop">autopop</a> or 
+<a href="toggle.htm#autochop">autochop</a> are on, then the 
+appropriate edge deletion or division is done.
+<li> New energies, volumes, and quantities are calculated.
+<li> If <a href="toggle.htm#check_increase">check_increase</a> is
+on and the surface energy has increased, then the vertices are 
+restored to their old values.
+<li> If <a href="toggle.htm#estimate">estimating</a> is on, then
+a linear estimate of the energy change is printed.  This is calculated
+from the velocities, gradients, and scale factor.
+<li> The number of iterations left, the new area, energy, and scale factor
+ are printed.
+<li> If a graphics display is active and set to 
+<a href="toggle.htm#autodisplay">autodisplay</a>, then graphics
+are redrawn.
+</ul>
+<hr>
+<a name="scale factor"></a><h2>Scale factor</h2>
+Once a direction of motion is found, the direction must be
+multiplied by a scale factor to compute the actual motion.
+If one interprets the direction of motion as a velocity
+(as in motion by mean curvature), then the scale factor becomes
+a time step.  The scale factor may be fixed with the 
+<a href="single.htm#m">m</a> command, or it may be in
+<a href="#optimizing scale">optimizing</a> mode.  The default
+is to start in optimizing mode.
+<hr>
+<a name="optimizing scale"></a><h2>Optimizing scale</h2>
+In using gradient descent to seek a minimum energy, one finds
+a direction of motion and does a line search along that direction
+to find the minimum energy.  Evolver will do that in optimizing
+scale mode.  The line search consists of halving  or doubling
+the current <a href="#scale factor">scale factor</a> until an
+energy minimum is bracketed; then quadratic interpolation is
+used to estimate the optimum scale.  Optimizing scale is the
+default; it also may be turned on with the <a href="single.htm#m">m</a>
+command or the <a href="commands.htm#optimizing">optimizing</a> command.
+
+<p>
+For safety, there is an upper bound to the scale; it defaults to 1
+but may be changed with the <a href="commands.htm#optimizing">optimizing</a>
+command.  There is also a lower bound; if Evolver gets a scale
+below 1e-12 of the scale bound when attempting to find a minimum,
+it gives up and just uses scale 0.  Scale 0 is not a null operation
+since it still projects to constraints, if they are not exactly
+satisfied.
+<p>
+
+In general, a good scale factor depends on the type of energy being
+minimized and the level of refinement.  However, for minimizing area,
+ when the triangulation is well-behaved and 
+<a href="model.htm#area normalization">area normalization</a> is off,
+the best scale factor is usually around 0.2, independent of refinement.
+ In optimizing
+ mode, a scale factor getting small, say below 0.01, indicates
+ triangulation problems.  Too large a fixed scale factor will show up as
+ total energy increasing.  If you have motion by area normalization ON
+ use a small scale factor, like 0.001, until you get a
+ feel for what works.  
+ <p>
+ If <a href="toggle.htm#check_increase">check_increase</a> is toggled
+ on, then the motion is not done if it would increase energy.  But
+ be aware that energy sometimes may have to increase in order to
+ satisfy constraints.
+<hr>
+
+<a name="conjugate gradient"></a><h2>Conjugate gradient</h2>
+"Conjugate gradient" is a method of accelerating gradient descent.
+In ordinary  gradient descent, one uses the gradient of energy to
+find the steepest downhill direction, then moves along that line
+to the minimum energy in that direction.  Hence successive steps
+are at right angles.  However, this can be very inefficient, as
+you can spend a lot of time zigzagging across an energy "valley"
+without making much progress "downstream".  With conjugate gradient,
+the search direction is chosen to be in a "conjugate" direction to
+the previous direction.  For a mathematical explanation, see any
+decent book in numerical analysis, such as <a href="biblio.htm#ref[P]">[P]</a>.
+In practice, the conjugate gradient method remembers a cumulative
+"history vector", which it combines with the ordinary gradient to
+figure out the conjugate gradient direction.  The upshot is that
+conjugate gradient can converge much faster than ordinary gradient
+descent.
+<p>
+Conjugate gradient can be toggled with the <a href="single.htm#U">U</a>
+command, or with the <a href="toggle.htm#conj_grad">conj_grad</a> toggle.
+It should always be used with <a href="#optimizing scale">optimizing scale</a>.
+<p>
+Notes: The conjugate gradient method is designed for quadratic energy
+functions.  As long as the energy function is nearly quadratic, as it
+should be near an energy minimum, conjugate gradient works well.
+Otherwise, it may misbehave, either by taking too big steps or by
+getting stalled.  Both effects are due to the history vector being
+misleading. To prevent too big steps, one should iterate without 
+conjugate gradient for a few steps whenever significant changes are
+made to the surface (refining, changing a constraint, etc.).
+On the other hand, if it looks like conjugate gradient is converging,
+it may have simply become confused by its own history. See the
+<a href="catenoid.htm">catenoid</a> example for a case in point.
+A danger signal is the scale factor going to zero.  If you are suspicious,
+toggle conjugate gradient off and on ("<tt>U 2</tt>" does nicely)
+to erase the history vector and start over.
+
+
+
+<hr>
+<a name="diffusion"></a><h2>Diffusion</h2>
+<a name="diffusion_coeff"></a>
+<a name="edge_diffusion"></a>
+<a name="facet_diffusion"></a>
+         The Evolver can simulate the real-life phenomenon
+         of gas diffusion between neighboring bubbles.  This
+         diffusion is driven by the pressure difference across
+         a surface.  This is invoked by the keyword  DIFFUSION
+         in the first part of the datafile, followed by the
+         value of the diffusion constant. The amount diffused
+         across a facet during an iteration is calculated as
+    scale*diffusion_constant*facet_area*pressure_difference.
+         The scale factor is included as the time step of 
+         an iteration.  The amount is added to or subtracted
+         from the prescribed volumes of the bodies on either
+         side of the facet.  The diffusion constant can be
+         accessible at runtime through the read-write 
+         internal variable <tt>diffusion_coeff</tt>. 
+<p>  If you want finer control over the rate of diffusion across
+various surfaces, you can define the edge_diffusion edge attribute
+in the string model or the facet_diffusion facet attribute in
+the soapfilm model and give individual values for edges or facets
+as you desire.  If the attribute is defined, then its value is
+used instead of the global diffusion constant.
+
+<hr>
+<a name="stability"></a><h2>Stability</h2>
+
+The timestep of an iteration should not be so large as to amplify
+perturbations of the surface. Short wavelength perturbations
+are most prone to amplification. This section contains a sketch of
+the stability characteristics of the various mobility modes, enough
+to let the user relate the maximum timestep to the minimum facet or
+edge size.  Two examples are discussed: a zigzag string and a
+nearly flat surface with equilateral triangulation.  Effective
+area is not included, as it is an insignificant correction for nearly
+flat surfaces.  The general moral of this section is that the
+maximum time step in iteration is limited by the length of the
+shortest edge or the area of the smallest facet, except in one case.
+
+<h3>Zigzag string</h3>
+
+Let the amplitude of the perturbation about the midline be Y and
+the edge length L.  Then the force on a vertex is F = -4Y/L
+for small Y.  Let the timestep (the Evolver scale factor) be
+\Delta t.  Let V be the vertex velocity.  Then the critical
+timestep for amplification of the perturbation is given by
+V\Delta t = -2Y, or \Delta t = -2Y/V.
+<p>
+ Vertex mobility.  Here V = F, so \Delta t = L/2.
+<p>
+ Area normalization. Here the vertex star has length 2L,
+so V = F/L and \Delta t = L^2/2.
+<p>
+ Approximate curvature. It turns out that the zigzag is
+an eigenvector of the mobility matrix M for the largest eigenvalue 3/L,
+so V = 3F/L and \Delta t = L^2/6.  This is a major disadvantage
+of approximate curvature.  If perturbation instability is the
+limitation on the timestep, it will take three times as many iterations
+as with area normalization to do the same evolution.  
+
+<h3> Perturbed sheet with equilateral triangulation.</h3>
+
+Consider a plane surface triangulated with equilateral triangles
+of area A. 
+The perturbation consists of a tiling of hexagonal dimples with their centers
+of height Y above their peripheries. The force at a central vertex turns
+out to be -sqrt(3)Y and the force at a peripheral vertex sqrt(3)Y/2.
+<p>
+Vertex mobility.  The critical time step is given by
+<br>
+(\sqrt(3)Y + sqrt(3)Y/2)\Delta t = 2Y,
+<br>
+so \Delta t = 4/3*sqrt(3).  Note that this is independent of the triangle
+size.  This is consistent with experience in evolving with optimizing
+scale factor, where the optimum time step is in the range 0.2 - 0.3
+indenpendent of triangle size.  This is a definite advantage of this
+version of mobility, since different parts of the surface can have
+different size triangulations and one size time step can work for all.
+<p>
+Area normalization. The star area of each vertex is 6A, so
+the velocities become -sqrt(3)Y/2A and sqrt(3)Y/4A, and the 
+critical time step \Delta t = 4/6*sqrt(3)A.  Hence on a surface
+with varying size triangles, the timestep is limited by the area of
+the smallest triangles.
+<p>
+Approximate area.  This force turns out to be an eigenvector
+of the mobility matrix with eigenvalue 2/A.  Hence the velocity
+is four times that of the area normalization, and the critical
+time step four times shorter.
+
+<hr>
+
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>

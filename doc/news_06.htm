@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 6</title></head>
+
+<BODY>
+<a name="newsletter 6"></a>
+<h1>Surface Evolver Newsletter no. 6</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+                      Surface Evolver Newsletter Number 6
+                              December 16, 1993
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+  Kelvin's partition beaten
+  Ftp directory changes
+  New features of version 1.93
+  Bibliography
+
+
+
+Kelvin's partition beaten:
+In 1887, Lord Kelvin posed the problem of finding the partition
+of space into equal volume cells minimizing the interface area.
+He suggested the cell shown in twointor.fe, which is basically
+the voronoi cell for a bcc lattice.  Now Robert Phelan and Denis
+Weaire of Trinity College, Dublin, have found a structure using
+two types of cells that has 0.3% less area than Kelvin's. Their
+Evolver datafile, phelan.fe, is now included in the Evolver package.
+
+Ftp directory changes: 
+
+Version 1.93 is now available for ftp.  Due to a
+rearrangement of The Geometry Center's ftp directory, the path
+is now  pub/software/evolver/evolver.tar.Z.  There is not a Mac
+version of 1.93, as I do not have access to a Mac at the moment.
+
+When you download, please check the date on the file and be sure
+it is Dec. 16 or later.  I am sending this newsletter out before
+the files actually get into the ftp directory, due to my travel plans.
+
+Also the archive now unpacks into three subdirectories: src (source code),
+doc (manual), and fe (sample datafiles).
+
+New features:
+
+ "history" command added to print command history.  Single-letter
+  commands now included in history for convenience.  But history
+  does not record responses to prompts commands may issue.
+
+  Named quantities for scalar and vector integrands over edges and 
+  facets added.  Method names are edge_scalar_integral,
+  facet_scalar_integral, edge_vector_integral, and facte_vector_integral.
+  Example use in datafile:
+
+     quantity zweight info_only method facet_scalar_integral global
+     scalar_integrand z^2
+
+     quantity fvec energy method facet_vector_integral global
+     vector_integrand
+     q1: y^2
+     q2: x*z 
+     q3: y^4
+
+  Quantity names may now be used as element attributes. Value
+  of total quantity must be referred to as "total quantityname".
+
+  Command repeat counts can now be expressions.
+
+  More internal variables for counters on command events:
+  equi_count, delete_count, notch_count, dissolve_count, pop_count, 
+  where_count.  These can be used in queries to make actions
+  depend on the outcome of previous equiangulation, delete, notch,
+  dissolve, or pop commands, or to use the number of items satisfying
+  the last where clause of a command.  These variables keep their
+  values until the next command of the appropriate type.
+
+  The manual index in 1.92 was slightly off in its page numbers.
+  Fixed in current manual.
+
+  DOS version has improved graphics.  Recognizes higher resolution
+  and more colors.  See evolver.doc in evolver.zip.
+
+  Can apply named quantities to elements with SET command. For
+  example, if you have defined a named quantity, say pogo, for
+  facets, you could do
+     set facet quantity pogo where color == red
+  Unset also works.  Of course, these commands do not apply to
+  quantities declared global.
+
+
+Bibliography
+
+  D. Weaire and R. Phelan, "A counter-example to Kelvin's conjecture
+  on minimal surfaces", preprint.
+
+  X. Michalet, D. Bensimon,a nd B. Fourcade, "Fluctuating vesicles
+  of high topology", to appear in Physical Review Letters.
+  Uses Evolver with squared mean curvature energy to model
+  elastic cell membranes.
+
+
+Have a Merry Solstice and a Happy Perihelion!
+
+End of Evolver Newsletter 6
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

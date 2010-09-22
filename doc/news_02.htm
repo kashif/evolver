@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 2</title></head>
+
+<BODY>
+<a name="newsletter 2"></a>
+<h1>Surface Evolver Newsletter no. 2</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+<hr><pre>
+
+
+		      Surface Evolver Newsletter Number 2
+			      February 26, 1993
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+  Announcements
+  Version 1.89 features
+  A student project
+  Bibliography
+
+Announcements:
+
+  The number of subscribers to this newsletter has passed 100.
+  I really appreciate all the interest.
+
+  Evolver version 1.89 is now available for ftp.
+
+  There is now a Macintosh version of the Evolver.  The binary
+  is available for anonymous ftp from geom.umn.edu as
+  pub/evolver.sit.hqx.  This is a binhexed Stuffit 1.5.1 archive.
+  It includes a README file with Mac specific information and datafiles 
+  in Mac format.  Thanks to Jeff Weeks for providing a sample program 
+  for setting up text and graphics windows and handling the event loop.  
+
+Version 1.89 features:
+
+  New arithmetic functions available are floor(), ceil(), and modulus.
+  The modulus operator is '%' as in C. It does a real modulus operation:
+    x % y = x - floor(x/y)*y, 
+  but it works fine on integer values.  Useful for getting multicolored
+  surfaces with `set facet color id % 15'.
+
+  A couple of items to more fully capture the current state in a dump file:
+  The internal viewing matrix (used for Xwindows graphics and Postscript
+  output) is now included in a dump file and can be read from a datafile.
+  User-defined commands are included in the dump file in a `read'
+  section at the end.
+
+  A `rebody' command has been added that recalculates connected bodies.
+  Useful when a neck has pinched out.  If original body volumes were
+  fixed, new bodies have their volumes set to their current volumes.
+
+  Some internal Evolver variables can now be used in command expressions:
+	vertex_count, edge_count, facet_count, body_count,
+	total_energy, total_area, total_length, scale.
+
+  Knot energies have been added.  One way to get a knot to look nice
+  is to endow it with `electric charge' and let it repel itself into
+  shape.  The potential is some inverse power of distance and is 
+  integrated between all pairs of points.  Two varieties are
+  implemented, corresponding to conducting or insulating wire.
+  
+ `dissolve' command added to erase elements and leave gaps in
+  surface, unlike delete command, which closes gaps.  Can only
+  dissolve elements not neede by higher dimensional elements.
+
+  Command repeat numbers have been restricted to just three
+  types of commands:
+      1.  single letter commands that don't have optional arguments
+	  (l,t,j,m,n,w have optional arguments)
+      2.  command list in braces
+      3.  user-defined procedure names
+  This is to prevent disasters like
+	 list vertex 1293
+  which before would produce 1293 lists of all vertices.   And
+  'l 2' now subdivides edges longer than 2 instead of doing 2 l commands.
+
+  "dump" without argument will dump to default file name,
+   which is datafile name with .dmp extension.
+
+  SIGTERM is caught and causes dump to default dump file and exit.
+  This is so scripts running in the background can be stopped with
+  kill -TERM.  SIGHUP acts the same way, so losing a modem connection
+  saves the surface.
+
+  Fixed bug that was causing crashes on Decstations.  Bug has been
+  present for a long time, but just showed up because Dec handles
+  reallocation of memory a little differently from everybody else.
+
+A student project.
+From: "John Oprea" &lt;OPREA@csvaxe.csuohio.edu&gt;
+
+I had two grad students do a comparison, using evolver, of minimal versus
+harmonic surfaces spanning a given curve? This all arose because one
+of our professors was telling students that a least area surface was
+z=f(x,y) with f harmonic. He had done two things: (1) read Courant-
+Hilbert where they use the standard perturbation argument to show that
+a least area surface is given by a harmonic function WHEN THE CURVE
+ISN'T TOO NONPLANAR (ie I think 4 th order partials are supposed to be
+negligible) and (2) read that a parameterization of a minimal surface 
+has harmonic coord functions WITHOUT PAYING ATTENTION TO THE ISOTHERMAL
+COORD CONDITION. Anyways, these students took harmonic functions 
+arising as the real or imaginary parts of analytic functions, lifted a
+circle to the resulting surface as a curve on the surface and used this
+as a bounding curve. They could, by hand, calculate the area of the 
+harmonic surface bounded by the curve. They then used Evolver to evolve
+the surface into a minimal surface (with fixed curve of course) and saw
+how the area decreased, measuring the percentage change. Of course, just
+as Courant - Hilbert says, for circles of small radius the harmonic
+surface is close to minimal. Actually, if the radius was too small, it
+seemed that the comparison didn't go so well --- but we think there was
+truncation error or we needed to increase the number of fixed vertices or 
+something along those lines. An outside possibility is that we somehow
+jumped to a new critical point of the area functional, but I don't think
+so. Also, they looked at examples like Enneper's surface where the 
+least area surface for a bounding curve on Enneper's surface (1 &lt; r &lt; sqrt(3))
+is NOT Enneper's surface itself --- ie Enneper is minimal but not
+least area for some curves on it. Anyway, Evolver provided very 
+beautiful illustrations of these principles. 'Nuff said. Bye.
+                                                         John
+
+
+Bibliography:
+
+Frank Morgan and Jean E. Taylor, Destabilization of the
+Tetrahedral Point Junction by Positive Triple Junction Line energy,
+Scripta Metall. Mater. {\bf 25} (1991) 1907-1910.
+
+Livia Racz (racz@navier.mit.edu) sends the following:
+
+L.M. Racz, J. Szekely, "Solder Volume Estimation" in Handbook of Fine
+Pitch Surface Mount Technology, J.H. Lau, ed., Van Nostrand Reinhold
+Publishing Co., NY (in press).
+
+ ==&gt;This is a book chapter we were asked to write including an algorithm
+ we developed to estimate an "optimal" volume for a particular lead wire
+ and substrate geometry in surface mounted integrated circuits.  We used
+ the Evolver to calculate the shapes of solder fillets with the different
+ volumes we proposed.  
+
+
+L.M. Racz, J. Szekely, K.A. Brakke, "A General Statement of the Problem
+and Description of a Proposed Method of Calculation for Some Meniscus
+Problems in Materials Processing", ISIJ International, Vol. 33, No. 2,
+(February 1993).
+
+   Revised reference from Newsletter 1.
+
+L.M. Racz, J. Szekely, "Determination of Equilibrium Shapes and Optimal
+Volume of Solder Droplets in the Assembly of Surface Mounted Integrated
+Circuits", ISIJ International, Vol. 33, No. 2, (February, 1993).
+
+ ==&gt;This is the paper based on which we were asked to write the chapter.
+ Basically the same contents, but more condensed and less literature
+ review.
+
+ N.L. Abbott, G.M. Whitesides, L.M. Racz, J. Szekely, "Calculating the
+ Shapes of Geometrically Confined Drops of Liquid on Patterned,
+ Self-Assembled Monolayers; A New Method to Estimate Small Contact
+ Angles" submitted to Journal of American Chemical Society.
+
+  ==&gt;Abbott and Whitesides have developed a way to pattern a substrate by
+  deposition and etching with which droplets of liquid (water in this
+  study) can be confined to desired patterns with great control, and with
+  this, a new, easier way to measure contact angles.  They were able to
+  verify their method with a contact angle goniometer for angles &gt; 15
+  degrees, but for angles &lt; 15 degrees, they compared their results to 
+  calculations we did with the Evolver.  
+
+  L.M. Racz, J. Szekely, "Development of Design Guidelines for Specifying
+  Solder Volumes in Surface Mount Technology", Proceedings of ASME Winder
+  Annual Meeting, Anaheim, CA (November, 1992).
+
+   ==&gt;Contents pretty much the same as that of chapter.  All the authors
+   were invited to give these talks about their chapters, and these were
+   published in the proceedings.
+
+   L.M. Racz, J. Szekely, "An Alternative Method for Determining
+   Wettability of Components with Dissimilar Surfaces", submitted to
+   Journal of Electronic Packaging.
+
+    ==&gt; A very nice Evolver application.  Circuit boards, because of the way
+    they are made, have two opposite sides that are wet by the solder alloy, and
+    two opposite sides that are not, resulting in a rather odd looking
+    meniscus.  These boards are dipped into the alloy to test for the
+    wettability of the two sides that are supposed to wet.  The force of
+    wetting per unit length is calculated, and that number is used as an
+    "index" to determine whether that particular board is OK to use.  This
+    method is fine if the two opposing non-wetting sides are proportionally
+    not too large in wetted perimeter, unduly influencing the force of wetting
+    determination.  Currently, with this method, they are throwing out lots
+    of perfectly good boards.  We say that this method is only useful for
+    certain geometries/areas.  The menisci shown as part of these arguments
+    are calculated with the Evolver.  
+
+
+From John Sullivan, sullivan@geom.umn.edu:
+
+   @Article{willmore,
+        Author = "Lucas Hsu and Rob Kusner and John M. Sullivan",
+        Title = "Minimizing the Squared Mean Curvature Integral for
+        Surfaces in Space Forms",
+        Journal = "Experimental Mathematics",
+        Year = 1992, Volume = 1, Number = 3, Pages = "191--208"}
+   We report on numerical experiments with the evolver, minimizing the
+   Willmore elastic energy for closed surfaces of different genus.
+
+   @Article{besic,
+        Author = "John M. Sullivan",
+        Title = "An Explicit Bound for the Besicovitch Covering Theorem",
+        Journal = "J. Geometric Analysis",
+        Year = 1993, Volume = "???", Pages = "???", Note = "Submitted"}
+   We show that the constant needed in the proof of the Besicovitch Theorem
+   is equal to the number of spheres that can be packed into one of 5 times
+   the radius; experiments with the evolver have found lower bounds for this
+   packing number (which are probably optimal) in dimensions three and four.
+
+End of newsletter 2.
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>

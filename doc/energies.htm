@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Energies</title></head>
+
+<BODY>
+<!--NewPage-->
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+
+<a name="energies"></a>
+<a name="energy"></a>
+<h1>Energies</h1>
+
+         The Evolver usually works by minimizing the total energy of the
+         surface, subject to constraints.  
+This energy can have several components:
+<ul>
+<li> <a href="#surface tension">Surface tension</a>
+<li> <a href="#gravity energy">Gravitational potential energy</a>
+<li> <a href="#constraint energy integrals">Constraint energy integrals</a>
+<li> <a href="#named quantity energy">Named quantity energies</a>
+<li> <a href="#gap energy">Convex constraint gap energy</a>
+<li> <a href="#pressure energy">Prescribed pressure energy</a>
+<li> <a href="#compressibility energy">Compressibility energy</a>
+<li> <a href="#crystalline energy">Crystalline energy</a>
+</ul>
+<hr>
+
+<a name="surface tension"></a><h2>Surface tension energy</h2>
+
+
+	  Soap  films and interfaces
+         between different fluids have an energy content proportional
+         to their area.  Hence they shrink to minimize energy. The
+         energy per unit area can also be regarded as a surface
+         tension, or force per unit length. Each facet has a surface
+         tension, which is 1 unless the datafile specifies otherwise
+         (see <a href="datafile.htm#faces section">TENSION</a> attribute
+          for faces).  
+         Different facets may have different surface tensions.
+	 Facet tensions may be changed interactively with the
+	 <a href="commands.htm#set"><tt>set facet tension ...</tt></a> command.
+         The contribution to the total energy is the sum
+         of all the facet areas times their respective surface
+         tensions. The surface tension of a facet may also be specified
+         as depending on the <a href="elements.htm#facet phase">phases</a> of the bodies it separates.
+     In the <a href="model.htm#string model">string model</a>, the
+     tension resides on edges instead of facets.
+<p> Example datafile: <a href="cube.htm">cube.fe</a>
+<hr>
+<a name="gravity energy"></a><h2>Gravitational potential energy</h2>
+          If a body has  
+         a <a href="elements.htm#body density">density</a>,
+         then that body contributes its gravitational
+         energy to the total.  The acceleration of gravity 
+<a href="syntax.htm#G value">G</a> is
+         under user control with the <a href="single.htm#G">G</a> command.
+  Letting \rho be the body density,
+         the energy is defined as
+<pre>
+  E = \int\int\int_{body} G \rho  z  dV 
+</pre>
+         but is calculated using the Divergence Theorem as
+<pre>
+  E =  \int\int_{body surface} G\rho {z^2\over 2} \vec k \cdot \vec{dS}.  
+</pre> 
+         This integral is done over each facet that bounds a body.
+         If a facet bounds two bodies of different density, then
+         the appropriate difference in density is used.  Facets
+         lying in the z = 0 plane make no contribution, and may be
+         omitted if they are otherwise unneeded.  Facets lying
+         in constraints may be omitted if their contributions to
+         the gravitational energy are contained in 
+<a href="#constraint energy integrals">constraint energy integrals</a>.
+         In the <a href="model.htm#string model">string model</a>,
+         all this happens in one lower dimension.
+<p> Example datafile: <a href="mound.htm">mound.fe</a>
+<hr>         
+<a name="constraint energy integrals"></a><h2>Constraint energy integrals</h2>
+         An edge on a <a href="constrnt.htm#level set constraints">
+level-set constraint</a>
+         may have an energy given by integrating a vectorfield
+         <b>F</b> over the oriented edge:
+  <pre>
+           E = \int_{edge} <b>F . dl</b>. 
+  </pre>
+ The integrand is defined in the <a href="datafile.htm#constraint decl">
+constraint declaration</a> in the datafile.
+	 The integral uses the innate orientation of the edge,
+	 but if the orientation attribute of the edge is negative,
+	 the value is negated.
+         This is useful for prescribed contact angles on walls
+         (in place of wall facets with equivalent tension)
+         and for gravitational potential energy that would
+         otherwise require facets in the constraint.
+         The <a href="mound.htm">mound example</a> illustrates this.
+
+<hr>
+<a name="named quantity energy"></a><h2>Named quantity energies</h2>
+ There are a large number of <a href="quants.htm">named methods</a>
+for calculating various quantities, which all follow the same syntax.
+These may be used as energy by defining an 
+<a href="quants.htm#energy quantity">energy-type</a>
+<a href="quants.htm#named quantities">named quantity</a> in the 
+<a href="datafile.htm#named quantity decl">datafile</a>.
+<p> Example datafile: <a href="ringblob.htm">ringblob.fe</a>
+<hr>
+<a name="gap energy"></a><h2>Convex constraint gap energy</h2>
+         Consider a soap film spanning
+         a circular cylinder.  The Evolver must approximate
+         this surface with a collection of facets.  The straight
+         edges of these facets cannot conform to the curved wall,
+         and hence the computed area of the surface leaves out
+         the gaps between the outer edges and the wall.  The
+         Evolver will naturally try to minimize area by moving
+         the outer vertices around so the gaps increase, ultimately
+         resulting in a surface collapsed to a line.  This is not
+         good.  Therefore there is provision for a "gap energy"
+         to discourage this.  A 
+<a href="constrnt.htm#level set constraints">level-set constraint</a>
+ may be declared CONVEX
+         in the <a href="datafile.htm#constraint decl">datafile</a>.  
+For an edge on such a constraint, an
+         energy is calculated as
+ <pre>  E = <i>k</i>\left\Vert \vec S \times \vec Q \right\Vert / 6
+    </pre> 
+         where \vec S is the edge vector and \vec Q is the 
+         projection of the edge on the tangent plane 
+         of the constraint at the tail vertex of the edge.
+         The constant <i>k</i> is a global constant called the "gap
+         constant".  A gap constant of 1 gives the best
+         approximation to the actual area of the gap.  A larger
+         value minimizes gaps and gets vertices nicely spread
+         out along a constraint.  You can set the 
+         value of <i>k</i> in the 
+<a href="datafile.htm#gap constant decl">datafile</a> or
+ with the <a href="single.htm#k">k</a> command.
+<p>
+         The gap energy falls off quadratically as the surface
+         is refined.  That is, refining once reduces the gap
+         energy by a factor of four.  You can see if this energy
+         has a significant effect on the surface by changing the
+         gap constant.
+<p> Note: gap energy is effective only in the 
+<a href="model.htm#linear model">linear model</a>.
+<p> Example datafile: tankex.fe
+
+<hr>
+<a name="pressure energy"></a><h2>Prescribed pressure energy</h2>
+          Each body with a prescribed
+         pressure P contributes energy E = PV.
+           where V is the actual volume of the body.
+         This can be used to generate surfaces of prescribed
+         mean curvature, since mean curvature is proportional
+         to pressure.   Pressure can be prescribed in the
+<a href="datafile.htm#bodies section">bodies section</a> of the
+datafile, and can be changed with the <a href="single.htm#b">b</a>
+command, or by assigning a value to the <a href="elements.htm#body pressure">
+pressure attribute</a> of a body.
+<hr>
+
+<a name="compressibility energy"></a><h2>Compressibility energy</h2>
+If the ideal gas mode is in effect (set by the 
+<a href="toggle.htm#ambient_pressure">PRESSURE</a> keyword
+in the datafile), then each body contributes an energy 
+<pre>
+         E = P*V_0*ln(V/V_0)  </pre>
+where P is the ambient pressure, V_0 is the target volume of the body,
+and V is the actual volume.  To account for work done against the
+ambeint pressure, each body also makes a negative contribution of 
+<pre> 
+	 E = -P*V. </pre>
+The ambient pressure can be set in the datafile or with the
+<a href="single.htm#p">p</a> command.  This energy is calculated
+only for bodies given a target volume.
+
+
+<hr>
+<a name="crystalline energy"></a><h2>Crystalline energy</h2>
+         The Evolver can model energies of crystalline
+         surfaces.  These energies are proportional to the
+         area of a facet, but they also depend on the direction
+         of the normal.  The energy is given by the largest dot
+         product of the surface normal with a set of vectors known
+         as the Wulff vectors.  Surface area can be regarded as
+         a crystalline integrand whose Wulff vectors are the unit sphere.
+         See the datafile section on Wulff vectors 
+         for more.  A surface has either crystalline energy
+         or surface tension, not both.  Use is not recommended since
+	 nonsmoothness makes Evolver work poorly.
+<p> Example datafile: crystal.fe
+
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>

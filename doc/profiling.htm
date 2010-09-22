@@ -1,0 +1,88 @@
+<HTML>
+<HEAD><TITLE>Surface Evolver Documentation: Debugging
+</title></head>
+
+<BODY>
+<center>
+<h1><a href="http://www.susqu.edu/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+
+<hr><a name="profiling"> </a>
+<h2>Surface Evolver Execution Time Profiling</h2>
+
+<hr>
+<H3>Coarse Profiling</H3>
+Coarse timing with resolution of 0,01 second or so can be done with
+Evolver's <a href="syntax.htm#clock"><tt>clock</tt></a> variable. 
+ For example, to time iterations I
+typically do
+<pre>
+
+   Enter command: quiet; start := clock; g 100; print start-clock; quiet off
+</pre>
+which will print out the elapsed time in seconds.  I do 
+<a href="toggle.htm#quiet"><tt>quiet</tt></a> here
+to suppress output to the screen, which can slow down things considerably.
+<p>
+<hr>
+<H3>Fine Profiling</h3>
+Nanosecond resolution can be done with Evolver's 
+<a href="syntax.htm#cpu_counter"><tt>cpu_counter</tt></a>
+variable.
+
+<p>
+<hr>
+<a name="print profiling"></a>
+<a name="reset_profiling"></a>
+<H3>Expression Evaluation Profiling</h3>
+
+On systems where Evolver has
+<a href="syntax.htm#cpu_counter"><tt>cpu_counter</tt></a>
+available and Evolver has been compiled with the manifest
+constant PROF_EVALS defined, the expression evaluator
+inside Evolver keeps track of the clock cycles elapsed
+during each expression evaluation.  These expressions
+include procedures, functions, constraint and boundary
+formulas, content integrands, energy integrands, quantity
+integrands, etc; everything that prints out as code in
+a dump file.  The <a href="#print profiling">
+<tt>print profiling</tt></a> command will print the 
+accumulated CPU cycles so far for each type of expression.
+The times are inclusive of any child functions or procedures.
+An example, from mound.fe after running "gogo":
+<pre>
+Enter command: print profiling
+Inclusive profiling counts:
+                      Name            CPU Cycles
+                              re           1,952,792
+                            gogo         125,201,889
+                           gogo2                   0
+                           gogo3                   0
+                           gogo4                   0
+                           gogo5                   0
+
+Constraint expressions
+                    Constraint  Formula Cycles   Energy Cycles  Content Cycles
+                             1         877,047       2,337,727               0
+</pre>
+Note that hard-coded evaluations of area, volume, etc. do not show up here,
+except for their effect on overall elapsed time.
+<p>
+The command <tt>reset_profiling</tt> will set all the cycle values back to 0.
+
+<p>
+<hr>
+<h3>Execution sampling</h3>
+Of course, if you are compiling Evolver yourself, you can use any
+type of profiling you would ordinarily use on a C program.  i leave
+you to your own devices on this.
+<p>
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>

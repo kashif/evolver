@@ -1,0 +1,85 @@
+// catman.fe
+// Evolver datafile for catenoid with parameters as in Manual tutorial.
+
+PARAMETER radius = 1     // ring radius; runtime adjustable
+PARAMETER height = 0.55  // ring height; runtime adjustable
+
+boundary 1 parameters 1     //  upper ring; p1 is ring parameter
+x1:  radius * cos(p1)
+x2:  radius * sin(p1)
+x3:  height
+
+boundary 2 parameters 1    //   lower ring
+x1:  radius * cos(p1)
+x2:  radius * sin(p1)
+x3:  -height
+
+vertices  /* given by parameter value on a boundary */
+1    0*pi/3  boundary 1   fixed
+2    1*pi/3  boundary 1   fixed
+3    2*pi/3  boundary 1   fixed
+4    3*pi/3  boundary 1   fixed
+5    4*pi/3  boundary 1   fixed
+6    5*pi/3  boundary 1   fixed
+7    0*pi/3  boundary 2   fixed
+8    1*pi/3  boundary 2   fixed
+9    2*pi/3  boundary 2   fixed
+10   3*pi/3  boundary 2   fixed
+11   4*pi/3  boundary 2   fixed
+12   5*pi/3  boundary 2   fixed
+
+edges  /* given by endpoint vertices */
+1    1  2  boundary 1   fixed
+2    2  3  boundary 1   fixed
+3    3  4  boundary 1   fixed
+4    4  5  boundary 1   fixed
+5    5  6  boundary 1   fixed
+6    6  1  boundary 1   fixed
+7    7  8  boundary 2   fixed
+8    8  9  boundary 2   fixed
+9    9  10 boundary 2   fixed
+10   10 11 boundary 2   fixed
+11   11 12 boundary 2   fixed
+12   12 7  boundary 2   fixed
+13   1  7
+14   2  8
+15   3  9
+16   4  10
+17   5  11
+18   6  12
+
+faces  /* given by oriented edge list */
+1   1 14 -7 -13
+2   2 15 -8 -14
+3   3 16 -9 -15
+4   4 17 -10 -16
+5   5 18 -11 -17
+6   6 13 -12 -18
+
+read
+
+// Demonstrating saddle point due to triangulation arrangement.
+// First setting parameters to stable values.
+gogo := {  g; u; r; g 50;  // at this point have nearly a saddle point
+           g 200;   // triangulation twists around to lower energy
+        }
+
+// Faster version of the above using conjugate gradient
+gogo2 := { g; u; r; U; g 25;  // at this point have nearly a saddle point
+           g 35;
+         }
+
+// High accuracy evolution, using higher-order Lagrange elements.
+gogo3 := { u; rmax := cosh(height); recalc;
+           r; g 5; hessian;
+           r; g 5; hessian;
+           lagrange 2; g 5; hessian;
+           lagrange 4; g 5; hessian;
+           lagrange 6; g 5; hessian;
+           lagrange 8; g 5; hessian; 
+           true_area := 2*pi*(height + 0.5*sinh(2*height));
+           printf"Difference from true area: %g\n",total_area - true_area;
+}
+           
+           
+

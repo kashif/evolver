@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>Surface Evolver tutorial</title>
+</head>
+<BODY>
+<!--NewPage-->
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<a name="tutorial"></a>
+<h1>Surface Evolver Tutorial</h1>
+To get started using the Surface Evolver, read the Basic Concepts
+section for a quick introduction, then try the examples.
+Many more examples can be found at the
+<a href="http://www.susqu.edu/facstaff/b/brakke/evolver/examples/examples.htm">
+Evolver Examples Web Page</a>
+<ul>
+<li> <a href="#basic concepts">Basic concepts</a>
+<li> <a href="cube.htm">Cube example</a>
+<li> <a href="mound.htm">Mound example</a>
+<li> <a href="catenoid.htm">Catenoid example</a>
+<li> <a href="twointor.htm">Torus model example (Kelvin's foam)</a>
+<li> <a href="ringblob.htm">Spinning ring example</a>
+<li> <a href="column.htm">Liquid column example</a>
+</ul>
+<hr>
+<a name="basic concepts"></a>
+<h1> Basic Concepts </h1>
+
+        The basic geometric elements used to represent a surface 
+        are vertices, edges, facets, and bodies. 
+        Vertices are points in space.
+        Edges are straight line segments joining pairs of vertices.
+        Facets are flat triangles bounded by three edges. A surface
+        is a union of facets.  (Actually, there is no separate surface
+        entity in the program; all facets belong to one
+        logical surface.) A body is defined by giving its bounding
+        facets. <P>
+
+        The term "surface", when used to refer to the entity upon              
+	which the Evolver operates, refers to all the geometric
+        elements plus auxiliary data such as constraints, boundaries,
+        and forces. <P>
+        
+          There are no limitations on how
+        many edges may share a vertex nor on how many facets may
+        share an edge.  Thus arbitrary topologies are possible,
+        including the triple junctions of surfaces characteristic
+        of soap films. <P>
+
+        Edges and facets are oriented for bookkeeping purposes,
+        but there are no restrictions on the orientation of 
+        neighboring facets.  Unoriented surfaces are thus possible. <P>
+
+        A surface is deemed to have a total energy, arising
+        from surface tension, gravitational energy, and possibly
+        other sources.  It is this energy which the Evolver
+        minimizes. <P>
+
+        No particular units of measurement are used.  The program 
+        only deals with numerical values.  If you wish to relate
+        the program values to the real world, then all values
+        should be within one consistent system, such as cgs or mks. <P>
+
+        The initial surface is specified in a text file (hereafter 
+        referred to as the datafile) that may be created with any
+        standard text  editor. 
+        (The <tt>.fe</tt> extension I always use for datafiles stands for
+        facet-edge, which refers to the internal data structure
+        used to represent the surface.  You may use any name
+        you wish for a datafile.) <P>
+
+        The basic operation of the Evolver is to read in a
+        datafile and take commands from the user.  The main
+        command prompt is  
+<pre>
+     Enter command:
+</pre>
+        The most common commands are one letter (case is significant
+for these), sometimes
+        with a numerical parameter. The most frequently used commands
+        are:
+<pre>
+     g n     do n iterations  ('g' is for 'go')
+     r       refine the triangulation of surface 
+     P       graphics output (option 8 for geomview, option 3 for PostScript)
+     s       show surface on screen (Evolver's own simple graphics)
+     q       quit 
+</pre>
+        There is also a more elaborate command language (in which case is
+	not significant).
+        Commands must be followed with the ENTER key; Evolver only reads
+        complete lines. <P>
+
+        An iteration is one evolution step.  The motion for 
+        the step is calculated as follows:  First, the force
+        on each vertex is calculated from the gradient of the
+        total energy of the surface as a function of the position
+        of that vertex.  The force gives the direction of motion.
+        Second, the force is made to conform to whatever
+        constraints are applicable.  Third, the actual
+        motion is found by multiplying the force by a global
+        scale factor.  <P>
+<hr>
+<a href="cube.htm">Cube example.</a>
+<a href="#tutorial">Back to top of tutorial.</a>
+<br>
+<a href="evolver.htm#doc top">Back to top of Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html> 

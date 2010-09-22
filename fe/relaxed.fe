@@ -1,0 +1,32 @@
+// relaxed.fe
+// Test of relaxed_elastic energy
+
+space_dimension 5  // 2 extra for unstrained reference coordinates
+
+quantity stretchy energy method relaxed_elastic global
+quantity stretchy1 info_only method relaxed_elastic1 global
+quantity stretchy2 info_only method relaxed_elastic2 global
+
+define facet attribute poisson_ratio real
+define vertex attribute ref_coord real[2]
+
+constraint 1 formula: x4 = ref_coord[1]
+constraint 2 formula: x5 = ref_coord[2]
+
+vertices
+1   0 0 0  0 0  constraint 1,2 ref_coord 0 0
+2   1 0 0  1 0  constraint 1,2 ref_coord 1 0
+3   0 1 0  1 1  constraint 1,2 ref_coord 0 1
+
+edges
+1   1 2
+2   2 3
+3   3 1
+
+faces
+1  1 2 3
+
+read
+set facet poisson_ratio 0.8
+set facet tension 0.0
+

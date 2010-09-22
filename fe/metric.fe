@@ -1,0 +1,33 @@
+// metric.fe
+// Demonstration of background metric with strings
+
+// Metric turns punctured plane into catenoid. Initial string
+// shrinks to loop around throat.  Note that graphing uses just
+// the plane coordinates without metric.
+
+SPACE_DIMENSION 2
+
+STRING
+
+#define G11    (1 + 1/(x^2 + y^2))^2
+
+METRIC
+G11 0 
+0   G11
+
+vertices  
+1   1  0
+2   0  2
+3  -2  0
+4   0 -1
+
+edges
+1   1 2
+2   2 3
+3   3 4
+4   4 1
+
+read
+
+// Typical evolution
+gogo := { g 5; r; g 5; r; g 5; r; g 5; }

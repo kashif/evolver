@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 12</title></head>
+
+<BODY>
+<a name="newsletter 14"></a>
+<h1>Surface Evolver Newsletter no. 14</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+
+
+                    Surface Evolver Newsletter Number 14
+                              August 15, 1996
+
+                   Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents
+  Version 2.01
+  New features and changes
+  Tetrahedralization
+  grad/postdoc opening wanting Evolver experience
+
+Version 2.01
+  Surface Evolver version 2.01 is now available at
+  http://www.geom.umn.edu/locate/evolver
+  or by anonymous ftp from geom.umn.edu in /pub/software/evolver.
+  This version is mostly bug fixes, but with a couple new features
+  as listed below.
+
+  There are new Mac 68K and Power PC versions in Evolver68K.sea.Hqx
+  and EvolverPPC.sea.Hqx, respectively.  This is the first native
+  Power PC version, and the first 68K update in a year.
+
+New features and changes
+
+  There is a new no_refine attribute for edges and facets.  It
+  prevents edges from being subdivided by the 'r' command.
+  Useful for large flat fixed surfaces or outlines.
+
+  You can create new elements on the fly with new_vertex, new_edge,
+  new_face, and new_body.  
+
+  The V command has been tweaked to work better on constrained vertices.
+  Also, there is a new command vertex_average to do individual
+  vertex averaging on the vertices of your choice.
+
+  Command output can be appended to a file using the &gt;&gt; redirection
+  symbol, as in    { g 100; u; g 20 } &gt;&gt; "logfile"
+
+  Equiangulation has been implemented for surfaces made of 3D
+  simplices.
+
+  The knot_energy method now uses "node_charge" vertex attribute
+  for calculating its electrostatic-type energy.  Useful for
+  spreading network graphs out in 3D.
+
+  There is an experimental implementation dynamic link libraries for 
+  functions used in constraints, boundaries, integrands, etc.
+  This can replace interpreted functions with compiled functions
+  for greater speed.
+ 
+  DOS, Windows versions leaves alphanumeric escape sequences alone
+  in quoted strings, so path names don't get mangled.
+  
+  The variables transform_expr and transform_count can be printed,
+  so you can see the current state if you are using multiple
+  image transforms.
+
+Tetrahedralization.
+
+  Some users are interested in constructing tetrahedral meshes
+  of the inside of an Evolver surface, e.g. for doing stress
+  analysis on solidified solder.  I've put together a set of
+  programs that does this, which those interested may get by
+  anonymous ftp from geom.umn.edu as /priv/brakke/tetra.tar.
+
+Research Opportunity wanting Evolver experience:
+
+
+	Project:  3-D Imaging of Flexible Polyurethane Foam
+
+	   -  Advisers:  Xiaodaong Zhang and Professor Chris Macosko
+		         (Chemical Engineering and Material Science)
+
+	   -  Goals:     To image foam using laser confocal microscopy and 
+	 	         other methods and use existing software 
+			 (such as Koros, Surface Evolver) or create 
+			 algorithms to size foam cells
+	
+	*  Graduate assistant or Postdoctoral salary level
+
+	*  Potential for industrial interaction
+
+	*  Desired qualifications:
+	   -  Strong math skills (particularly geometry)
+	   -  Works well with computers (programming not necessary)
+	   -  Experience with image processing and UNIX
+              (desirable but not necessary)
+
+	*  For further information, please contact Xiaodong Zhang
+           (send resume to apply):
+	     Dept. of Chemical Engineering and Materials Science
+	     University of Minnesota
+	     151 Admundson Hall
+	     421 Washington Avenue SE
+	     Minneapolis, MN 55455
+	     Phone:  625-8573
+	     E-mail:  zhan0063@maroon.tc.umn.edu 
+
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

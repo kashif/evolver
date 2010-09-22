@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation</title></head>
+
+<BODY>
+<!--NewPage-->
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<h1><a name="overview">
+Surface Evolver Overview</a></h1>
+
+<h2>General description</h2>
+
+       The Surface Evolver is an interactive program for the study of
+       surfaces shaped by surface tension and other 
+<a href="energies.htm">energies</a>, and subject
+to various <a href="constrnt.htm">constraints</a>.  A
+       surface is implemented as a simplicial complex, that is, a union
+       of triangles.  The user defines an initial surface in a datafile.  The
+       Evolver evolves the surface toward minimal energy by a gradient
+       descent method.   The aim can be to find a minimal energy surface,
+or to model
+       the process of evolution by mean curvature, which was studied
+       in <a href="biblio.htm#ref[B1]">[B1]</a> for surface tension energy in the context of varifolds
+       and geometric measure theory.  The energy in the Evolver can be
+       a combination of
+       surface tension, gravitational energy, squared mean curvature,
+       user-defined surface integrals, or knot energies.  The Evolver can handle
+       arbitrary topology (as seen in real soap bubble clusters),
+       volume constraints, boundary constraints, boundary contact
+       angles, prescribed mean curvature, crystalline integrands,
+       gravity, and constraints expressed as surface integrals.  The
+       surface can be in an ambient space of arbitrary dimension, which
+       can have a Riemannian metric, and the ambient space can be a
+       quotient space under a group action.  The user can interactively
+       modify the surface to change its properties or to keep the
+       evolution well-behaved.  The Evolver was written for one and two
+       dimensional surfaces, but it can do higher dimensional surfaces
+       with some restrictions on the features available.  Graphical
+       output is available as screen graphics and in several file
+       formats, including PostScript.
+<p>
+       The Surface Evolver program is freely 
+       <a href="install.htm">available</a>
+       and is in use by a number of researchers.  Some of the
+       applications of the Evolver so far include modelling the shape
+       of fuel in rocket tanks in low gravity <a href="biblio.htm#ref[Te]">[Te]</a>, calculating areas
+       for the Opaque Cube Problem <a href="biblio.htm#ref[B4]">[B4]</a>, computing capillary surfaces
+       in cubes <a href="biblio.htm#ref[MH]">[MH]</a> and in exotic containers <a href="biblio.htm#ref[C]">[C]</a>, simulating grain
+       growth <a href="biblio.htm#ref[FT]">[FT]</a><a href="biblio.htm#ref[WM]">
+       [WM]</a>, studying grain boundaries pinned by
+       inclusions, finding  partitions of space more efficient
+       than Kelvin's tetrakaidecahedra <a href="biblio.htm#ref[WP]">[WP]</a>
+       <a href="biblio.htm#ref[KS1]">[KS1]</a>, 
+       foam rheology <a href="biblio.htm#ref[KR1]">[KR1]</a>
+       <a href="biblio.htm#ref[KR2]">[KR2]</a>,
+       sphere eversion <a href="biblio.htm#ref[FS]">[FS]</a>,
+       modelling the shape of molten solder on
+       microcircuits <a href="biblio.htm#ref[RSB]">[RSB]</a>, studying polymer chain packing, modelling
+       cell membranes <a href="biblio.htm#ref[MB]">[MB]</a>, and classifying minimal surface  singularities. 
+<p>
+       The strength of the Surface Evolver program is in the breadth
+       of problems it handles, rather than optimal treatment of some
+       specific problem.  It is under continuing development, and 
+       users are invited to suggest new features.
+<p>
+   This manual contains full operational details.
+   A journal article description of the Evolver 
+   appeared in <a href="biblio.htm#ref[B2]">[B2]</a>.
+<p>
+<h2>Portability</h2>
+       The Evolver is written in portable C and has been run
+       on several systems: Sun, Silicon Graphics, HP, Dec, MS-DOS,
+       Macintosh, and various MS-Windows versions.  It is meant to be easily portable to any
+       system that has C.
+<p>
+<h2>Acknowledgements</h2>
+       The Evolver was written as part of the Geometry Supercomputing
+       Project (later 
+<a href="http://www.geom.umn.edu">The Geometry Center</a>, now defunct),
+       sponsored by the National Science Foundation, the Department
+       of Energy, Minnesota Technology, Inc., and the University of
+       Minnesota. The program is available free of charge.  
+<p>
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+<hr>
+<a href="http://www.susqu.edu/facstaff/b/brakke/">
+Author's home page.</a>
+</body>
+</html>
+

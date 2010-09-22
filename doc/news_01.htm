@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 1</title></head>
+
+<BODY>
+<a name="newsletter 1"></a>
+<h1>Surface Evolver Newsletter no. 1</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+<hr><pre>
+
+		      Surface Evolver Newsletter Number 1
+			      January 25, 1993
+
+             Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+  Introduction
+  Announcement
+  Bibliography
+  Latest features
+
+Introduction:
+
+  The purpose of this Newsletter is to keep Surface Evolver users
+  (and other interested parties) up to date and to promote interaction
+  between those with like interests.  Contents will include:
+     Latest features added to Evolver.
+     Future plans for new features.
+     Suggestions for new features, with the likelihood of their being
+        added proportional to demand.
+     Bibliography of papers using Evolver, hopefully with brief abstracts.
+     Workshops, talks, etc. to be given.
+     Descriptions of projects underway using Evolver.
+     List of systems users have ported Evolver to.
+     Anything else anybody would wish to contribute.
+
+  Send contributions to brakke@geom.umn.edu.
+  If you are not on the Newsletter mailing list and would like to be,
+  send email to brakke@geom.umn.edu.
+
+Announcement:
+
+  The possibility has arisen of porting Evolver to a CM5, which
+  is a massively parallel machine.  The main benefit would be in
+  speeding up iteration with many thousands of facets.  If anyone
+  has a project which might benefit, please let me know.  Even if
+  you never plan to run on a CM5 yourself, we would like to be able
+  to cite types of applications that could benefit when requesting
+  CM5 time to do the port.   -- Ken Brakke
+
+
+Bibliography:
+
+K. A. Brakke, The Surface Evolver Manual, version 1.87.  Research
+   Report GCG45, The Geometry Center, 1300 South Second Street,
+   Minneapolis, MN 55454. October, 1992.
+
+     Every so often, The Geometry Center prints and binds a bunch
+     of copies of the manual.  This is the latest.  Of course, it
+     is not as up to date as the version in the ftp package.
+
+K. A. Brakke, "The Surface Evolver," Experimental Mathematics, vol. 1 (1992),
+     no. 2, pp 141-165.
+
+     A journal article giving a general description of the Evolver
+     and some examples.  Good article to cite in your papers.
+
+K. A. Brakke, "The Opaque Cube Problem," Am. Math. Monthly, vol. 99,
+    no. 9 (November, 1992), pp 866-871.
+
+     Uses the Evolver to compute the area of a proposed solution to
+     the Opaque Cube Problem, which is to find the least area surface
+     that intersects all lines through a cube.
+
+K. A. Brakke, "Grain growth with the Surface Evolver,"
+      Video Proceedings of the Workshop on Computational Crystal Growing, 
+      J. E. Taylor, ed., American Mathematical Society, Providence RI, 1992.
+
+      Evolver starts with 100 cells in a square and evolves by mean
+      curvature until equilibrium.
+
+M. Callahan, P. Concus and R. Finn, "Energy minimizing capillary surfaces 
+      for exotic containers,"  Computing Optimal Geometries, 
+      American Mathematical Society, Providence RI, 1991.
+
+      Simulation of a Space Shuttle experiment done last year.
+      See Science News for Aug. 22 1992 (I think) for a report 
+      on the Shuttle experiment.
+
+H. Mittelmann, "Symmetric capillary surfaces in a cube" and  
+     "Symmetric capillary surfaces in a cube Part 2: Near the
+      limit angle," preprints.
+
+      Evolver does families of fixed-volume bodies inside a cube
+      with various contact angles.
+
+L. M. Racz, J. Szekely, and K. A. Brakke, "On some meniscus
+      problems in materials processing," to appear in  Trans. Iron and
+	    Steel Inst. vol. 33(1993) no. 2.
+
+      General description of Evolver and some applications to 
+      materials processing, such as liquid solder.
+
+J. Tegart, "Three-dimensional fluid interfaces in cylindrical
+      containers," AIAA paper AIAA-91-2174, 27th Joint Propulsion Conference,
+      Sacramento, CA, June 1991.
+
+      Engineer at Martin-Marietta uses Evolver to simulate liquid fuel
+      shape in weightlessness for Shuttle small fuel tank.
+
+
+
+Latest features:
+
+Latest ftp version is 1.88a, Jan. 6, 1993.  For those of you who
+haven't downloaded in a while, here's the history list from the manual
+for the past year:
+
+Version 1.76  March 20, 1992
+
+     Autopopping and autochopping in string model for automatic
+     evolution.
+
+     Phase-dependent grain boundary energies.
+
+     Approximate polyhedral curvature.
+
+     Stability test for approximate curvature.
+
+     Squared Gaussian curvature as part of energy only, not force.
+
+     ``system'' command to execute shell commands.
+
+     ``check_increase'' to guard against blowup during interation.
+
+     ``effective_area'' to count only resistance to motion normal to surface.
+
+      Runge-Kutta iteration.
+
+Version 1.80 July 25, 1992
+
+      Command and query language much extended.
+
+      geomview interface added. (A MUST HAVE for SGI machines. geomview
+	 available by ftp from geom.umn.edu.  Obsoletes MinneView.)
+
+      Fixed area added as a constraint.
+
+      Multiple viewing transforms can be specified in the datafile
+      so one fundamental region of a symmetric surface can be
+      displayed as the whole surface.
+
+      Commands can be included at the end of the datafile, introduced
+      by the keyword READ.
+
+ Version 1.83 September 9, 1992
+
+      Some alternate definitions of squared curvature added.
+      Invoked by ``effective_area ON | OFF'' or 
+      ``normal_curvature ON  | OFF''.
+
+Version 1.84 September 10, 1992
+
+      Shaded colors added to xgraph and cheygraph.
+
+Version 1.85 September 29, 1992
+
+      Restriction of motion to surface normal added. Toggle 
+      ``normal_motion''.
+
+      Squared mean curvature, gaussian curvature, and squared gaussian
+	curvature extended to surfaces with boundary.
+ 
+      Datafile element attribute ``bare'' added for vertices and edges 
+      in soapfilm model so they won't generate erroneous warnings.
+
+      Force calculation added for squared gaussian curvature, so it
+      can be used in the energy.
+
+      All prompts that require real value responses now accept
+      arbitrary expressions.
+
+ Version 1.86 October 19, 1992
+ 
+      User-defined mobility added, both scalar and tensor forms.
+
+      Default squared curvature works for 2-surfaces in $R^n$.
+
+ Version 1.87 October 27, 1992
+
+      ``close_show'' command added to close show window (the native
+	graphics window, not geomview).
+
+      Graphics command checks string for illegal characters
+	before doing any transformations.
+
+      Dihedral angles now work for 2-surfaces in any dimension.
+
+      Permanent variable assignments may be made with ``\tt ::=''
+      instead of ``:=''.  Such assignments will not be forgotten
+      when  a new surface is begun.
+
+      Conditional expressions of C form added: expr ? expr : expr.
+      Useful for patching constraints  together.
+
+Version 1.88    December 16, 1992
+
+      ``SET BACKGROUND color'' command added for native graphics.
+
+      View transformation generators and expressions added.
+
+      Exact bounding box calculated for PostScript files.
+
+Version 1.88a   January 6, 1993
+
+      Default constraint_tolerance lowered from 1e-5 to 1e-12.
+
+      Fixed bug in volume constraint calculation introduced in 1.88.
+
+Version 1.88b   (not in ftp yet) 
+
+      Postscript draws fixed and boundary edges in interior of surface.
+      All internal graphics should be consistent in the special edges they
+      draw (bare edges, triple edges, etc.).
+
+      Viewing matrix can be read from datafile and will be dumped.
+      Keyword VIEW_MATRIX
+
+      Mod operator `%' added, and functions floor(), ceil().
+
+      `rebody' command added to recalculate connected bodies
+      after neck pinching and any other body disruption.
+
+End of newsletter.
+
+    
+
+</pre>
+
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>
+    
+
+

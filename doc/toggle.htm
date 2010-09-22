@@ -1,0 +1,1129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation: toggle commands
+</title></head>
+
+<BODY>
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+
+<hr><a name="toggle commands"> </a>
+<a name="on"></a> <a name="off"></a>
+<h2>Toggle commands</h2>
+
+There are a large number of Surface Evolver features that can
+be turned on or off with simple "toggle" commands.  The
+general syntax is "togglename ON" or "togglename OFF", with
+just "togglename" being a synonym for "togglename ON". 
+  The toggle names below have brief descriptions
+ of their actions in the ON state.  Toggles will usually print
+ their previous state.  A togglename used in an arithmetic
+ expression is the current value of the toggle, 0 for OFF and
+ 1 for ON.  The current value of a toggle may be
+ found by "print togglename".
+<p>
+All toggles are reset when a surface is loaded.  Default values
+are OFF unless otherwise noted.
+<p>
+ These full-word toggle commands are not to be confused with
+ various single-letter toggle commands, which always
+ change the state.  All single-letter toggles have full word
+toggle equivalents.
+<hr>
+<table border><caption><b>Toggles</b></caption>
+<tr valign=top><td><ul>
+<li><a href="#ambient_pressure">ambient_pressure</a>
+<li><a href="#approximate_curvature">approximate_curvature</a>
+<li><a href="#area_normalization">area_normalization</a>
+<li><a href="#assume_oriented">assume_oriented</a>
+<li><a href="#augmented_hessian">augmented_hessian</a>
+<li><a href="#autochop">autochop</a>
+<li><a href="#autodisplay">autodisplay</a>
+<li><a href="#autopop">autopop</a>
+<li><a href="#autopop_quartic">autopop_quartic</a>
+<li><a href="#autorecalc">autorecalc</a>
+<li><a href="#backcull">backcull</a>
+<li><a href="#bezier_basis">bezier_basis</a>
+<li><a href="#big_endian">big_endian</a>
+<li><a href="#blas_flag">blas_flag</a>
+<li><a href="#boundary_curvature">boundary_curvature</a>
+<li><a href="#break_after_warning">break_after_warning</a>
+<li><a href="#bunch_kaufman">bunch-kauffman</a>
+<li><a href="#check_increase">check_increase</a>
+<li><a href="#circular_arc_draw">circular_arc_draw</a>
+<li><a href="#clip_view">clip_view</a>
+<li><a href="#clipped">clipped</a>
+<li><a href="#colormap">colormap</a>
+<li><a href="#conf_edge">conf_edge</a>
+<li><a href="#conj_grad">conj_grad</a>
+<li><a href="#connected">connected</a>
+<li><a href="#debug">debug</a>
+<li><a href="#deturck">deturck</a>
+<li><a href="#diffusion toggle">diffusion</a>
+<li><a href="#dirichlet_mode">dirichlet_mode</a>
+
+</ul></td><td><ul>
+<li><a href="#effective_area">effective_area</a>
+<li><a href="#estimate">estimate</a>
+<li><a href="#facet_colors">facet_colors</a>
+<li><a href="#force_deletion">force_deletion</a>
+<li><a href="#full_bounding_box">full_bounding_box</a>
+<li><a href="#function_quantity_sparse">nction_quantity_sparse</a>
+<li><a href="#gravity">gravity</a>
+<li><a href="#gv_binary">gv_binary</a>
+<li><a href="#hessian_diff">hessian_diff</a>
+<li><a href="#hessian_normal">hessian_normal</a>
+<li><a href="#hessian_normal_one">hessian_normal_one</a>
+<li><a href="#hessian_normal_perp">hessian_normal_perp</a>
+<li><a href="#hessian_quiet">hessian_quiet</a>
+<li><a href="#hessian_special_normal">hessian_special_normal</a>
+<li><a href="#homothety">homothety</a>
+<li><a href="#immediate_autopop">immediate_autopop</a>
+<li><a href="#interp_normals">interp_normals</a>
+<li><a href="#interp_bdry_param">interp_bdry_param</a>
+<li><a href="#itdebug">itdebug</a>
+<li><a href="#jiggle">jiggle</a>
+<li><a href="#kusner">kusner</a>
+<li><a href="#linear_metric">linear_metric</a>
+<li><a href="#little_endian">little_endian</a>
+<li><a href="#memdebug">memdebug</a>
+<li><a href="#metis_factor">metis_factor</a>
+<li><a href="#metric_convert">metric_convert</a>
+<li><a href="#normal_motion">normal_motion</a>
+<li><a href="#old_area">old_area</a>
+<li><a href="#quantities_only">quantities_only</a>
+</ul></td><td><ul>
+<li><a href="#quiet">quiet</a>
+<li><a href="#quietgo">quietgo</a>
+<li><a href="#quietload">quietload</a>
+<li><a href="#pinning">pinning</a>
+<li><a href="#pop_disjoin">pop_disjoin</a>
+<li><a href="#pop_enjoin">pop_enjoin</a>
+<li><a href="#post_project">post_project</a>
+<li><a href="#ps_colorflag">ps_colorflag</a>
+<li><a href="#ps_crossingflag">ps_crossingflag</a>
+<li><a href="#ps_gridflag">ps_gridflag</a>
+<li><a href="#ps_labelflag">ps_labelflag</a>
+<li><a href="#raw_cells">raw_cells</a>
+<li><a href="#rgb_colors">rgb_colors</a>
+<li><a href="#ribiere">ribiere</a>
+<li><a href="#runge_kutta">runge_kutta</a>
+<li><a href="#self_similar">self_similar</a>
+<li><a href="#shading">shading</a>
+<li><a href="#show_all_quantities">show_all_quantities</a>
+<li><a href="#show_inner">show_inner</a>
+<li><a href="#show_outer">show_outer</a>
+<li><a href="#slice_view">slice_view</a>
+<li><a href="#smooth_graph">smooth_graph</a>
+<li><a href="#sobolev_mode">sobolev_mode</a>
+<li><a href="#sparse_constraints">sparse_constraints</a>
+<li><a href="#squared_gradient">squared_gradient</a>
+<li><a href="#star_finagling">star_finagling</a>
+<li><a href="#thicken">thicken</a>
+<li><a href="#torus_filled">torus_filled</a>
+<li><a href="#transforms">transforms</a>
+<li><a href="#view_4d">view_4D</a>
+<li><a href="#verbose">verbose</a>
+<li><a href="#visibility_test">visibility_test</a>
+<li><a href="#volgrads_every">volgrads_every</a>
+<li><a href="#ysmp">ysmp</a>
+</ul></td></tr></table>
+<hr>
+<a name="ambient_pressure"></a><h2>AMBIENT_PRESSURE</h2>
+Toggles <a href="datafile.htm#ideal gas decl">ideal gas mode</a>
+with ambient pressure outside bodies.
+The external pressure can be set with the 
+<a href="datafile.htm#ideal gas decl">pressure</a>
+phrase in the top of the datafile, or at runtime
+with the <a href="single.htm#p">p</a> command, e.g. <tt>p 10</tt>.
+<hr>
+<a name="approx_curv"></a>
+<a name="approx_curvature"></a>
+<a name="approximate_curvature"></a><h2>APPROXIMATE_CURVATURE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Uses 
+<a href="model.htm#polyhedral curvature">polyhedral curvature</a>
+ (linear interpolation over facets for metric) for 
+mean curvature vector.  Actually establishes the inner product
+for forms or vectors to be integration over facets of euclidean
+inner products of linear
+interpolation of values at vertices.  Synonyms: <tt>APPROX_CURV,
+APPROX_CURVATURE</tt>.
+
+<hr>
+<a name="area_normalization"></a><h2>AREA_NORMALIZATION</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+
+Convert the
+ force on vertex to a mean curvature velocity vector by dividing the force by
+the area associated to the vertex, which is one-third of the area of
+its adjacent vertices. The string model divides by one-half of the sum of
+the lengths of adjacent edges.  Useful in doing grain growth simulations.
+
+<hr>
+<a name="assume_oriented"></a><h2>ASSUME_ORIENTED</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Tells squared mean curvature routines that they can assume the surface
+is locally consistently oriented.  Significant only for extreme shapes.
+
+<hr>
+<a name="augmented_hessian"></a><h2>AUGMENTED_HESSIAN</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Solves constrained Hessians by putting the body and quantity
+ constraint gradients in 
+an augmented matrix with the Hessian, and using sparse matrix techniques
+to factor.  Vastly speeds things up when there are thousands of 
+sparse constraints, as in a foam.  The default state is unset
+(prints as a value of -1), in which case augmentation is used for
+50 or more constraints, but not for less.
+ 
+
+<hr>
+<a name="autochop_length"></a>
+<a name="autochop"></a><h2>AUTOCHOP</h2>
+
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Evolver toggle command. Do automatic refining of long edges each iteration. Use
+"autochop_length := <em>expr</em>" to set autochop length. Each iteration, any edge that
+projected to become longer than the cutoff is bisected. If any bisections
+are done, the motion calculation is redone.  The autochop length may
+be accessed by the read/write internal variable autochop_length;
+but note that simply assigning a value to autochop_length does not
+toggle autochop on.
+
+<hr>
+<a name="autodisplay"></a><h2>AUTODISPLAY</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles automatic redrawing of graphics whenever the surface changes.
+Default ON.
+Same function as the '<a href="single.htm#d">D</a>' command.
+<hr>
+<a name="autopop"></a><h2>AUTOPOP</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+        Toggles automatic deletion of short edges and
+                   popping of improper vertices each iteration.
+                   Before each iteration, any edge projected to
+                   shorten to under the critical length is deleted
+                   by identifying its endpoints. The critical length
+                   is calculated as L = sqrt(2*dt), where
+                   dt is the time step or 
+<a href="iterate.htm#scale factor">scale factor</a>.
+                   Hence this should be used only with a fixed
+                   scale, not optimizing scale factor.  The critical
+                   length is chosen so that instabilities do not
+                   arise in motion by mean curvature. If any edges
+                   are deleted, then vertices are examined for 
+                   improper vertices as in the '<a href="single.htm#o">o</a>' 
+command.
+                   Useful in string
+                   model.
+<p>
+Autopop is also implemented for small facets as of Evolver version 2.30.
+The critical area is calculated as sqrt(2*dt)*perimeter/2, where perimeter
+is the sum of the lengths of the three sides of the facet.
+<p>
+See also the 
+<a href="#immediate_autopop">immediate_autopop</a> and
+<a href="#autopop_quartic">autopop_quartic</a> toggles.                   
+
+<hr>
+<a name="autopop_quartic"></a><h2>AUTOPOP_QUARTIC</h2>
+
+Toggle.  Modifies the <a href="toggle.htm">autopop</a> mode.
+The critical length for edges is set to 2*sqrt(sqrt(dt)) and the
+critical area for facets is 2*sqrt(sqrt(dt))*perimeter/2; meant
+for quantities such as 
+<a href="quants.htm#laplacian_mean_curvature">laplacian_mean_curvature</a>
+ where velocity is proportional to fourth derivative of surface.
+
+
+
+<hr>
+<a name="autorecalc"></a><h2>AUTORECALC</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles automatic recalculation of the surface whenever adjustable
+parameters or energy quantity moduli are changed.  Default is OFF.
+
+<hr>
+<a name="backcull"></a><h2>BACKCULL</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Prevents display of facets with normal away from viewer. May have 
+different effects in different graphics displays.  For example,
+to see the inside back of a body only, "set frontcolor clear" alone works in
+   2D displays, but needs backcull also for direct 3D.
+
+<hr>
+<a name="bezier_basis"></a><h2>BEZIER_BASIS</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+When Evolver is using the
+<a href="model.htm#Lagrange model">Lagrange model</a>
+ for geometric elements, this
+toggle replaces the Lagrange interpolation polynomials (which pass through
+the control points) with Bezier basis polynomials (which do not pass
+through interior control points, but have positive values, which guarantees
+the edge or facet is within the convex hull of the control points).
+This is experimental at the moment, and not all features such as
+graphing or refinement have been suitably adjusted.
+
+<hr>
+<a name="big_endian"></a><h2>BIG_ENDIAN</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Controls the order of bytes in 
+<a href="commands.htm#binary_printf">binary_printf</a> numerical output.
+Big-endian is most significant byte first.
+To change to little-endian, use <a href="#little_endian">little_endian</a>,
+not "little_endian off".
+
+<hr>
+<a name="blas_flag"></a><h2>BLAS_FLAG</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles using BLAS versions of some matrix routines, if the Evolver program
+has been compiled with the -DBLAS option and linked with some BLAS library.
+For developer use only at the moment.
+
+<hr>
+<a name="boundary_curvature"></a><h2>BOUNDARY_CURVATURE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+When doing integrals of mean curvature or squared curvature,
+the curvature of a boundary vertex cannot be defined by its
+neighbor vertices, so the area of the boundary vertex star
+instead is counted with an adjacent interior vertex.
+
+<hr>
+<a name="break_after_warning"></a><h2>BREAK_AFTER_WARNING</h2>
+
+Causes Evolver to cease execution of commands and return to command
+prompt after any warning message.  Same effect as 
+<a href="general.htm#break after warning option">option -y</a>.
+
+<hr>
+<a name="bunch_kaufman"></a>
+<a name="bunch_kauffman"></a><h2>BUNCH_KAUFMAN</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles Bunch-Kaufman factoring of the 
+<a href="eigentut.htm">Hessian</a> in the alternative minimal degree 
+factoring method (<a href="#ysmp">ysmp</a> off). 
+This factors the Hessian as LBL^T
+where L is lower triangular with ones on the diagonal, and B is
+block diagonal, with 1x1 or 2x2 blocks.  Supposed to be more stable
+when factoring indefinite Hessians.
+
+
+
+<hr>
+<a name="check_increase"></a><h2>CHECK_INCREASE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Toggles checking for increase of energy in an
+   <a href="iterate.htm#iteration step">iteration step</a>. 
+ If energy increases, then
+                     the step is undone and any iteration loop is halted.
+ Meant for early
+                     detection of instabilities and other problems
+                     causing the surface to misbehave.  Useful in 
+                     doing a multiple iteration with a fixed scale.
+Also applies to the <a href="commands.htm#hessian command">hessian</a>
+command.
+		     Caution: there are circumstances where an energy
+		     increase is appropriate, for example when there
+		     are volume or quantity constraints and conforming
+		     to the constraints means an energy increase 
+		     initially.
+
+<hr>
+<a name="circular_arc_draw"></a><h2>CIRCULAR_ARC_DRAW</h2>
+
+If on, then in quadratic string mode, an edge is drawn as a circular arc
+(actually 16 subsegments) through the endpoints and midpoint, instead of a 
+quadratic spline.
+
+<hr>
+<a name="clip_view"></a>
+</a><h2>CLIP_VIEW</h2>
+Toggles use of <a href="graphics.htm#clip view">clipping planes</a> 
+in graphics display.
+ 
+<hr>
+<a name="clipped_cells"></a>
+<a name="clipped"></a><h2>CLIPPED</h2>
+ 
+Evolver <a href="#toggle commands">toggle command</a>.
+ Sets <a href="model.htm#torus display">torus model display</a> to 
+clip to the fundamental region. 
+ Not an on-off toggle. 3-way toggle with 
+<a href="#raw_cells">raw_cells</a> and
+ <a href="#connected">connected</a>.  Synonym: clipped_cells.
+The origin (lower left back corner) of the clip parallelogram can
+be set by setting entries in the <a href="model.htm#display_origin">
+display_origin</a> vector.
+
+<hr>
+<a name="colorfile"></a>
+<a name="colormap"></a><h2>COLORMAP</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Use colormap from file in certain graphics output. 
+See the <a href="single.htm#P">P</a> command.
+ Use <tt>COLORFILE := "filename"</tt> to set file.
+
+<hr>
+<a name="conf_edge"></a><h2>CONF_EDGE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Calculation of squared curvature by fitting sphere to edge and adjacent
+ vertices (conformal curvature).  
+
+<hr>
+<a name="conj_grad"></a><h2>CONJ_GRAD</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Use <a href="iterate.htm#conjugate gradient">conjugate gradient method</a>
+in <a href="single.htm#g">g</a> command.   See also 
+<a href="single.htm#U">U</a> command and <a href="#ribiere">RIBIERE</a>.
+
+<hr>
+<a name="connected_cells"></a>
+<a name="connected"></a><h2>CONNECTED</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Sets <a href="model.htm#torus display">torus model</a> 
+display to do each body as a connected, wrapped
+ surface.
+ Not an on-off toggle. 3-way toggle with 
+<a href="#clipped">clipped</a> and
+<a href="#raw_cells">raw_cells</a>.  Synonym: connected_cells.
+
+<hr>
+<a name="convert_to_quantities"></a><h2>CONVERT_TO_QUANTITIES</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+This will do an automatic
+ conversion of old-style energies to new-style named quantities.
+  This has the same effect as the <a href="general.htm#options">-q</a>
+ command line option, but
+  can be done from the Evolver command prompt.  Useful when
+ <a href="commands.htm#hessian command">hessian</a> complains about not being able to do a type of energy.
+  A few energies don't convert yet.  It is my intention that
+    this will be the default sometime in the near future,
+    if it can be made sufficiently fast and reliable.
+<hr>
+<a name="deturck"></a><h2>DETURCK</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Motion by unit velocity along normal, instead of by curvature vector.
+
+<hr>
+<a name="diffusion toggle"></a><h2>DIFFUSION</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Activates <a href="iterate.htm#diffusion">diffusion</a> step each 
+<a href="single.htm#g">g</a> command.
+
+<hr>
+<a name="dirichlet_mode"></a><h2>DIRICHLET_MODE</h2>
+
+When the facet_area method is being used to calculate areas in hessian
+commands, this toggles using an approximate facet_area hessian that
+is positive definite.  This permits hessian iteration to make big steps
+in a far-from-minimal surface without fear of blowing up.  However, since
+it is only an approximate hessian, final convergence to the minimum
+can be slow.  
+<a href="model.htm#linear model">Linear model</a> only.  Does 
+<a href="#convert_to_quantities">convert_to_quantities</a> implicitly.
+Another variant of this is triggered by 
+<a href="#sobolev_mode">sobolev_mode</a>.
+
+<hr>
+<a name="effective_area"></a><h2>EFFECTIVE_AREA</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+In <a href="model.htm#area normalization">area normalization</a>,
+ the resistance factor to motion is taken to
+be only the projection of the vertex star area perpendicular to the
+motion.  If squared mean curvature is being calculated, this projected
+area is used in calculating the curvature.
+
+<hr>
+<a name="estimate"></a><h2>ESTIMATE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Activates estimation of energy decrease in each gradient descent step
+(<a href="single.htm#g">g</a> command). For each "g" iteration, it
+prints the estimated and actual change in energy.  The estimate
+is computed by the inner product of
+energy gradient with actual motion. Useful
+only for a fixed scale factor much less than optimizing, so linear
+approximation is good.  The internal variable estimated_change records
+the estimated value.
+
+<hr>
+<a name="facet_colors"></a><h2>FACET_COLORS</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Enables coloring of facets in certain graphics interfaces (e.g. xgraph).  
+If off, facet color is white.  Default on.
+
+<hr>
+<a name="force_deletion"></a><h2>FORCE_DELETION</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+In the soapfilm model, overrides the refusal of the 
+<a href="commands.htm#delete">delete</a> command to delete edges
+or facets when that would create two edges with the same endpoints.
+Sometimes it is necessary to have such edges, for example in pinching
+off necks. But usually it is a bad idea.  Also see 
+<a href="#star_finagling">star_finagling</a>. Default is off.
+
+<hr>
+<a name="full_bounding_box"></a><h2>FULL_BOUNDING_BOX</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Causes bounding box in PostScript output to be the full window, rather
+than the actual extent of the surface within the window.  Default off.
+
+<hr>
+<a name="function_quantity_sparse"></a><h2>FUNCTION_QUANTITY_SPARSE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+For named quantities defined as functions of named methods,
+this toggles the use of sparse matrices in calculating hessians.
+
+
+
+<hr>
+<a name="gravity"></a><h2>GRAVITY</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Includes the  <a href="energies.htm#gravity energy">gravitational energy</a>
+of bodies with density in total energy.  The gravitational constant
+can be set in the top of the datafile with "gravity_constant = value",
+or with the runtime command "G value".
+<hr>
+<a name="gv_binary"></a><h2>GV_BINARY</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles sending data to geomview in binary format, which
+is faster than ascii.  Default is binary on SGI, ascii on other systems,
+since there have been problems with binary format on some systems.  
+Ascii is also useful for debugging.
+
+<hr> 
+<a name="hessian_diff"></a><h2>HESSIAN_DIFF</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles computing the hessian matrix by finite differences.
+Used only for debugging, since it is very slow.
+<hr>
+<a name="hessian_double_normal"></a><h2>HESSIAN_DOUBLE_NORMAL</h2>
+   
+Evolver <a href="#toggle commands">toggle command</a>.
+When <a href="#hessian_normal">hessian_normal</a> is also on,
+and the space dimension is even, then the normal vector components
+in the last half of the dimensions are copies of the components in
+the first half. Sounds weird, huh?  But it is useful in calculating
+the stability of cylindrically symmetric surfaces using a string
+model in 4D.
+
+<hr>
+<a name="hessian_normal"></a><h2>HESSIAN_NORMAL</h2>
+   
+Evolver <a href="#toggle commands">toggle command</a>.
+   Constrains <a href="eigentut.htm#hessian tutorial">Hessian</a>
+   to move each vertex perpendicular
+   to the surface.  This eliminates all the fiddly sideways movement
+   of vertices that makes convergence difficult.  Perpendicular is
+   usually defined as the volume gradient, but at triple (and higher)
+   junction lines it is a subspace perpendicular to the line, and singular
+   points where several triple lines meet have full degrees of freedom.
+See <a href="#hessian_normal_one">hessian_normal_one</a> to alter this
+behavior.
+
+<hr>
+<a name="hessian_normal_one"></a><h2>HESSIAN_NORMAL_ONE</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+If this and <a href="#hessian_normal">hessian_normal</a> are on,
+then the normal at any point will be one dimensional.  This is meant
+for soap films with Plateau borders, where there are triple junctions
+with tangent films.  Ordinary <tt>hessian_normal</tt> permits lateral
+movement of such triple junctions, but <tt>hessian_normal_one</tt>
+does not.  Valid only for <a href="model.htm#string model">string model</a>
+in 2D and <a href="model.htm#soapfilm model">soapfilm model</a> in 3D.
+The normal vector is computed as the eigenvector of the largest
+eigenvalue of the sum of the normal projection matrices of all edges
+or facets adjoining a vertex.
+
+<hr>
+<a name="hessian_normal_perp"></a><h2>HESSIAN_NORMAL_PERP</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+   If this is on, then the Hessian <a href="#linear_metric">linear_metric</a>
+   uses only the component of the normal perpendicular to the facet or edge.
+   This raises eigenvalues slightly.
+
+
+<hr>
+<a name="hessian_quiet"></a><h2>HESSIAN_QUIET</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles suppression of  printing of information during hessian calculations.  Default is on.
+
+<hr>
+<a name="hessian_special_normal"></a><h2>HESSIAN_SPECIAL_NORMAL</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+When <a href="#hessian_normal">hessian_normal</a> is on, this toggles
+using a special vectorfield for the direction of the perturbation, rather
+than the usual surface normal.  The vectorfield is specified in the
+<a href="datafile.htm#hessian_special_normal_vector">
+hessian_special_normal_vector</a> section of the datafile header.
+Beware that hessian_special_normal also applies to the normal calculated by
+the  <a href="elements.htm#vertexnormal">vertexnormal</a> attribute and the normal
+ used by regular <a href="commands.htm#vertex_average">vertex averaging</a>. 
+
+<hr>
+<a name="homothety"></a><h2>HOMOTHETY</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Adjust total volume of all bodies to fixed value after each 
+<a href="single.htm#g">iteration</a>
+by uniformly scaling entire surface.
+
+<hr>
+<a name="immediate_autopop"></a><h2>IMMEDIATE_AUTOPOP</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Modifies the autopop mode. Causes deletion of a short edge
+or small facet immediately upon detection, before proceeding with further
+detection of small edges or facets.  Original behavior was to do all
+detection before any elimination, which could cause bad results if a
+lot of edges got short simultaneously. Default off for backward
+compatibility, but you should probably turn it on.
+
+<hr>
+<a name="interp_bdry_param"></a><h2>INTERP_BDRY_PARAM</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+For edges on <a href="constrnt.htm#parametric boundaries">
+parametric boundaries</a>, calculate the parameter values of
+new vertices (introduced by refining) by interpolating parameter
+values, rather than extrapolating from one endpoint.  Useful only
+when parameters are not periodic.  
+
+<hr>
+<a name="interp_normals"></a><h2>INTERP_NORMALS</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Display using interpolated vertex normals for shading for those graphics
+ interfaces that support it.
+
+<hr>
+<a name="itdebug"></a><h2>ITDEBUG</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Prints some debugging information during a 'g' step.  For gurus only.
+
+<hr>
+<a name="jiggle"></a><h2>JIGGLE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Toggles <a href="single.htm#j">jiggling</a> on every iteration.
+
+<hr>
+<a name="kraynikpopedge"></a><h2>KRAYNIKPOPEDGE</h2>
+
+Toggles edge-popping mode (<a href="single.htm#O">O</a>
+ or <a href="commands.htm#pop">pop</a> commands) in which poppable edges
+look for adjacent facets of different edge_pop_attribute values to
+split off from the original edge; failing that it reverts to the regular
+mode of popping the edge.  This is meant to give the user greater
+control on how edge popping is done.  It is up to the user to declare
+the edge_pop_attribute integer facet attribute and assign values.
+
+<hr>
+<a name="kraynikpopvertex"></a><h2>KRAYNIKPOPVERTEX</h2>
+
+Toggles 3D vertex popping mode in which a poppable vertex is examined
+to see if it is a special configuration of six edges and 9 facets. If it
+is, a special pop is done that is much nicer than the default pop.
+
+
+<hr>
+<a name="kusner"></a><h2>KUSNER</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Calculation of squared curvature by edge formula rather than vertex formula.
+
+<hr>
+<a name="labelflag"></a><h2>LABELFLAG</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+When on, the <a href="commands.htm#postscript command">postscript</a>
+command will print element labels in the <a href="graphics.htm#postscript">
+postscript</a> file.   Synonym for ps_labelflag.
+
+<hr>
+<a name="little_endian"></a><h2>LITTLE_ENDIAN</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Controls the order of bytes in 
+<a href="commands.htm#binary_printf">binary_printf</a> numerical output.
+Little-endian is least significant byte first.
+To change to big-endian, use <a href="#big_endian">big_endian</a>,
+not "little_endian off".
+
+<hr>
+<a name="linear_metric"></a><h2>LINEAR_METRIC</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Eigenvalues and eigenvectors of the 
+<a href="eigentut.htm">Hessian</a> are defined with respect to
+a <a href="eigentut.htm#hessian metric">metric</a>. 
+ This command toggles a metric that imitates the smooth
+surface natural metric of L_2 integration on the surface.  Use
+with <a href="#hessian_normal">hessian_normal</a> to get eigenvalues and eigenvectors
+similar to those on smooth surfaces.
+<hr>
+<a name="memdebug"></a><h2>MEMDEBUG</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+When ON, the '<a href="single.htm#c">c</a>' command prints
+ full memory usage statistics on some systems.
+Also, each allocation or freeing of memory is printed.  Causes heap checking
+to be done on some systems at each memory operation.
+
+<hr>
+<a name="metis_factor"></a><h2>METIS_FACTOR</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Computes and uses an ordering for Hessian factoring using the 
+<a href="http://www.cs.umn.edu/~karypis/metis/metis/index.html">METIS</a>
+library of Karypis and Kumar, if this library has been compiled into
+the Evolver. 
+
+<hr>
+<a name="metric_convert"></a>
+<a name="metric_conversion"></a>
+<h2>METRIC_CONVERT</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+If a <a href="model.htm#metric">Riemannian metric</a>
+is defined, whether to use the metric
+to do gradient form to vector conversions.
+Synonym: metric_conversion.
+<hr>
+<a name="normal_curvature"></a><h2>NORMAL_CURVATURE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Calculation of squared curvature by taking area of vertex to be
+ the component of the volume gradient parallel to the mean curvature
+ vector.
+
+<hr>
+<a name="normal_motion"></a><h2>NORMAL_MOTION</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Projects motion to surface normal, defined as the volume gradient.
+May be useful with squared curvature if vertices tend to slither
+sideways into ugly patterns.
+
+
+<hr>
+<a name="old_area"></a><h2>OLD_AREA</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+In the string model with area normalization, at a triple vertex
+Evolver normally tries to calculate the motion so that Von Neumann's
+Law will be obeyed, that is, the rate of area change is proportional
+to the number of sides of a cell.  If old_area is ON, then motion is
+calculated simply by dividing force by star area.
+
+<hr>
+<a name="pinning"></a><h2>PINNING</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Check for vertices that can't move because adjacent
+	vertices are not on same constraint when they could be.
+	Obscure.
+
+<hr>
+<a name="pop_disjoin"></a><h2>POP_DISJOIN</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Changes the behavior of 
+<a href="commands.htm#pop">popping</a> edges and vertices
+to act like merging Plateau borders, i.e. produce disjoined
+films instead of films joined with cross-facets.  In the edge
+case, if four facets meet along an edge and two opposite bodies
+are the same body, then popping the edge will join the bodies
+if pop_disjoin is in effect.  In the vertex case, if the vertex
+has one body as an annulus around it, then the vertex will be
+separated into two vertices so the annulus becomes a continuous
+disk.  This is all done regardless of the angles at which facets
+meet.  Applies to <a href="commands.htm#pop">pop</a>, 
+<a href="single.htm#o">o</a>, and <a href="single.htm#O">O</a> commands.
+
+<hr>
+<a name="pop_enjoin"></a><h2>POP_ENJOIN</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Changes the behavior of popping vertices in the soapfilm model
+so that when two distinct cones are detected meeting at a
+common vertex, the popping result is a widening of the cone
+vertex into a neck rather than a disjoining of the cones.
+meet.  Applies to <a href="commands.htm#pop">pop</a> and
+<a href="single.htm#o">o</a> commands.
+
+<hr>
+<a name="pop_to_edge"></a><h2>POP_TO_EDGE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+
+The non-minimal cone over a triangular prism frame can pop in two ways.  
+If this toggle is on,
+then popping to an edge rather that a facet will be done.  Default off.
+
+<hr>
+<a name="pop_to_face"></a><h2>POP_TO_FACE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+The non-minimal cone over a triangular prism frame can pop in two ways.  
+If this toggle is on,
+then popping to a facet rather that an edge will be done.  Default off.
+
+
+<hr>
+<a name="ps_crossingflag"></a><h2>PS_CROSSINGFLAG</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+When on and the <a href="model.htm#string model">string model</a>
+is in effect, the <a href="commands.htm#postscript command">postscript</a>
+command will show background edges with a break where foreground edges
+pass in front.
+<hr>
+<a name="debug"></a><h2>DEBUG</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Print YACC debug trace of parsing of commands.
+
+
+<hr>
+<a name="ps_gridflag"></a><h2>PS_GRIDFLAG</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+If toggled on, the <a href="commands.htm#postscript command">postscript</a>
+command will show all edges of displayed facets,
+ instead of just those satisfying the
+current <a href="commands.htm#show">edge show condition</a>.
+
+<hr>
+<a name="ps_labelflag"></a><h2>PS_LABELFLAG</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+When on, the <a href="commands.htm#postscript command">postscript</a>
+command will print element labels in the <a href="graphics.htm#postscript">
+postscript</a> file.   Synonym for labelflag.
+<hr>
+
+<a name="ps_colorflag"></a><h2>PS_COLORFLAG</h2>
+<a name="pscolorflag"></a>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+When on, the <a href="commands.htm#postscript command">postscript</a>
+command will do color.
+
+<hr>
+<a name="quantities_only"></a><h2>QUANTITIES_ONLY</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Inactivates all energies except named quantities.  Meant for
+programmer's debugging use.
+
+<hr>
+<a name="quiet"></a><h2>QUIET</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Suppresses all normal output messages automatically generated by commands.
+  Good while running scripts, or for loading datafiles with long <tt>read</tt>
+sections.
+Explicit output from print, printf, and list commands will still appear, as
+will prompts for user input.
+Applies to redirected output as well as console output.
+An error or user interrupting a command (i.e. with CTRL-C) will turn QUIET off,
+ for sanity.
+
+<hr>
+<a name="quietgo"></a><h2>QUIETGO</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Suppresses only <a href="single.htm#g">g</a> iteration step output.
+
+<hr>
+<a name="quietload"></a><h2>QUIETLOAD</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Suppresses echoing of files being read in.  This applies to the
+<tt>read</tt> section at the end of the datafile and any files
+read in with the <a href="commands.htm">read</a> command.  This
+toggle does not get reset at the start of a new datafile.
+This toggle can be set with the <a href="toggle.htm">-Q</a>
+command line option, to suppress echoing in the first datafile
+loaded.
+Default is OFF.
+
+<hr>
+<a name="post_project"></a><h2>POST_PROJECT</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Introduces extra projections to volume and fixed quantity constraints
+each <a href="single.htm#g">g</a> 
+iteration. If convergence fails after 10 iterations,
+you will get a warning message, repeated iterations will stop, and the
+internal variable  <a href="syntax.htm#iteration_counter">iteration_counter</a>
+ will be negative.
+
+<hr>
+<a name="raw_cells"></a><h2>RAW_CELLS</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+ Sets <a href="model.htm#torus display">torus model</a>
+ display for plain, unwrapped facets.
+ Not an on-off toggle; 3-way toggle with 
+<a href="#clipped">clipped</a>and
+<a href="#connected">connected</a>.
+
+<hr>
+<a name="rgb_colors"></a>
+<a name="frgb"></a><a name="fbrgb"></a><a name="ergb"></a>
+<h2>RGB_COLORS</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles graphics to use user-specified red-green-blue components of
+color for elements rather than the <a href="misc.htm#color">color</a>
+attribute indexing the pre-defined 16 color palette.  The individual
+element rgb values are in element extra attributes: ergb for edges,
+frgb for facets, and fbrgb for facet backcolor.  It is up to the user
+to define these attributes; if they are not defined, then they are not
+used and do not take up space.  If frgb is defined but not fbrgb, then
+frgb is used for both front and back color.  The attributes are real
+of dimension 3 or 4; if 4 dimensional, the fourth component is passed
+to the graphics system as the alpha value, but probably won't have
+any effect. The value range is 0 to 1.
+  Be sure to initialize the rgb attributes, or else you
+will get an all-black surface.  The attribute definitions to use are:
+<pre>
+   define edge attribute ergb real[3]
+   define facet attribute frgb real[3]
+   define facet attribute fbrgb real[3]
+</pre>
+
+
+<hr>
+<a name="ribiere"></a><h2>RIBIERE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Makes the <a href="iterate.htm#conjugate gradient">conjugate gradient method</a>
+ use the Polak-Ribiere version
+instead of Fletcher-Reeves. (The toggle doesn't turn on conjugate gradient.)
+Polak-Ribiere seems to recover much better from stalling.  
+Ribiere is the default mode.
+
+<hr>
+<a name="runge_kutta"></a><h2>RUNGE_KUTTA</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Use Runge-Kutta method in a <a href="single.htm#g">g</a> iteration step
+ (fixed <a href="iterate.htm#scale factor">scale factor</a> only).
+
+<hr>
+<a name="self_similar"></a><h2>SELF_SIMILAR</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+If squared mean curvature energy is being used, this scales the
+velocity toward a self-similar motion. Applies only
+when the old top-of-datafile "squared_curvature" declaration is used,
+or the sqcurve named method.
+The global read-write variable self_sim_coeff is used as a multiplier.
+<hr>
+<a name="shading"></a><h2>SHADING</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+  Toggles facet shading in certain graphics interfaces
+  (xgraph, psgraph).  Darkness of  facet depends on angle of
+  normal from vertical, simulating a light source above surface.
+  Default is ON.
+
+<hr>
+<a name="show_all_quantities"></a><h2>SHOW_ALL_QUANTITIES</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+By default, only explicitly user-defined 
+<a href="quants.htm#named quantities">named quantities</a> are
+shown by the <a href="single.htm#Q">Q</a> or 
+<a href="single.htm#v">v</a> commands.  If show_all_quantities
+is on, then all internal quantities created by option
+<a href="general.htm#options">-q</a> or by doing
+<a href="#convert_to_quantities">convert_to_quantities</a>
+are also shown.
+
+<hr>
+<a name="show_inner"></a><h2>SHOW_INNER</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+   Display interior facets, those on 2 bodies.
+
+<hr>
+<a name="show_outer"></a><h2>SHOW_OUTER</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+   Display outer facets, those on 0 or 1 body.
+
+<hr>
+<a name="slice_view"></a>
+</a><h2>SLICE_VIEW</h2>
+Toggles use of <a href="graphics.htm#slice view">slice view</a> 
+in graphics display.
+ 
+<hr>
+<a name="smooth_graph"></a><h2>SMOOTH_GRAPH</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+
+In string quadratic and Lagrange model, causes edges to be plotted
+with many subdivisions for smooth look.
+In soapfilm Lagrange model, causes edges and facets to be plotted with 8-fold
+subdivision rather than Lagrange order subdivision.  Is not
+implemented in quadratic soapfilm model. Default off.
+
+<hr>
+<a name="sobolev_mode"></a><h2>SOBOLEV_MODE</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+When the facet_area method is being used to calculate areas in hessian
+commands, this toggles using an approximate facet_area hessian that
+is positive definite.  This permits hessian iteration to make big steps
+in a far-from-minimal surface without fear of blowing up.  However, since
+it is only an approximate hessian, final convergence to the minimum
+can be slow.  
+<a href="model.htm#linear model">Linear model</a> only.  Does 
+<a href="#convert_to_quantities">convert_to_quantities</a> implicitly.
+Another variant of this is triggered by 
+<a href="#dirichlet_mode">dirichlet_mode</a>.
+
+<hr>
+<a name="sparse_constraints"></a><h2>SPARSE_CONSTRAINTS</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles using sparse matrix techniques to accumulate and handle
+body and quantity gradients in iteration and hessian commands.
+Now the default.
+
+<hr>
+<a name="squared_gradient"></a><h2>SQUARED_GRADIENT</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+In <a href="commands.htm#hessian_seek">hessian_seek</a>,
+use minimizing the square of the gradient of the energy as
+the objective rather than minimizing the energy. 
+
+<hr>
+<a name="star_finagling"></a><h2>STAR_FINAGLING</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+In the soapfilm model, the
+ <a href="commands.htm">delete</a> command for edges or facets normally
+will not do the deletion if it would result in the creation of two edges
+with the same endpoints.  Some simple configurations that cause this are
+detected and handled automatically, namely a "star" configuration in 
+which there are three facets forming a triangle adjacent to the edge
+being deleted.  Such a star is automatically removed by deleting one of
+its internal edges before deleting the original edge.  But sometimes
+there are more complicated configurations that such unstarring won't 
+handle, and then Evolver will not delete the edge unless the 
+<a href="#force_deletion">force_deletion</a> toggle is on.  An alternative
+is to first refine the edges that would have the common endpoints, and
+this is what the star_finagling toggle enables.  Default off.
+
+<hr>
+<a name="thicken"></a><h2>THICKEN</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Whether to display differently colored sides of a facet separated
+by <a href="syntax.htm#thickness">thickness</a>.  Default on.
+This helps prevent weird striping due to limited resolution of
+depth buffers.
+
+
+<hr>
+<a name="torus_filled"></a><h2>TORUS_FILLED</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Whether Evolver should treat one fixed volume as not fixed,
+for the purpose of avoiding redundant constraints in the 
+case of a torus space being completely filled with bodies
+of fixed volume, for example a periodic foam.
+
+<hr>
+<a name="transforms"></a><h2>TRANSFORMS</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles graphing multiple images of the surface, according to
+the <a href="datafile.htm#view transforms">view transforms</a> defined
+in the datafile, or according to the current
+<a href="commands.htm#transform_expr">transform expression</a>
+applied to the <a href="datafile.htm#view generators">view transform
+generators</a> defined in the datafile.
+
+<hr>
+<a name="view_4d"></a><h2>VIEW_4D</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles sending 4D information to <a href="graphics.htm#geomview">geomview</a>.
+
+<hr>
+<a name="verbose"></a><h2>VERBOSE</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles printing of progress messages during surface modification
+commands such as refine, delete, notch, edgeswap, o, O.
+
+
+<hr>
+<a name="visibility_test"></a><h2>VISIBILITY_TEST</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles an occluded-triangle test for graphics output that uses the
+Painter's Algorithm to produce 2D output (PostScript, Xwindows).  This
+can greatly reduce the size of a PostScript file, but inspect the output
+since the implementation of the algorithm may have flaws.
+
+<hr>
+<a name="volgrads_every"></a><h2>VOLGRADS_EVERY</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles recalculating volume constraint gradients every projection
+ step during constraint enforcement. Good for stiff problems. 
+
+<hr>
+<a name="ysmp"></a><h2>YSMP</h2>
+
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles between Yale Sparse Matrix Package routines for factoring hessians,
+and my own minimal degree factoring.  Default is YSMP off.
+
+<hr>
+<a name="zener_drag"></a>
+<a name="zener_coeff"></a>
+<h2>ZENER_DRAG</h2>
+Evolver <a href="#toggle commands">toggle command</a>.
+Toggles Zener drag feature, in which the velocity of the surface is
+ reduced by a magnitude given by the variable zener_coeff, and the
+ velocity is set to zero if it is smaller than zener_coeff.
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>

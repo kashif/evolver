@@ -1,0 +1,338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation: Hints
+</title></head>
+
+<BODY>
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<center><H1> HINTS</h1></center>
+This is a collection helpful hints gained from my own experience with Evolver
+and from helping others.
+
+<ul>
+<li> Evolver works in dimensionless units, and the default settings
+work best when size, surface tension, volume, etc. are near 1.
+If you decide to work in units that give very large or small numbers,
+you may have to adjust parameters such as
+<a href="datafile.htm#scale_limit">scale_limit</a>,
+<a href="syntax.htm#target_tolerance">target_tolerance</a>, and
+<a href="syntax.htm#constraint_tolerance">constraint_tolerance</a>.
+<p>
+
+<li> When drawing a sketch for constructing the initial datafile, make
+it as big as you can.  You will have lots of notation to put on it.
+Number all vertices, edges, and facets.  Put orientation arrows on the
+edges, and indicate the orientation of facets (I like to use curved
+arrows around the facet numbers).  
+<p>
+<li> Initial faces should be convex.  Although Evolver handles nonconvex
+faces, the triangulation algorithm is very simple-minded, and the triangulation
+of a nonconvex face can be ugly.  Just put in an extra edge or two to 
+divide the face into a couple of convex faces.
+<p>
+<li> Make separate constraints for edges with constraint energy or content
+integrals, and for edges without.  Even if the other edges are fixed,
+it is much easier to check that the integrands are correct when only the
+precisely needed edges are on constraints with integrals.
+<p>
+<li> If you don't have all your elements numbered consecutively (which usually
+happens due to numbering schemes you use, or adding or deleting elements),
+run Evolver with the -i command line option so mouse-picking reports the
+same element numbers as in your datafile.  You can instead put "keep_originals"
+in the top of your datafile for the same effect.
+<p>
+<li> Make sure all your body facets are oriented properly.  Evolver will
+complain if there are mismatched facet orientations on an ordinary edge,
+but fixed edges, constrained edges, etc. are exempt from this checking.
+A good way to check is by coloring, for example:
+<pre>   set body[1].facet color green </pre>
+<p>
+<li> Make sure vertices, edges, and facets are on their proper constraints.
+You can check visually by coloring, e.g.
+<pre>  set edge color red where on_constraint 1
+  set facet color green where on_constraint 1 </pre>
+You can't color vertices directly, but you can get close to the same effect
+by refining a couple of times and coloring edges adjacent to vertices:
+<pre>  foreach vertex vv where on_constraint 1 do set vv.edge color blue </pre>
+<p>
+<li> Check that all the energies, volumes, quantities, etc. in your
+initial datafile are correct.  See the section <a href="#checking">below</a>
+for more details on how to check in great detail.
+<p>
+<li> If you are doing liquids with contact lines on solid walls, I suggest
+making the first datafile with all the boundary surfaces of the liquid
+represented explicitly as facets, and then make a second version of the
+datafile using constraint energy and content integrals to replace the
+facets on the fixed walls.  It is far easier to get the energies and
+volumes right in the first version, but it is also far more prone to
+problems during evolution.  Use the first version to check the correctness
+of the second version, and use the second version for serious work.
+<p>
+<li>
+If your edges on curved constraints try to short-cut the curve, there
+are several ways to discourage that:
+  <ul>
+   <li> Make a second guide constraint, so that  the intersection
+    of the two constraints define guiderails for vertices to run
+     along. By using vertex attributes to customize the guide constraint,
+     you only need one guide constraint.  For example:
+<pre>    define vertex attribute guides real[2]
+    constraint 1 
+    formula:  x^2 + y^2 = rad^2   // curved constraint
+    constraint 2 
+    formula:  guides[1]*x + guides[2]*y = 0  // radial guide planes  </pre>
+Then you can set the guide coefficients at runtime with
+<pre>   set vertex.guides[1] -y where on_constraint 1
+   set vertex.guides[2] x where on_constraint 1  </pre>
+   <li> If you understand exactly what energy or volume condition
+    is encouraging the short-cutting, you can adjust the energy or
+     content integrand on the curved constraint to compensate enough
+     to eliminate the encouragement.  This basically means calculating
+   the surface area of the gap between the edge and the curved constraint,
+   or the volume bounded by the gap.
+   <li> Declare the curved constraint 
+    <a href="constrnt.htm#convex constraint">CONVEX</a>. This adds an energy
+    roughly proportional to the gap area.  This is simple to do, and
+    works if you set the gap_constant high enough (you should leave 
+    the gap constant as low as will work, however), but you cannot
+    use any Hessian commands if you use convex constraints.
+   </ul>
+<p>
+<li>
+      Run at low resolution before refining.  A good evolution
+      script usually winds up having alternating refining
+      and evolultion.  Having many triangles
+      not only takes a long time to calculate, but motion can
+      propagate only one triangle per iteration.  Don't over-evolve
+      at a particular refinement.  Remember it's an approximation.
+      There is not much point in evolving to 12 digits precision
+      an approximation that is only accurate to 4 digits.
+
+<p>
+<li>  Groom your surface triangulation with 
+      <a href="single.htm#V">V</a> (vertex averaging),
+      <a href="single.htm#u">u</a> (equiangulation),
+      <a href="single.htm#l">l</a> (long edge division), and
+      <a href="single.htm#t">t</a> (tiny edge deletion).
+      It may take some experimenting to get the right sequence, along
+      with refinements.  It may be better to divide certain long edges
+      than simply refine the whole surface.  However, overdoing it may
+      be counterproductive to convergence; sometimes the converged 
+      surface doesn't want to be entirely equiangulated or averaged, and
+      you can get into an endless loop of iteration and grooming.
+      Once you work out a good script, write it down in a handy command
+      at the end of the datafile for easy use.
+ <p>
+<li> Use the <a href="commands.htm#dump">dump</a> or 
+     <a href="single.htm#d">d</a> commands to save your evolved surface
+     regularly. Remember that Evolver has no undo feature to roll back
+     disastrous commands.     
+
+<p>
+<li>  Use <a href="iterate.htm#conjugate gradient">conjugate gradient</a>
+      mode for faster gradient descent,
+      but not too soon.  Use regular gradient descent to adjust
+      to volume or constraint changes.
+      Conjugate gradient should be used only when regular motion
+      has settled down.  Conjugate gradient assumes a quadratic
+      energy function, and may get confused when it's not.
+      Conjugate gradient may need to be toggled off and on to
+      make it forget its history.
+<p>
+<li> During gradient descent (including conjugate gradient), keep an
+     eye on the scale factor.  The scale factor should remain fairly
+     steady.   A scale factor going to 0 does NOT mean convergence;
+     it means the surface is having trouble.  However, a good scale
+     factor may depend on refinement and other considerations.  See
+     the section on <a href="#reasonable">reasonable scale factors</a>.
+
+<p>
+<li>  Second-order Hessian convergence is much faster than first-order
+      gradient descent, when Hessian works.  So my advice is to use gradient 
+      descent just to get to where it's safe to use 
+      <a href="commands.htm#hessian">hessian</a>
+      <a href="commands.htm#hessian_seek">hessian_seek</a>.
+      Actually, hessian_seek is pretty  much always safe to use, since
+      it makes sure energy is decreasing.  I have found circumstances
+      where hessian_seek does an amazingly good job as an iteration step,
+      even though the surface is nowhere near convergence.
+
+<p>
+<li>  Beware saddle points of energy.  A symmetric surface, e.g.
+      a blob of solder on a pad or around a wire, may seem to 
+      converge with gradient descent, but just have reached a 
+      saddle point.  Use the <a href="commands.htm#eigenprobe">eigenprobe</a>
+      command to test for stability, and if not stable, use
+      the <a href="commands.htm#saddle">saddle</a> command to
+      get off the saddle point.
+
+<p>
+<li>
+      Judging convergence in gradient descent is tough. If iterations 
+      run at a more
+      or less constant scale factor and energy isn't changing much,
+      and running in conjugate gradient mode for a long time doesn't
+      change much, then you're probably in good shape.  But use
+      the <a href="eigentut.htm#eigenprobe">eigenprobe</a> command to 
+      make sure, and <a href="commands.htm#hessian">hessian</a> to
+      finish off convergence.
+
+<p>
+<li>  If you intend to use quadratic mode or Lagrange mode for 
+      higher precision, evolve in linear model first until the 
+      final stage, since it is much  quicker and there are more
+      triangulation grooming commands available.
+</ul>
+
+<hr>
+
+<a name="checking"></a>
+<h4>Checking your datafile</h4>
+
+You should always check your initial datafile to be sure it is doing
+exactly what you want.  It is easy to get signs on integrands wrong,
+or apply quantities to the wrong elements.  When you load the initial
+datafile, the initial energy, body volumes, and quantities values 
+should be exactly what you expect, either from hand calculation or
+from another datafile you trust.  In particular, when using constraint
+integrals to replace omitted facets, I suggest you make a separate
+datafile with facets instead of integrals just for checking the agreement
+between the two.
+<p>
+With the named methods and quantities feature, it is possible to get
+very detailed information on where numbers are coming from.  If you
+give the "convert_to_quantities" command, every energy, volume, and
+constraint integrand will be internally converted to named methods
+and quantities (although the user interface for all remains the same).
+These internal quantities are ordinarily not displayed by the 'v' or 'Q'
+commands, but if you do "show_all_quantities" then they will be displayed.
+Further, 'Q' will show all the component method instances also. For an
+example, consider the following output:
+<pre> Enter command: convert_to_quantities
+ Enter command: show_all_quantities
+ Enter command: Q
+Quantities and instances:
+(showing internal quantities also; to suppress, do "show_all_quantities off")
+ 1. default_length                        64.2842712474619  info_only quantity
+                            modulus       1.00000000000000
+ 2. default_area                          4.00000000000000  energy quantity
+                            modulus       1.00000000000000
+ 3. constraint_1_energy                 -0.342020143325669  energy quantity
+                            modulus       1.00000000000000
+ 4. constraint_2_energy                 -0.342020143325669  energy quantity
+                            modulus       1.00000000000000
+ 5. body_1_vol                            1.00000000000000  fixed quantity
+                             target       1.00000000000000
+                            modulus       1.00000000000000
+    body_1_vol_meth                      0.000000000000000  method instance
+                            modulus       1.00000000000000
+    body_1_con_2_meth                     1.00000000000000  method instance
+                            modulus       1.00000000000000
+ 6. gravity_quant                        0.000000000000000  energy quantity
+                            modulus      0.000000000000000
+</pre>
+Here's a detailed explanation of the output of the Q command above:
+<p><b>default_length</b> - total edge length, using the edge_length method.
+This would be the default energy in the string model, and I guess it really
+doesn't need to exist here.  But it's an info_only quantity, which means
+it is only evaluated when somebody asks to know its value.
+<p>
+<b>default_area</b> - the default energy in the soapfilm model, and
+included in the energy here, as indicated by "energy quantity" at the right.
+<p>
+<b>constraint_1_energy</b> - the energy integral of constraint 1, using
+the edge_vector_integral method applied to all edges on constraint 1.
+<p>
+<b>constraint_2_energy</b> - the energy integral of constraint 2, using
+the edge_vector_integral method applied to all edges on constraint 2.
+<p>
+<b>body_1_vol</b> - the volume of body 1, as a sum of several method
+instances.  <b>body_1_vol_meth</b> is the  facet_vector_integral of (0,0,z) over
+all the facets on the body. <b>body_con_2_meth</b> is the integral of
+the constraint 2 content integrand over all edges on facets of body 1
+which are edges on constraint 2.  
+<p>
+<b>gravity_quant</b> - the total gravitational energy of all bodies
+with assigned densities.  This quantity is always present even if you
+don't have any bodies, or don't have any body densities.  But you'll notice
+the modulus is 0, which means its evaluation is skipped, so the presence
+of this quantity doesn't harm anything.
+<p>
+You can find the quantity or method contribution of single elements
+by using the quantity or method name as an attribute of elements.
+Using a quantity name really means summing over all its constituent
+methods that apply to the element.  For example, in plates_column,
+<pre> Enter command: foreach edge ee where on_constraint 2 do printf "%d  %f\n",id, ee.body_1_con_2_meth
+5  0.000000
+6  0.000000
+7  1.000000
+8  0.000000
+Enter command: foreach edge where constraint_1_energy != 0 do print constraint_1_energy
+  -0.342020143325669
+</pre>
+<hr>
+
+<a name="reasonable"></a>
+<h3> Reasonable scale factors. </h3>
+Trouble in evolving is usually signaled by a small scale, which means
+there is some obstacle to evolution. Of course, that means you have to
+know what a reasonable scale is, and that depends on the type of energy
+you are using and how refined your surface si.  In normal evolution, the 
+size of the scale is set by
+the development of small-scale roughness in the surface. Combined with
+a little dimensional analysis, that leads to the conclusion that the
+scale should vary as L<sup>2-q</sup>, where L is the typical edge 
+length and
+the units of energy are length<sup>q</sup>.  The dimensional analysis goes
+like this:  Let D be the perturbation of one vertex away from an equilibrium
+surface.  In general, energy is quadratic around an equibrium, so
+<blockquote><tt>  E = D<sup>2</sup>L<sup>q-2</sup> </tt></blockquote>
+
+So the gradient of energy at the vertex is 
+<blockquote><tt>  grad E = 2<sup>D </sup>L<sup>q-2</sup>  </tt></blockquote>
+
+The motion is the scale times the gradient, which we want proportional to D,
+so 
+<blockquote><tt> scale * grad E = scale * 2 D L<sup>q-2</sup> = D  </tt>
+</blockquote>
+So scale is on the order of L <sup>2-q</sup>.  Some examples:
+<table border="2" align="center">
+<caption align="top"><b>Dimensional Dependence of Scale</b></caption>
+<tr><td><b>Energy</b></td><td><b>Energy dimension</b></td>
+<td><b>Scale</b> </td><td><b>Example file</b></td></tr>
+<tr>
+<td>Area of soapfilm </td><td align="center">L<sup>2</sup> </td>
+<td align="center"> L<sup>0</sup> </td><td>quad.fe</td></tr>
+<tr>
+<td>Length of string </td><td align="center">L<sup>1</sup> </td><td align="center"> L<sup>1</sup> </td><td>flower.fe</td></tr>
+<tr>
+<td>Squared curvature of string </td><td align="center">L<sup>-1</sup> </td>
+ <td align="center"> L<sup>3</sup></td>
+   <td>elastic8.fe</td></tr>
+<tr>
+<td>Squared mean curvature of soapfilm </td><td align="center">L<sup>0</sup> </td>
+<td align="center"> L<sup>2</sup></td>
+ <td>sqcube.fe</td></tr>
+</table>
+In particular, the scale for area evolution is independent of refinement,
+but for most other energies the scale decreases with refinement.
+<p>
+Another common influence on the scale for area evolution is the surface
+tension.  Doing a liquid solder simulation in a system of units where
+the surface tension of facets is assigned a value 470, say, means that
+all calculated gradients are multiplied by 470, so the scale decreases
+by a factor of 470 to get the same geometric motion.  Thus you should
+set scale_limit to be the inverse of the surface tension.
+
+
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+</body>
+</html>

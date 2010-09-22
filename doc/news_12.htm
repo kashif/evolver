@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 12</title></head>
+
+<BODY>
+<a name="newsletter 12"></a>
+<h1>Surface Evolver Newsletter no. 12</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+
+
+                    Surface Evolver Newsletter Number 12
+                              July 19, 1995
+
+                   Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents
+  Version 1.99 ready
+  New features
+
+Version 1.99 ready.
+  Surface Evolver version 1.99 is now available from geom.umn.edu
+  in /pub/software/evolver/evolver.tar.Z.  There are also new DOS and 
+  Mac versions.  The DOS version is in evolver.zip.
+  The Mac version is in Evolver.sea.Hqx.  This was compiled for
+  use with a math coprocessor and will not run on a Power Mac.
+  There is a non-coprocessor version in Evolver.no68881.sea.Hqx
+  which will run on the Power Mac I have access to, although it has
+  been reported to crash others. Any ambitious volunteers to figure
+  this out will be welcomed.
+ 
+  For those of you into Hessians and eigenvalues, there is a little
+  tutorial in eigentut.txt.  This is a plain text file, about 10 pages.
+
+
+New features.
+
+  Storage used by element structures has been cut down by only
+  allocating storage for features actually used.
+
+  The limit on the number of constraints has been raised to 128,
+  and can easily go much higher if somebody needs it.
+
+  Body "volume" technically should be a read-only value, the
+  actual computed volume.  "target" should be used for setting
+  the volume constraint, as in "set body[1] target 2.34", 
+  although "set body[1] volume 2.34" will still work, although
+  with a warning.
+
+  "volconst" has been added as a read-write body attribute.
+  This is a constant added to the calculated volume.  Also
+  applies to named quantities.
+
+  The command "convert_to_quantities" will do an automatic
+  conversion of old-style energies to new-style named quantities.
+  This has the same effect as the -q command line option, but
+  can be done from the Evolver command prompt.  Useful when
+  "hessian" complains about not being able to do a type of energy.
+  A few energies don't convert yet.  It is my intention that
+  this will be the default in the near future, probably in 
+  version 2.00.
+
+  "edgeswap" command will force an equiangulation-type switch
+  on designated edges, as in "edgeswap edge[23]" or
+  "edgeswap edge where color == red".  "edgeswap edge" will
+  swap all edges, if you like to see weird surfaces.
+
+  A "variable_parameter" is a parameter whose value will be varied
+  during optimization.  Just use "variable_parameter" instead of
+  "parameter" in the top of the datafile.  Be aware that energy
+  derivatives with respect to variable parameters are done
+  numerically, not symbolically.  Won't work with Hessian yet.
+
+  For the torus mode, torus translations have been automatically
+  added as view_transform_generators after any appearing in the
+  datafile.  So multiple copies of the fundamental domain can
+  been seen with
+      transform_expr "abc"
+
+  Command P can now take a number after it, so "P 8" starts geomview
+  without having to bring up the "P" menu.
+
+  "saddle" and "hessian_seek" commands takes maximum stepsize, 
+  e.g. "saddle 0.5".
+
+  "move" command will continue in direction of previous motion,
+  whether from gradient or hessian.  Takes stepsize, e.g. "move 0.5".
+  Negative move is not a perfect undo.
+
+  Toggles print previous value along with new value.
+
+  Can now make saddle or hessian_seek minimize squared gradient
+  instead of energy.  Use hessian_menu toggle G.
+
+  There is now a "bottominfo" command that prints out the bottom
+  part of a dumpfile.  Useful for generating new datafiles from old.
+
+  You can redefine single-letter commands with " x :::= command".
+  Restore with "x :::= ".  Redefs undone at start of surface.
+  Redef not retroactive to single letter commands used in
+  definition of commands. Letter redefed at execution, not parsing.
+  Redefed letter used in command will revert to standard meaning
+  when letter unredefed. Meant for analogous replacements,
+  like special r.  "r :::= { hooke_length := hooke_length/2; r}"
+  will work right first time, but not second. Use single quotes
+  around letter to get old meaning, i.e. 'r'.
+  Should only use to disable commands.
+
+  hessian_menu has option Z to do subspace iteration for multiple
+  eigenvectors (same as "ritz" command), and you can pick
+  eigenvectors for motion with option X.
+
+  Read-only variable "last_eigenvalue" stores eigenvalue found
+  in saddle command, or first eigenvalue found by ritz.
+  Read-only variable "last_hessian_scale" stores stepsize used
+  by most recent saddle or hessian_seek command.
+
+  Compilation option -DSDIM=3 will hard-wire space dimension 3 into
+  the code, permitting more compiler optimization.  But such
+  an Evolver cannot handle any other space dimension.
+
+  The eigenprobe command has an alternate form, eigenprobe(value,iters),
+  that will do shifted inverse power iteration to find the eigenvalue
+  nearest the given value. iters is the limit on the number of iterations.
+  The eigenvalue is stored in last_eigenvalue, and the eigenvector
+  can be used via the "move" command.
+  
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

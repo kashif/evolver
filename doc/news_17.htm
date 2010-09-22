@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 17</title></head>
+
+<BODY>
+<a name="newsletter 17"></a>
+<h1>Surface Evolver Newsletter no. 17</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+                         Surface Evolver Newsletter 17
+                              August 20, 2003
+
+                     by Ken Brakke, brakke@susqu.edu
+
+
+  Surface Evolver version 2.20 is now available at
+  http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm.
+  This is the first full official new version release since
+  version 2.14 in 1999.
+
+  Since there have been various modifications and tweaks of internal
+  algorithms, it would be wise to test the new version on your existing
+  datafiles before trusting it fully.  Please let me know of any
+  significant anomalies.
+
+
+New features and changes:
+
+  There are Macintosh versions for Mac OS 9 and Mac OSX.
+  This will be the last Mac OS 9 version unless I hear demand from users. 
+
+  Variables and element extra attributes can be multi-dimensional
+  arrays.  The "print" command can print whole arrays or slices of arrays.
+
+  Functions with arguments and return values and procedures with arguments
+  have been added.
+
+  A variable name can be declared local in a command block to restrict
+  its scope to the block.  Prevents global namespace pollution. 
+  
+  Variables and procedures can be made "permanent" and survive loading
+  of the next datafile.
+
+  There is a simple man page for unix systems, evolver.1, which just
+  describes the command line options.
+ 
+  All versions can use OpenGL/GLUT graphics.  Can have a pull-down
+  menu of graphics window commands, and multiple graphics windows with
+  different camera angles.
+
+  The "exec" command will interpret and execute a text string of Evolver
+  commands.  Good for generating commands within a script.
+
+  There is a FOR loop construct much like in C, but not quite the same.
+  Example: for ( {inx:=1;rsum:=0;} ; inx &lt; 10 ; inx += 1 ) rsum += inx^2;
+
+  Warning messages generated early in loading a datafile can scroll off
+  the screen, so if there were messages, a meesage is printed after
+  loading is complete, and the user can reprint the messages with
+  "print warning_messages".
+
+  Wild cards are permitted in filenames both on the command line and in
+  response to various Evolver prompts.  But be very cautious you do not
+  get unexpected matches.  Useful when files have horribly long
+  descriptive names and you get tired of typing them in.
+
+  Constraints and boundaries can be designated by name as well as number,
+  i.e. "constraint topwall" instead of "constraint 1". 
+
+  "errprintf" command is like "printf" except it sends output to stderr; good
+  for console output in scripts where standard output is being redirected
+  to a file.
+  
+  "sparse_constraints" toggles a mode of projecting to constraints that
+  takes advantage of sparsity in constraints.  Makes it practicable to
+  do 100,000 bodies and more in reasonable time.  Default on.
+
+  "augmented_hessian" toggles a mode of solving Hessian equations
+  that takes advantage of sparsity in constraints.  You can now do
+  hessian commands with 100,000 bodies and more in reasonable time.
+  Default on.
+
+  For fine control of facet colors, the simple color numbers are overridden if 
+  the extra attribute frgb is defined: "define facet attribute frgb real[3]".
+  Color component values should be in the range 0 to 1.
+
+  The "pop" command can pop selected sets of vertices or edges.  Gives more
+  control than the universal "o" and "O" popping commands.
+
+  Special popping commands pop_edge_to_tri, pop_tri_to_edge, pop_quad_to_quad
+  do topological changes common in foam evolution.
+
+  Command sequences can be executed at the start of expressions by
+  putting the commands in backquotes, followed by a comma.  Useful in
+  constraint and boundary formulas and integrands.
+
+  The width of individual edges in PostScript output can be controlled
+  by defining the edge extra attribute ps_linewidth.
+
+  The "equiangulate" command applies the equiangulation test and edge
+  swap to selected edges, as opposed to the universal "u" command, or
+  the non-testing "edgeswap" command.
+
+  If you define it, a h_zero vertex attribute takes precedence over
+  the global variable h_zero in various squared mean curvature calculations.
+
+  Deleting edges and facets favors keeping triple edges (and higher
+  valence edges) where there is a choice.
+
+  The default length, area, and volume definitions can be substituted for
+  by other named methods.  See length_method_name, area_method_name, 
+  and volume_method_name in the documentation.
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

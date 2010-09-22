@@ -1,0 +1,63 @@
+//  slidestr.fe
+
+//  Evolver data for drop of prescribed volume sitting
+//  on hyperbolic slide with gravity.  Illustrates corner
+//  holding drop against gravity.
+
+// Instructions for simple use:
+//   refine once
+//   iterate until drop settles into curve (datafile starts with
+//       gravity = 1 to pull drop down)
+//   Use `G' command to reverse gravity.  Blob is stable up to
+//      about G = -.8
+//
+//   You can color the blob edges with
+//      set edge color white where not fixed
+
+STRING  // one-dimensional surface
+space_dimension 2
+
+// Constraint of form   m*x + x*y = k with m = 0.5, k = 0.1
+// Integrals are used for volume, since zero density facets
+// don't move, and their stretching around the curve gives
+// an inaccurate volume.
+
+PARAMETER STEEP = 0.5
+PARAMETER SHARP = 0.1
+
+constraint 1  //  the slide, constants are steepness and sharpness
+formula: STEEP*x + x*y = SHARP
+content:
+c1: log(x)*SHARP - STEEP*x    // note this is indefinite integral of y
+
+
+constraint 2  //  the slide, for display
+formula: STEEP*x + x*y = SHARP
+
+vertices
+1  0.0  2.2  constraint 1
+2  0.0  0.8  constraint 1
+3  0.5  2.2 
+4  0.5  0.8
+5  0.0  2.5   constraint 2 fixed  // for slide display
+6  0.3  0.2   constraint 2 fixed  // for slide display
+7  1.5  .0   constraint 2 fixed  // for slide display
+
+edges  /* given by endpoints and attribute */
+1   2 4
+2   4 3
+3   3 1
+4   5 6 fixed constraint 2  // for slide display
+5   6 7 fixed  constraint 2 // for slide display
+
+faces  /* given by oriented edge loop */
+1   1 2 3
+
+
+bodies  /* one body, defined by its oriented faces */
+1   1   volume 0.7  density 1.0
+
+read
+
+// Typical evolution, doing V's to keep vertices spread.
+gogo := { r; {g 10; V;} 40 }

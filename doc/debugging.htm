@@ -1,0 +1,393 @@
+<HTML>
+<HEAD><TITLE>Surface Evolver Documentation: Debugging
+</title></head>
+
+<BODY>
+<center>
+<h1><a href="http://www.susqu.edu/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+
+<hr><a name="debugging"> </a>
+<h1>Surface Evolver Debugging</h1>
+
+There are several debugging features built into Evolver. Script 
+debugging is meant for ordinary users; the others are meant mostly
+for Evolver developers (me).
+
+<ul>
+<li><a href="#script debugging">Script debugging</a>
+<li><a href="#syntax debugging">Syntax debugging</a>
+<li><a href="#memory debugging">Memory debugging</a>
+<li><a href="#gradient debugging">Gradient debugging</a>
+<li><a href="#Hessian debugging">Hessian debugging</a>
+<li><a href="#iteration debugging">Iteration debugging</a>
+</ul>
+
+<hr>
+<a name="script debugging"><h2>Script Debugging</h2></a>
+
+A 'script' here refers to any Evolver commands, whether
+they be in procedures or functions.
+<p>
+Debugging may be done the old-fashioned way, by putting print
+statments in code.  Another alternative is to put
+<a href="commands.htm#subcommand"><tt>subcommand</tt></a> in a script
+to let the user explore the state of the surface at a given 
+point in a script.  If you can't or don't want to modify
+the script, then you can set breakpoints.
+
+<h3> <a name="breakpoints">Breakpoints</a></h3>
+The user may set a breakpoint in an already loaded script
+with the "set breakpoint" command.  The syntax is 
+<pre>
+  BREAKPOINT <em>scriptname</em> <em>linenumber</em>
+</pre>
+where <em>scriptname</em> is the name of the function or
+procedure and <em>linenumber</em> is the line number in 
+the file where the breakpoint is to be set. There must be
+executable code on the line, or you will get an error.
+<em>linenumber</em> may be an expression.
+<p>
+Breakpoints may be unset individually with
+<pre>
+  UNSET BREAKPOINT <em>scriptname</em> <em>linenumber</em>
+</pre>
+or as a group with
+<pre>
+  UNSET BREAKPOINTS 
+</pre>
+<p>
+When a breakpoint is reached, Evolver will enter into a subcommand prompt,
+at which the user may enter any Evolver commands (although some commands,
+such as <tt>load</tt> would be very unwise).  
+To exit from the
+subcommand prompt, use <tt>q</tt> or <tt>exit</tt> or <tt>quit</tt>.
+<p>
+<a name="single-stepping"></a>
+<b>Single-stepping:</b> At the debug prompt, there is a special
+single-step command <tt>n</tt>. which will continue execution to the next line
+(to be precise, until the line number changes).  
+
+<p>
+<a name="stack trace"></a> <a name="whereami"></a>
+<b>Stack trace:</b> At the debug prompt, the <tt>whereami</tt> command
+ will print
+ a stack trace, showing the sequence of function or procedure calls made to
+reach the current spot.
+
+
+<hr>
+<a name="syntax debugging"><h2>Syntax Debugging</h2></a>
+The error messages produced by Evolver's command parser try to
+be helpful, but sometimes are rather cryptic.  Frequent errors
+are misspelled keywords, variables that are spelled the same
+as keywords, use of uninitialized variables,
+ and missing semicolons.  Check these before trying
+any fancy syntax debugging as described here. It is possible to
+print out the parsing steps, but this is not for the faint of heart,
+since it the printout is in very unfriendly YACC format. You will
+have to have an understanding of how shift-reduce parsing works
+to have a chance at understanding the output.  The
+toggle <tt>debug</tt> controls the YACC trace feature.
+Example:
+<pre>
+
+Enter command: debug
+YACC debugging was OFF.
+Now ON.
+Enter command: print asdf
+Starting parse
+Entering state 0
+Reading a token: Next token is token COMMAND_START_ ()
+Shifting token COMMAND_START_ ()
+Entering state 2
+Reading a token: Next token is token PRINT_ ()
+Reducing stack by rule 2 (line 158), -> @1
+Stack now 0 2
+Entering state 5
+Next token is token PRINT_ ()
+Shifting token PRINT_ ()
+Entering state 180
+Reducing stack by rule 454 (line 1555), PRINT_ -> print
+Stack now 0 2 5
+Entering state 308
+Reading a token: Next token is token NEWIDENT_ ()
+Shifting token NEWIDENT_ ()
+Entering state 11
+Reading a token: Now at end of input.
+syntax error
+
+Shifting token error ()
+Entering state 316
+Reducing stack by rule 391 (line 1295), NEWIDENT_ error -> rexpr
+ERROR 2381: Syntax error: Unexpected new identifier 'asdf'.
+  Input line so far:
+print asdf
+
+</pre>
+
+
+<hr>
+<a name="memory debugging"><h2>Memory Debugging</h2></a>
+The <tt><a href="single.htm#c">c</a></tt> command gives a brief printout of
+memory usage, including element memory as calculated for the 
+number of existing elements, and total allocated data memory.
+ For example, on Windows:
+<pre>
+
+Enter command:  c
+Vertices: 50  Edges: 144  Facets: 96  Bodies: 1  Facetedges: 288
+Element memory: 40280
+Total data memory: 302122 bytes.
+</pre>
+If the <tt>verbose</tt> toggle is on, then more detailed information
+(which may depend on your system) is printed:
+<pre>
+
+Enter command: verbose
+Verbose ON. (was off)
+Enter command: c
+Vertices: 50  Edges: 144  Facets: 96  Bodies: 1  Facetedges: 288
+Element memory: 40280
+    vertex size:  152 bytes;  number allocated: 156
+      edge size:   80 bytes;  number allocated: 244
+     facet size:   96 bytes;  number allocated: 196
+      body size:  424 bytes;  number allocated: 154
+ facetedge size:   40 bytes;  number allocated: 388
+quantity size:    360 bytes
+instance size:    656 bytes
+
+blocks in use: 181    memory in use: 360740
+blocks free:    16    memory free:    45080
+Heap top: 03477000
+Heap size: 48.71 MB
+Physical memory size: 1072680960 bytes   Virtual memory top: 7FFE0000
+Session:       4 blocks,      11200 bytes
+Permanent:    77 blocks,     290922 bytes
+Temporary:     0 blocks,          0 bytes
+Total data memory: 81 blocks, 302122 bytes.
+</pre>
+
+<p>
+
+
+<b>For gurus only.</b> The <a href="toggle.htm#memdebug">memdebug</a>
+command causes verbose information to be printed at every memory allocation,
+reallocation, or deallocation.   Meant for me to use debugging Evolver itself.
+If Evolver was compiled with MEMSTRINGS defined, then the file and line
+location of each memory operation is also printed.
+It also causes heap checking
+to be done on some systems at each memory operation.
+
+<hr>
+<a name="gradient debugging"><h2>Gradient Debugging</h2></a>
+
+<b>For gurus mostly.</b>
+The <a href="toggle.htm#estimate"><tt>estimate</tt></a> toggle can be used
+to verify that gradients are being calculated correctly.
+When on, <tt>estimate</tt> will, for each 'g' step, print
+the energy change based on the gradient, that is, calculate the
+inner product of the velocity and energy gradient at each vertex
+and sum the products, and then also pring the actual energy 
+change during the motion.  For small scales, these numbers should be
+very close, since energy should change nearly linearly over
+short scales.  For example,
+<pre>
+Enter command: estimate
+Estimation ON. (was off)
+Enter command: m 1e-6
+Scale fixed at 1e-006.
+Enter command: g 2
+Estimated energy change: -9.16981132075472e-006
+Actual energy change   : -9.16979039722321e-006
+  2. area:  5.99999083020960 energy:  5.99999083020960  scale: 1.00000e-006
+Estimated energy change: -9.16972762183562e-006
+Actual energy change   : -9.16970669440076e-006
+  1. area:  5.99998166050291 energy:  5.99998166050291  scale: 1.00000e-006
+</pre>
+
+However, if volume constraints or quantity constraints are not satisfied,
+then it may take a few iterations for agreement to be reached:
+<pre>
+
+Enter command: body[1].target := 2
+Enter command: estimate
+Estimation ON. (was off)
+Enter command: m 1e-6
+Scale fixed at 1e-006.
+Enter command: g 5
+Estimated energy change: -1.20000000000000e-005
+Actual energy change   :     2.74061897546020
+  5. area:  8.74061897546020 energy:  8.74061897546020  scale: 1.00000e-006
+Estimated energy change: -8.05951562616423e-006
+Actual energy change   : -0.000107080144722715
+  4. area:  8.74051189531548 energy:  8.74051189531548  scale: 1.00000e-006
+Estimated energy change: -8.05945861736465e-006
+Actual energy change   : -8.06006082854083e-006
+  3. area:  8.74050383525465 energy:  8.74050383525465  scale: 1.00000e-006
+Estimated energy change: -8.05934708554515e-006
+Actual energy change   : -8.05931920133673e-006
+  2. area:  8.74049577593545 energy:  8.74049577593545  scale: 1.00000e-006
+Estimated energy change: -8.05923555500071e-006
+Actual energy change   : -8.05920767277257e-006
+  1. area:  8.74048771672778 energy:  8.74048771672778  scale: 1.00000e-006
+Enter command:
+</pre>
+
+<p>
+For optimizing scale, when evolution is well behaved, the estimate will
+be around twice the actual change, since this is the ratio for a
+perfectly quadratic energy function.  Example:
+<pre>
+Enter command: estimate
+Estimation ON. (was off)
+Enter command: g 5
+Estimated energy change:    -1.23332147258421
+Actual energy change   :   -0.647118913175537
+  5. area:  5.35288108682446 energy:  5.35288108682446  scale: 0.233721
+Estimated energy change:   -0.420072251955455
+Actual energy change   :   -0.203503019926857
+  4. area:  5.14937806689761 energy:  5.14937806689761  scale: 0.212928
+Estimated energy change:   -0.219347968060792
+Actual energy change   :   -0.108607336477709
+  3. area:  5.04077073041990 energy:  5.04077073041990  scale: 0.197501
+Estimated energy change:   -0.130401658330236
+Actual energy change   :  -0.0647701891524211
+  2. area:  4.97600054126748 energy:  4.97600054126748  scale: 0.213378
+Estimated energy change:  -0.0809651401128813
+Actual energy change   :  -0.0401832076359208
+  1. area:  4.93581733363156 energy:  4.93581733363156  scale: 0.198322
+Enter command:
+</pre>
+<p>
+Beware that non-smooth evolution, for example with one-sided
+constraints, can invalidate the assumptions behind <tt>estimate</tt>.
+
+
+<hr>
+<a name="hessian debugging"><h2>Hessian Debugging</h2></a>
+
+The <a href="toggle.htm#hessian_quiet">hessian_quiet</a> toggle
+can be turned off to print information on memory usage and 
+workload during Hessian factoring (hessian, hessian_seek, ritz,
+eigenprobe commands).  For example,
+<pre>
+
+Enter command: hessian_quiet off
+Enter command: eigenprobe 0
+Sparse init alloc: 36897
+Expanded hashtable size: 73794.
+Expanded hashtable size: 147588.
+Sparse entries: 61444  Final hashtable size: 147588
+Hash extra probes: 256957
+Variables: 12291  Original fill: 61446
+Workspace: 8 bytes
+Passes through main loop: 34
+Total_fill:  538907
+Total_flops: 7.25226e+007
+Eigencounts:    3 <,  0 ==,  12286 >
+</pre>
+There are some differences in output depending on whether
+the ysmp toggle is on (using the Yale Sparse Matrix Package) or off
+(using my home-grown minimal degree algorithm).
+<p>
+<b>For gurus only.</b>
+Evolver has a feature that permits numerical checking of the 
+correctness of the named-quantity Hessian-calculating routines.  The
+<a href="toggle.htm#hessian_diff">hessian_diff</a> toggle causes
+Hessians to be calculated with finite differences of gradients
+rather than the routines in question.  
+  There are some limitations on what
+kinds of surfaces the numerical Hessian works on, primarily
+it won't work with volume or quantity constraints.  But since
+any quantity can be tested as an energy, that does not affect
+its main purpose.
+<p>
+<a name="mindeg_debug_level"></a>
+<a name="mindeg_min_region_size"></a>
+<a name="mindeg_margin"></a>
+Some items for debugging and tweaking of my minimal degree algorithm:
+<dl>
+<dt>mindeg_debug_level</dt><dd> Controls verbosity of debug messages.</dd>
+<dt>mindeg_min_region_size</dt><dd> Smallest size region desired; smaller
+regions will be merged with parent node. Default 0.</dd>
+<dt>mindeg_margin</dt><dd> How high to go above minimum degree in seeking
+  good elimination.  Default 5. </dd>
+</dl>
+
+
+
+
+<hr>
+<a name="iteration debugging"><h2>Iteration Debugging</h2></a>
+The <a href="toggle.htm#itdebug">itdebug</a> command toggles the printing
+of information during a '<a href="single.htm#g">g</a>' command.
+It prints the scale factor for the move, the progress in convergence
+of the volume or fixed quantity constraints (in terms of the total
+error as a multiple of the tolerance), then the energy and volumes
+resulting from the move.  An example using cube.fe with optimizing scale:
+<pre>
+
+Enter command: g
+Calculating volgrads.
+First move, scale 0.1
+Diff: 74.4218    Old_diff: 74.4218
+Next diff: 5.17892
+Diff: 5.17892    Old_diff: 74.4218
+Next diff: 0.350987
+first move:
+scale1 0.1 energy1     5.31028806222661
+Body             target volume        actual volume        pressure
+  1                         1      0.999964901275881     2.26415094339623
+
+0th move:
+scale1 0 energy1                    6
+Body             target volume        actual volume        pressure
+  1                         1                      1     2.26415094339623
+
+Doubling scale, scale 0.2
+Diff: 284.517    Old_diff: 284.517
+Next diff: 38.248
+Diff: 38.248    Old_diff: 284.517
+Next diff: 4.87311
+Diff: 4.87311    Old_diff: 38.248
+Next diff: 0.61629
+scale2 0.2 energy2     5.11714524527486
+Body             target volume        actual volume        pressure
+  1                         1      0.999938371022819     2.26415094339623
+
+Doubling scale, scale 0.4
+Diff: 1032.7    Old_diff: 1032.7
+Next diff: 261.432
+Diff: 261.432    Old_diff: 1032.7
+Next diff: 59.494
+Diff: 59.494    Old_diff: 261.432
+Next diff: 13.1576
+Diff: 13.1576    Old_diff: 59.494
+Next diff: 2.89075
+Diff: 2.89075    Old_diff: 13.1576
+Next diff: 0.634175
+scale2 0.4 energy2     5.89816432999747
+Body             target volume        actual volume        pressure
+  1                         1       0.99993658248485     2.26415094339623
+
+Final scale: 0.20612
+Diff: 301.341    Old_diff: 301.341
+Next diff: 41.6649
+Diff: 41.6649    Old_diff: 301.341
+Next diff: 5.45074
+Diff: 5.45074    Old_diff: 41.6649
+Next diff: 0.707497
+  1. area:  5.12110729535848 energy:  5.12110729535848  scale: 0.206120
+Enter command:
+</pre>
+
+<hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>

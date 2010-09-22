@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 7</title></head>
+
+<BODY>
+<a name="newsletter 7"></a>
+<h1>Surface Evolver Newsletter no. 7</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+                      Surface Evolver Newsletter Number 7
+                              January 24, 1994
+
+                    Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents:
+Version 1.94.
+Minimization via Hessian.
+New features.
+Bibliography update.
+
+Version 1.94:
+
+Version 1.94 is now available for ftp.  Still no new Mac version.
+And be wary of the NeXT version, since I made some changes that
+might possibly affect behavior of the NeXT interface, and I don't have
+access to a NeXT at the moment to test it.
+
+The uncompressed version of evolver.tar is being dropped from the
+ftp directory.  If this causes anybody problems, let me know.
+
+
+Minimization via Hessian:
+
+  The Evolver's usual gradient descent method is a first order method,
+using just the first derivative of energy.  A second order method might
+give faster convergence, and furthermore tell the stability of a critical
+point.  By using the Hessian matrix of second derivatives along with
+the gradient, one has a quadratic approximation to the energy that one
+can solve for a minimum (or other critical point).  The Evolver has had
+an embryonic capability to do this for a while, but I did not publicize it
+because it was very limited.  Now it has been improved to the point of
+maybe being useful.
+
+  The command to do one iteration is "hessian".  There are some restrictions 
+on  its use.  The energies it applies to are area, constraint edge integrals,
+simplex model facet areas, and these named quantity methods: edge_tension, 
+edge_length, facet_tension, facet_area, vertex_scalar_integral, 
+edge_scalar_integral, edge_vector_integral, facet_scalar_integral, 
+facet_vector_integral, facet_2form_integral, and gravity_method.  Note 
+particularly it does not apply to the string model or to ordinary gravity.  
+One can fake strings in the soapfilm model with edge_length quantity, and use
+gravity_method instead of ordinary gravity.  The constraints that are handled 
+are body volumes, level set constraints, and fixed named quantities involving 
+the afore mentioned methods.  Unfixed vertices on parameterized boundaries are 
+not handled.  Some of these restrictions will be removed in future versions.
+
+  The Hessian method should be tried only when the surface is extremely close 
+to a minimum (or some critical point).  I advise evolving with other methods 
+(like conjugate gradient) until the energy has converged to 8 places or so.
+If you do try the Hessian from too far away, it is likely to explode your 
+surface.  But if you do "check_increase ON", the surface will be restored to 
+its previous state if the Hessian method would increase its energy.
+
+  Running the Hessian method is liable to produce a number of warning messages 
+when the matrix is not positive definite.  This is normal when there are 
+constraints (such as volumes) or degenerate critical points (for example, 
+due to translational degrees of freedom).  A message like 
+  WARNING: sdrv: Not positive definite. Diag[25] = -3.84845; 
+indicates the raw energy Hessian is indefinite.  If the constraints don't make 
+the net Hessian positive semidefinite, then you will get a message like
+  WARNING: Constrained Hessian not positive definite. Index 3 
+where the index is the number of negative eigenvalues.  This may show up in 
+the first few iterations.  Don't worry about it unless it shows up when the 
+Hessian method has converged all the way.
+
+  For degenerate critical points, nullspace directions generate messages like
+    WARNING: sdrv: Diag[39] = 3.28904e-15; max in row: 3.1778e-15; adding 1
+As long as the max in row is also small, all is fine. The ``adding 1'' is just 
+an internal gimmick to get a nonzero pivot.
+
+  The criterion for treating a value as zero in solving the Hessian is set 
+by the variable "hessian_epsilon".  Its default value is 1e-8.
+
+  To get a feel for the Hessian method, try it out with cube.fe.
+For more details, see the Hessian section of the Technical Reference chapter
+of the Manual.
+
+
+New features:
+
+  New named quantity methods: vertex_scalar_integrand, facet_2form_integral.
+
+  Hessians for named quantity methods: edge_length, facet_area, 
+  vertex_scalar_integral, edge_scalar_integral, edge_vector_integral,
+  facet_scalar_integral, facet_vector_integral, facet_2form_integral,
+  gravity_method.
+
+  Added edge wrap as readable attribute.
+
+  Added coordinate attributes for edges and facets.  Interpreted as
+  edge vector components and facet normal components.
+
+  Commands are added to history list after being successfully parsed,
+  rather than after successful execution.
+
+  Unfound files are treated as errors rather than prompting for new
+  name, except for datafiles.
+
+  New arithmetic operators: mod (synonym for %), imod, idiv.
+  New arithmetic function: atan2(y,x).
+
+  "Show" conditions for edges and facets are saved in "read" section 
+  of dump file.
+
+  Total energy is in a comment at the top of a dump file.
+
+  PostScript output in case of string model in 3D has option for doing
+  bordered crossings.
+
+  w is synonym for coordinate x4.
+
+
+
+Bibliography update:
+
+X. Michalet, B. Fourcade and D. Bensimon, "Fluctuating vesicles of 
+nonspherical topology," Phys. Rev. Lett. 72, 168, 1994.
+
+End of Newsletter 7.
+
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

@@ -1,0 +1,24 @@
+// quad.fe
+// simple skew quadrilateral
+
+vertices
+1   0  0  1   fixed
+2   2  0  0   fixed
+3   2  2  1   fixed
+4   0  2  0   fixed
+
+edges
+1   1  2 fixed
+2   2  3 fixed
+3   3  4 fixed
+4   4  1 fixed
+
+faces
+1   1 2 3 4 
+
+read
+
+// Typical evolution
+gogo := { r; g 5; r; g 5; r; g 5; hessian; hessian; }
+
+

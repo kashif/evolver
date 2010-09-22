@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 11</title></head>
+
+<BODY>
+<a name="newsletter 11"></a>
+<h1>Surface Evolver Newsletter no. 11</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+
+
+                    Surface Evolver Newsletter Number 11
+                              March 15, 1995
+
+                   Editor: Ken Brakke, brakke@geom.umn.edu
+
+Contents
+  Postdoc position wanted.
+  Version 1.98 ready.
+  New features.
+
+Postdoc/teaching position wanted
+
+  Anmin Zhu expects his PhD in August 1995 from Arizona State 
+  University. His thesis under Hans Mittelmann is concerned
+  with the computation of capillary and minimal surfaces.
+  His interests are in the numerical solution of ODE's, PDE's,
+  and applications of Differential Geometry. He has extensive
+  EVOLVER experience, a broad background in Math and Computer
+  Science, and is a successful teacher of Algebra and Calculus
+  including Reform Calculus.
+
+  contact: Hans Mittelmann (mittelmann@math.la.asu.edu, (602)965-6595)
+  	   Anmin Zhu       (azhu@asu.edu, (602)965-0406)
+
+
+Version 1.98 ready.
+  The new version is available by anonymous ftp from geom.umn.edu
+  in the directory /pub/software/evolver.  The Mac and DOS versions
+  have also been updated.  The Mac version is now in Evolver.sea.Bin,
+  which is a self-extracting archive treated with BinHex 5.0.  No
+  PowerMac version yet, but soon I hope.  There is a PostScript version 
+  of the new manual in /pub/documents/preprints/GCG71/manual.198.ps.
+
+New features:
+
+  A little advanced calculus tutorial has been added to the manual
+  at end of the Tutorial chapter.
+
+  Geomview picking: If you right-click the mouse in the geomview
+  window, Evolver will print the id numbers of the vertex, edge,
+  or facet you click on.  These id numbers are saved in the
+  variables pickvnum, pickenum, pickfnum.
+
+  Hessian stuff:
+ 
+    A section on Eigenvalues and Eigenvectors has been added to
+    the Model chapter of the manaul as a brief guide to using
+    some of the relevant commands for analyzing the Hessian.
+
+    The command Hessian_normal permits vertices to move only
+    perpendicular to the surface.  Much easier to converge if you
+    don't let the vertices slither sideways.
+
+    The command "eigenprobe x" will report the number of eigenvalues
+    less than, equal to, or greater than the value x.  The numbers
+    are recorded in the variables eigenneg, eigenzero, and eigenpos.
+
+    "Lanczos x" prints 15 approximate eigenvalues nearest x.
+    "Lanczos(x,n)" will print n approximate eigenvalues nearest x.
+    Multiplicities are unreliable, though.
+
+    "Ritz(x,n)" does a shifted inverse iteration on an n-dimensional
+    random subspace.  Slower than Lanczos, but much more accurate in
+    values and multiplicities.  Hit CTRL-C when you get impatient
+    for it to converge, and it will print current approximations.
+
+    To get eigenvalues and eigenvectors that can be compared to those
+    for smooth surfaces defined using the L_2 norm, a linear_metric 
+    command has been added.  The metric used is a convex combination
+    of weighting vertices with the adjacent area, and the L_2 norm
+    applied to linear interpolation over the facets.  The variable
+    linear_metric_mix gives the proportion of the latter.  Default
+    value of 0.5 seems to give the most accurate eigenvalues for
+    a couple of test cases.  Use only with hessian_normal!!!
+
+    You can actually see the eigenvectors if use use hessian_menu.
+    Use menu choices 1, V, and 4.  See manual for more details.
+
+    If your files involve energies or constraints that don't have
+    Hessians implemented, run Evolver with the -q option.  That
+    converts everything it can to named quantities internally, and 
+    they have a lot more Hessians implemented.  Actually, -q is going
+    to become the default before long, but all the current datafile
+    syntax will still be recognized.
+
+  End of Hessian stuff.
+
+  BREAK and CONTINUE have been added to the command language for
+  breaking out of loops. Also BREAK n and CONTINUE n for n levels.
+
+  'P' command takes menu option number, i.e. 'P 8' for quick geomview.
+  Also have 'geomview' command for same.
+
+    -q option
+  
+  Added 'random_seed' internal read-write variable, for seeding
+  random number generator.  Reseeded to 1 at start of datafile.
+
+  Added 12-pt degree 6 and 28-pt degree 11 integration rules for facets.
+  Degree 6 is now default for quadratic area, since previous degree 5
+  always got itself fouled up (for me, anyway).
+
+  Degree of numerical integration for edges and facets is now separately
+  controllable by the variables integral_order_1d and integral_order_2d,
+  which are the degrees of polynomials exactly integrated.  But old
+  integral_order syntax remains for compatibility, though obsolete.
+
+  DOS and Mac versions that can't pipe to processes, but rather
+  write directly to files, now recognize "+" at the start of the
+  file as meaning append.
+
+  The gravity_method named quantity now takes into account the
+  densities of the adjacent bodies, whereas in earlier versions
+  it just calculated for density 1, and the user had to account
+  for density in the modulus.
+
+  Added "target" attribute for body volumes, set and get. I.e.
+  set body[1].target 3
+
+  Added maximum(x,y) and minimum(x,y) to arithmetic.  These have two
+  values  for arguments, in contrast to the min() and max() functions
+  which take iterators.
+
+  Added "set element orientation -1 where ... " command to negate oriented 
+  integrals on edges and facets.  Useful when hacking up the surface
+  and sticking edges on constraints when they point the wrong way.
+
+  There are density_ versions of length and area named quantities that
+  multiply by density.
+
+  Streamlined asking for torus display mode.
+
+End Newsletter 11.
+</pre><hr>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><title>Surface Evolver Documentation - Torus Example</title></head>
+<body>
+<center>
+<h1><a href="http://www.susqu.edu/facstaff/b/brakke/evolver/evolver.htm">
+Surface Evolver</a> Documentation</h1>
+</center>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+
+<a name="Kelvin foam example"></a>
+<a name="twointor"></a> <h1>Example: Torus partitioned into two cells (Kelvin's foam)
+</h1>
+
+This example has a flat 3-torus (i.e. periodic boundary conditions)
+divided into two bodies.  The unit cell is 
+a unit cube, and the surface has the topology of Kelvin's partitioning of 
+space into tetrakaidecahedra <a href="biblio.htm#ref[TW]">[TW]</a>, which 
+was the least area partitioning of space into equal volumes known until 
+recently <a href="biblio.htm#ref[WP]">[WP]</a>.  
+<p>
+The datafile handles the 
+wrapping of edges around the torus by specifying for each direction whether
+an edge wraps positively (+), negatively (-), or not at all (*).
+<p>
+Note the use of the keyword <tt>TORUS_FILLED</tt> in the datafile.
+This informs Evolver that one of the volume constraints is redundant,
+preventing a singular matrix when the time comes to enforce volume
+constraints.  One could use just <tt>TORUS</tt> and only put on one
+volume constraint.
+<p>
+The display of a surface in a torus can be done several ways.
+The <a href="toggle.htm#connected"><tt>connected</tt></a>
+command (my favorite) makes each body show as a single unit.
+The  <a href="toggle.htm#clipped"><tt>clipped</tt></a>
+command shows the surface clipped to the fundamental
+parallelpiped.  The <a href="toggle.htm#raw_cells"><tt>raw_cells</tt></a>
+command shows the unedited surface.
+<p>
+The Weaire-Phelan structure 
+<a href="biblio.htm#ref[WP]">[WP]</a>.  
+is in the datafile <tt>phelanc.fe</tt>.
+It has area 0.3% less than Kelvin's.
+
+
+<table>
+<tr><td>
+<img src="twointor.gif" align="middle" alt="twointor"></td>
+<td>  The initial two-cell Kelvin shape.  Note that due to
+periodidity, a single vertex or edge may appear
+multiple times in the image.</td>
+</tr>
+</table>
+
+
+<pre>
+// twointor.fe
+// Two Kelvin tetrakaidecahedra in a torus.
+
+TORUS_FILLED   // signals that domain is a torus and bodies fill it.
+
+periods
+1.000000 0.000000 0.000000
+0.000000 1.000000 0.000000
+0.000000 0.000000 1.000000
+
+vertices // values from another program
+1  0.499733 0.015302 0.792314
+2  0.270081 0.015548 0.500199
+3  0.026251 0.264043 0.500458
+4  0.755123 0.015258 0.499302
+5  0.026509 0.499036 0.794636
+6  0.500631 0.015486 0.293622
+7  0.025918 0.750639 0.499952
+8  0.499627 0.251759 0.087858
+9  0.256701 0.499113 0.087842
+10 0.026281 0.500286 0.292918
+11 0.500693 0.765009 0.086526
+12 0.770240 0.499837 0.087382
+
+edges // with wraps in axis directions
+1    1 2  * * *    
+2    2 3  * * *
+3    1 4  * * *
+4    3 5  * * *
+5    2 6  * * *
+6    2 7  * - *
+7    1 8  * * +
+8    4 6  * * *
+9    5 9  * * +
+10   3 10 * * *
+11   3 4  - * *
+12   6 8  * * *
+13   6 11 * - *
+14   7 4  - + *
+15   8 12 * * *
+16   9 8  * * *
+17   9 11 * * *
+18   10 7 * * *
+19   11 1 * + -
+20   12 5 + * -
+21   5 7  * * *
+22  11 12 * * *
+23  10 12 - * *
+24   9 10 * * *
+
+faces
+1    1 2 4 9 16 -7 
+2    -2 5 12 -16 24 -10 
+3    -4 10 18 -21 
+4    7 15 20 -4 11 -3 
+5    -1 3 8 -5 
+6    6 14 -11 -2 
+7    5 13 -17 24 18 -6 
+8    -12 13 19 7 
+9    -16 17 22 -15 
+10   -10 11 8 12 15 -23 
+11   -21 9 17 19 1 6 
+12   -14 -18 23 -22 -13 -8 
+13   -24 -9 -20 -23 
+14   -19 22 20 21 14 -3 
+
+bodies
+1    -1 -2 -3 -4 -5 9 7 11 -9 10 12 5 14 3 volume 0.500
+2     2 -6 -7 8 -10 -12 -11 -13 1 13 -14 6 4 -8 volume 0.500
+
+</pre>
+Doing some refining and iterating will show that the optimal shape
+is curved a bit.
+<hr>
+<a href="ringblob.htm">Spinning ring example.</a>
+<a href="tutorial.htm#tutorial">Back to top of tutorial.</a>
+<br>
+<a href="evolver.htm#doc top">Back to top of Evolver documentation.</a>
+<a href="index.htm">Index.</a>
+</body>
+</html>
+

@@ -1,0 +1,222 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD><TITLE>Surface Evolver Documentation - Newsletter 18</title></head>
+
+<BODY>
+<a name="newsletter 18"></a>
+<h1>Surface Evolver Newsletter no. 18</h1>
+<a href="evolver.htm#doc top">Back to top of Surface Evolver documentation.</a>
+<hr><pre>
+
+                         Surface Evolver Newsletter 18
+                              October 13, 2004 
+                     by Ken Brakke, brakke@susqu.edu
+
+
+Surface Evolver version 2.24 is available for download at
+http://www.susqu.edu/brakke/evolver.
+This is the first release since version 2.20 in August, 2003 (although
+version 2.23 was posted unannounced in June).
+
+For those who compile Evolver themselves, the same makefile may
+be used, except there is an additional source file method5.c.
+
+Trinity College Workshop - While on sabbatical at Trinity College, Dublin,
+I gave a six-session Evolver workshop.  The web pages and datafiles are
+available at http://www.susqu.edu/brakke/evolver/workshop.
+
+New features in version 2.24:
+
+ Added on_quantity and on_method_instance element attributes,
+ e.g. "list vertex where on_quantity bigvol".
+
+ Named quantities and method instances, constraints and boundaries can
+ be defined at runtime by using "define" followed by the definition
+ as in the top of a datafile.   
+
+ Added readable quantity attributes fixed, energy, info_only, conserved.
+
+ New t1_edgeswap command. String model T1 topology change; flips an edge
+ joining two triple points.
+
+ New topology changing commands in soapfilm model:
+  pop_quad_to_quad
+  pop_tri_to_edge
+  pop_edge_to_tri
+
+ Pop control toggles:
+  pop_disjoin - films separate with no new film generated between
+  pop_to_face - forces six-triple edge vertex pop to triangle
+  pop_to_edge - forces six-triple edge vertex pop to edge
+
+ Added vertex_merge(v1,v2), edge_merge(e1,e2), and facet_merge(f1,f2)
+ for gluing bits of surface together.  The first of the pair is the 
+ one kept.  Tensions do not add; you should set them yourself if needed.
+
+ Added commands matrix_multiply and matrix_inverse to help working with
+ arrays.
+
+ New named methods for working with a string network on a sphere:
+ spherical_arc_length, spherical_arc_area_n, spherical_arc_area_s
+ These work in the linear string model.
+
+ Circular_arc mode does exact postscript arc drawing.
+
+ New named method for integral of squared mean curvature:
+ star_perp_sq_mean_curvature
+ Designed so that its zeros are the equilibria of gradient descent with
+ normal_motion in effect and hessian with hessian_normal. Now the 
+ recommended method for squared mean curvature.
+
+ All the "star_..." varieties of squared mean curvature now work with 
+ partial stars, i.e. you can bound the surface with mirror symmetry
+ planes, and the curvature will be correctly calculated on the sides
+ and in the corners.
+
+ hessian_menu now has a subshell command, "=", to make it easier to do
+ things in the middle of looking at eigenmodes and stuff. Good for
+ making postscript files of perturbations and then returning to the
+ original.
+
+ Added ps_labelsize read-write variable to control the relative size
+ of labels in PostScript files. Default value 3.
+
+ full_bounding_box toggle writes the bounding box in a postscript file
+ as the grapics window boundary rather than the actual bounding box
+ of the surface.  Good for creating a series of images with the same
+ bounding box.
+
+ Added list quantity, list constraint, list boundary, list method_instance,
+ so you can see what one of these is at runtime without doing a whole
+ list topinfo.
+
+ For really high-resolution timing, there is now the cpu_counter variable,
+ which reports the value of the CPU cycle counter.  Currently implemented
+ only on x86 architecture.
+
+ valid_element(etype[index]) function to query whether an element of
+ a given number exists.
+
+ The Windows version is now compiled to use a 3GB address space, if 
+ the system supports it.  Windows defaults to only 2GB user address 
+ space per process, but you can up that to 3GB by adding the /3GB option 
+ to the boot line in your boot.ini. (if you don't know what this means, 
+ you shouldn't be fiddling with it.) If your physical memory is 1GB or 
+ above, I advise you to do this, since virtual memory space tends to
+ get fragmented.
+ 
+ The "set" command can now be used to put vertices, edges, and facets
+ on parametric boundaries.  Set the vertex boundary parameters p1, p2, etc. 
+ as needed first.
+
+ Added display_periods for controlling display of sheared torus
+ unit cells.  
+
+ Added window_aspect_ratio variable to lock graphics window aspect ratio; 
+ GLUT version only.
+ 
+ Added stokes2d method for doing 2D viscous flow.
+ Added stokes2d_laplacian info only method to extract stream function
+   laplacian conveniently.
+
+ Added general_linear_elastic method for doing non-isotropic elastic surfaces.
+
+ New sample command files (see the top of each file for more information):
+    wetfoam2.cmd - create Plateau borders on a dry foam; update of wetfoam.cmd
+    rewrap.cmd - adjust vertices in 3D torus model back to unit cell
+    rewrap2.cmd - adjust vertices in 2D torus model back to unit cell
+    gaussmap.cmd - convert surface to its Gauss map
+    gaussref.cmd - refine according to area on Gauss map
+    multiplicate.cmd - print datafile for full surface shown by view transforms
+    band.cmd - draw colored bands along designated edges
+    unshear.cmd - adjust a 2D sheared torus unit cell back toward squareness
+    xray.cmd - make xray image of the Plateau borders of a wet foam
+
+Changed features:
+
+  torus mode connected bodies changed to keep bodies in same places
+  when topological changes made. May be some initial differences in
+  display; old way technically had a bug in it anyway.
+
+  is_defined() now runtime evaluation.  Be careful in using this to
+  detect previously defined variables, since the complete command is
+  parsed before is_defined() is executed.  Try  "define variablename type"
+  and then testing for the default initial value.
+
+  10 argument limit on printf and sprintf removed.
+
+  pop vertex modified for touching cones to do merging instead of
+  splitting if cones wide enough.  Septum depends on body agreement.
+
+  Added ! in transform_expr to indicate single transform necessary.
+  ! after single transform means use it, not alternate with identity.
+  ! at start of transform string means do not include identity transform.
+
+  Changed semantics of autorecalc.  Now controls doing of recalc at
+  end of exec() when recalc_flag has been set.  Default changed to ON.
+  Old uses of SURFACE_PARAMETER recalculation causing recalc() when
+  autorecalc on now sets recalc_flag.
+
+  Bezier_basis mode now changes control points to maintain curve image
+  during refinement and order change.  Note this means old control points
+  move, so have to be careful with alignment constraints.  And facets.
+
+  "smooth_graph" toggles smoother segmented drawing of Lagrange model.
+  And in bezier_basis. And quadratic string mode. 
+  But not in torus connected mode, nor quadratic soapfilm mode.
+
+  Made current state of quiet_flag propagate to read files, but reverts
+  when file done.
+
+  The vertexnormals vertex attribute now projects the normal to constraints.
+
+  Limited vertex averaging in Lagrange model added; internal to facets
+  and edges only.
+
+  Individual facet areas in string model.
+
+  Got vertex.facet working for string model.  Facets reported as having
+  positive orientation.  And only one reported per edge.
+  
+  Overhaul of count reporting.  About 20 count variables now:
+  equi_count;
+  edge_delete_count;
+  facet_delete_count;
+  edge_refine_count;
+  facet_refine_count;
+  vertex_dissolve_count;
+  edge_dissolve_count;
+  facet_dissolve_count;
+  body_dissolve_count;
+  vertex_pop_count;
+  edge_pop_count;
+  facet_pop_count;
+  pop_tri_to_edge_count;
+  pop_edge_to_tri_count;
+  pop_quad_to_quad_count;
+  where_count;
+  edgeswap_count;
+  t1_edgeswap_count;
+  fix_count;
+  unfix_count;
+  skinny_refine_count;
+  notch_count;
+  
+  "list procedures" lists prototypes but not bodies of procedures.
+  
+  'o' reports edge and vertex pop counts seperately; was adding edge pops
+  to vertex pops.
+  
+  "pop vertices" has special consideration for vertices on constraints.
+  Put in special pop handlers for cube cone and tri-prism cone (formerly
+  kraynikpop).
+  
+  "delete facet" really works in string model now.
+  
+  augmented_hessian default state on for at least 50 constraints, off for less.
+
+End of Newsletter 18
+
+</pre>
+</body>
+</html>
+
