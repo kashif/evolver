@@ -1,14 +1,15 @@
 find_package (OpenGL)
 find_package (GLUT)
 find_package (Threads)
+find_package (Metis)
+
+set (targetName evolver)
 
 include_directories (
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${GLUT_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
 )
-
-set (targetName evolver)
 
 if (APPLE)
   add_definitions(-DLINUX -DPTHREADS -DOOGL -DMAC_OS_X)
@@ -120,8 +121,14 @@ add_executable (evolver
   zoom.c
 )
 
+if (METIS_FOUND)
+  add_definitions(-DMETIS)
+  include_directories(${METIS_INCLUDE_DIR})
+endif (METIS_FOUND)
+
 target_link_libraries (evolver
   ${CMAKE_THREAD_LIBS_INIT}
+  ${METIS_LIBRARIES}
   ${GLUT_LIBRARIES}
   ${OPENGL_LIBRARIES}
 )
